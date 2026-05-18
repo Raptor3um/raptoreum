@@ -20,8 +20,10 @@
 #include <cuckoocache.h>
 #include <evm/connectblock.h>
 #include <evm/host.h>
+#include <evm/mpt.h>
 #include <evm/receipt.h>
 #include <evm/state_cache.h>
+#include <evo/cbtx.h>
 #include <evm/state_db.h>
 #include <evm/undo.h>
 #include <flatfile.h>
@@ -2594,6 +2596,38 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
                       "credits for block %s",
                       __func__, pindex->GetBlockHash().ToString()),
                 REJECT_INVALID, "bad-evm-spend-credit");
+        }
+
+        // D2 increment 3 — committed EVM state-root check.
+        //
+        // Once a block commits the EVM roots (CCbTx v3+, only after
+        // the EVM_COMMIT hard-fork is scheduled — increment 6), the
+        // committed evmStateRoot MUST equal the post-block world-state
+        // root every validator independently recomputes from the cache
+        // here (all EVM txs applied, pre-flush — the exact point and
+        // the exact ComputeStateRoot the Capa-B suite pins across
+        // 20328 fixtures). Recompute-and-compare, never trust the
+        // block — same discipline as merkleRootMNList / the SPEND
+        // credits. Fully inert until v3 coinbases exist (no block has
+        // nVersion>=3 before EVM_COMMIT activates), so this is a
+        // no-op on every network today.
+        {
+            CCbTx cbTxRoots;
+            if (GetTxPayload(*block.vtx[0], cbTxRoots) &&
+                cbTxRoots.nVersion >= CCbTx::EVM_COMMIT_VERSION) {
+                const uint256 expectedStateRoot = evm::ComputeStateRoot(
+                    evm::CollectAccountsForStateRoot(*evmStateCache));
+                if (cbTxRoots.evmStateRoot != expectedStateRoot) {
+                    return state.DoS(100,
+                        error("%s: committed evmStateRoot %s != recomputed "
+                              "%s for block %s",
+                              __func__,
+                              cbTxRoots.evmStateRoot.ToString(),
+                              expectedStateRoot.ToString(),
+                              pindex->GetBlockHash().ToString()),
+                        REJECT_INVALID, "bad-evm-stateroot");
+                }
+            }
         }
 
         // Phase 3.6 — generate + persist per-tx receipts. We have the

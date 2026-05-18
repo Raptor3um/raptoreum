@@ -5,9 +5,14 @@
 #include <test/test_raptoreum.h>
 
 #include <evm/account.h>
+#include <evm/balance.h>
 #include <evm/hashing.h>
 #include <evm/mpt.h>
 #include <evm/rlp.h>
+#include <evm/state_cache.h>
+#include <evm/state_db.h>
+
+#include <uint256.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -89,6 +94,59 @@ BOOST_AUTO_TEST_CASE(state_root_single_eoa)
     uint256 root = evm::ComputeStateRoot(accounts);
     BOOST_CHECK(root != evm::CEvmAccount::EmptyStorageRoot());
     BOOST_CHECK(root != uint256{});
+}
+
+// D2 increment 3: the committed-evmStateRoot consensus check
+// recomputes ComputeStateRoot(CollectAccountsForStateRoot(cache)) on
+// the post-block cache and compares it to cbTx.evmStateRoot. That is
+// only sound if the recompute is (a) deterministic for identical
+// state and (b) sensitive to any state change. Pin both — exactly
+// the cache-driven path ConnectBlock uses (not the bare vector form
+// the cases above cover).
+BOOST_AUTO_TEST_CASE(state_root_over_cache_is_deterministic_and_sensitive)
+{
+    auto mkAddr = [](uint8_t fill) {
+        std::vector<unsigned char> r(20, fill);
+        return uint160(r);
+    };
+
+    evm::CEvmStateDB db(1 << 20, /*fMemory=*/true);
+    evm::CEvmStateCache cache(db);
+    cache.SetAccount(mkAddr(0xA1), evm::CEvmAccount(
+        1, evm::Uint256FromUint64(1000),
+        evm::CEvmAccount::EmptyCodeHash(),
+        evm::CEvmAccount::EmptyStorageRoot()));
+    cache.SetAccount(mkAddr(0xB2), evm::CEvmAccount(
+        0, evm::Uint256FromUint64(42),
+        evm::CEvmAccount::EmptyCodeHash(),
+        evm::CEvmAccount::EmptyStorageRoot()));
+
+    const uint256 r1 =
+        evm::ComputeStateRoot(evm::CollectAccountsForStateRoot(cache));
+    const uint256 r2 =
+        evm::ComputeStateRoot(evm::CollectAccountsForStateRoot(cache));
+    BOOST_CHECK(r1 == r2);                       // deterministic
+    BOOST_CHECK(r1 != uint256{});
+
+    // A one-wei balance change must move the root (else a tampered
+    // post-state could pass the committed-root check).
+    cache.SetAccount(mkAddr(0xB2), evm::CEvmAccount(
+        0, evm::Uint256FromUint64(43),
+        evm::CEvmAccount::EmptyCodeHash(),
+        evm::CEvmAccount::EmptyStorageRoot()));
+    const uint256 r3 =
+        evm::ComputeStateRoot(evm::CollectAccountsForStateRoot(cache));
+    BOOST_CHECK(r3 != r1);
+
+    // Reverting the change restores the exact original root
+    // (path-independence — the committed root depends only on state).
+    cache.SetAccount(mkAddr(0xB2), evm::CEvmAccount(
+        0, evm::Uint256FromUint64(42),
+        evm::CEvmAccount::EmptyCodeHash(),
+        evm::CEvmAccount::EmptyStorageRoot()));
+    const uint256 r4 =
+        evm::ComputeStateRoot(evm::CollectAccountsForStateRoot(cache));
+    BOOST_CHECK(r4 == r1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
