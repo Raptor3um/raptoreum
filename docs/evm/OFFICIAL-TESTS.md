@@ -139,7 +139,7 @@ docker exec rtm-builder bash -lc "
 Running against `ethereum/tests` v14.0 `BlockchainTests/GeneralStateTests`:
 
 ```
-Cancun fixtures: 20230 pass, 108 fail, 2041 skip
+Cancun fixtures: 20292 pass, 46 fail, 2041 skip
 ```
 
 | Version | Commit | PASS | FAIL | SKIP |
@@ -186,18 +186,22 @@ Cancun fixtures: 20230 pass, 108 fail, 2041 skip
 | Capa B v40 | `04cbed79c` | 20183 | 155 | 2041 (consensus-safety: snapshot/restore EIP-6780 substate sets on revert) |
 | Capa B v41 | `d33b026b8` | 20187 | 151 | 2041 (MODEXP — EIP-2565 gas computed before length early-outs) |
 | Capa B v42 | `2c4387288` | 20220 | 118 | 2041 (dispatch Ethereum precompile for top-level tx-to-precompile) |
-| **Capa B v43** | `e96c07c98` | **20230** | **108** | **2041** (consensus-safety: EIP-7610 collision sees committed storage) |
+| Capa B v43 | `e96c07c98` | 20230 | 108 | 2041 (consensus-safety: EIP-7610 collision sees committed storage) |
+| **Capa B v44** | `dec38a64e` | **20292** | **46** | **2041** (consensus-security: real BLS12-381 KZG point-evaluation) |
 
-Pass count is **+248% over v1** (5820 → 20230) — every increment came
+Pass count is **+249% over v1** (5820 → 20292) — every increment came
 from a real production-pipeline or harness-correctness fix uncovered
-by running the fixtures. **~99.5% of applicable Cancun fixtures now
-pass.** v40 and v43 are consensus-safety fixes (reverted-frame
-SELFDESTRUCT leak; EIP-7610 collision blindness to committed storage)
-found by a parallel root-cause investigation. The remaining ~108 are
-dominated by the KZG point-evaluation "correct/incorrect-proof"
-external vectors (real BLS12-381 verification — in progress via the
-already-vendored dashbls/RELIC) and a thin long-tail of deeply-nested
-CREATE/SELFDESTRUCT value-routing and gas-trace edges.
+by running the fixtures. **~99.8% of applicable Cancun fixtures now
+pass.** v40, v43 and v44 are consensus-security fixes: v40 =
+reverted-frame SELFDESTRUCT leak; v43 = EIP-7610 collision blindness
+to committed storage; **v44 = the KZG point-evaluation precompile
+previously accepted forged proofs** (it returned success without
+verifying the proof — a critical soundness hole now closed with a
+full BLS12-381 pairing check via the already-vendored dashbls/RELIC,
+no new dependency). The remaining 46 are a thin long-tail of
+deeply-nested CREATE/SELFDESTRUCT value-routing (~44, needs a
+parent/child substate split — heuristic patches have repeatedly
+regressed) and 1 u64-overflow harness edge.
 
 **Skip categories** (all by design, not failures):
 
