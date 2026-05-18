@@ -307,9 +307,9 @@ std::string CCbTx::ToString() const {
         nVersion, nHeight, merkleRootMNList.ToString(), merkleRootQuorums.ToString());
     if (nVersion >= EVM_COMMIT_VERSION) {
         s += strprintf(", evmStateRoot=%s, evmReceiptsRoot=%s, "
-                       "evmBaseFee=%d, evmGasUsed=%d",
+                       "evmBaseFee=%d, evmGasUsed=%d, evmExecTime=%d",
                        evmStateRoot.ToString(), evmReceiptsRoot.ToString(),
-                       evmBaseFee, evmGasUsed);
+                       evmBaseFee, evmGasUsed, evmExecTime);
     }
     return s + ")";
 }

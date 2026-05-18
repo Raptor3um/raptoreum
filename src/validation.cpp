@@ -2561,11 +2561,47 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
     CAmount nEvmSpendCreditTotal = 0;
 
     if (evmStateCache != nullptr && Updates().IsEvmActive(pindex->pprev)) {
+        // Read the coinbase CCbTx once up front. A v3 coinbase commits
+        // the EVM execution timestamp (D2 inc 6a): the PoW nonce loop
+        // keeps mutating the header nTime after the coinbase is fixed,
+        // so the EVM must execute under the COMMITTED time, identical
+        // for the miner and every validator, or the recomputed roots
+        // diverge. Pre-v3 (everywhere today) we keep the legacy
+        // behaviour (execute under the header time) exactly.
+        CCbTx evmCb;
+        const bool haveEvmV3 =
+            !block.vtx.empty() &&
+            GetTxPayload(*block.vtx[0], evmCb) &&
+            evmCb.nVersion >= CCbTx::EVM_COMMIT_VERSION;
+
         evm::ExecutionContext evmCtx;
         evmCtx.chainId = 7373; // TODO: parameterize via chainparams once the
                                //       EVM chain-id is added to Consensus::Params
         evmCtx.blockHeight = static_cast<uint64_t>(pindex->nHeight);
-        evmCtx.blockTimestamp = block.GetBlockTime();
+        if (haveEvmV3) {
+            // Committed exec time must lie inside the block's own
+            // consensus-valid time window: strictly after the parent's
+            // median-time-past and not beyond the header time. This
+            // bounds what a miner can commit while still decoupling
+            // EVM determinism from later nTime drift.
+            const int64_t mtp =
+                pindex->pprev ? pindex->pprev->GetMedianTimePast() : 0;
+            if (static_cast<int64_t>(evmCb.evmExecTime) <= mtp ||
+                static_cast<int64_t>(evmCb.evmExecTime) >
+                    block.GetBlockTime()) {
+                return state.DoS(100,
+                    error("%s: committed evmExecTime %d outside (MTP %d, "
+                          "blockTime %d] for block %s",
+                          __func__, evmCb.evmExecTime, mtp,
+                          block.GetBlockTime(),
+                          pindex->GetBlockHash().ToString()),
+                    REJECT_INVALID, "bad-evm-exectime");
+            }
+            evmCtx.blockTimestamp =
+                static_cast<int64_t>(evmCb.evmExecTime);
+        } else {
+            evmCtx.blockTimestamp = block.GetBlockTime();
+        }
         evmCtx.blockGasLimit = 30'000'000; // hard cap until header field lands
         // baseFee 0 in Phase 2.4e: real EIP-1559 dynamics activate alongside
         // the header field change. With baseFee=0, effective_gas_price ==
@@ -2611,18 +2647,16 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
         // credits. Fully inert until v3 coinbases exist (no block has
         // nVersion>=3 before EVM_COMMIT activates), so this is a
         // no-op on every network today.
-        {
-            CCbTx cbTxRoots;
-            if (GetTxPayload(*block.vtx[0], cbTxRoots) &&
-                cbTxRoots.nVersion >= CCbTx::EVM_COMMIT_VERSION) {
+        if (haveEvmV3) {
+            {
                 const uint256 expectedStateRoot = evm::ComputeStateRoot(
                     evm::CollectAccountsForStateRoot(*evmStateCache));
-                if (cbTxRoots.evmStateRoot != expectedStateRoot) {
+                if (evmCb.evmStateRoot != expectedStateRoot) {
                     return state.DoS(100,
                         error("%s: committed evmStateRoot %s != recomputed "
                               "%s for block %s",
                               __func__,
-                              cbTxRoots.evmStateRoot.ToString(),
+                              evmCb.evmStateRoot.ToString(),
                               expectedStateRoot.ToString(),
                               pindex->GetBlockHash().ToString()),
                         REJECT_INVALID, "bad-evm-stateroot");
@@ -2651,12 +2685,12 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
                 }
                 const uint256 expectedReceiptsRoot =
                     evm::ComputeReceiptsRoot(rr);
-                if (cbTxRoots.evmReceiptsRoot != expectedReceiptsRoot) {
+                if (evmCb.evmReceiptsRoot != expectedReceiptsRoot) {
                     return state.DoS(100,
                         error("%s: committed evmReceiptsRoot %s != "
                               "recomputed %s for block %s",
                               __func__,
-                              cbTxRoots.evmReceiptsRoot.ToString(),
+                              evmCb.evmReceiptsRoot.ToString(),
                               expectedReceiptsRoot.ToString(),
                               pindex->GetBlockHash().ToString()),
                         REJECT_INVALID, "bad-evm-receiptsroot");
@@ -2675,11 +2709,11 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
                     blockEvmGasUsed +=
                         static_cast<uint64_t>(tr.apply.gasUsed);
                 }
-                if (cbTxRoots.evmGasUsed != blockEvmGasUsed) {
+                if (evmCb.evmGasUsed != blockEvmGasUsed) {
                     return state.DoS(100,
                         error("%s: committed evmGasUsed %d != recomputed "
                               "%d for block %s",
-                              __func__, cbTxRoots.evmGasUsed,
+                              __func__, evmCb.evmGasUsed,
                               blockEvmGasUsed,
                               pindex->GetBlockHash().ToString()),
                         REJECT_INVALID, "bad-evm-gasused");
@@ -2712,11 +2746,11 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
                             evmCtx.blockGasLimit);
                     }
                 }
-                if (cbTxRoots.evmBaseFee != expectedBaseFee) {
+                if (evmCb.evmBaseFee != expectedBaseFee) {
                     return state.DoS(100,
                         error("%s: committed evmBaseFee %d != expected "
                               "EIP-1559 %d for block %s",
-                              __func__, cbTxRoots.evmBaseFee,
+                              __func__, evmCb.evmBaseFee,
                               expectedBaseFee,
                               pindex->GetBlockHash().ToString()),
                         REJECT_INVALID, "bad-evm-basefee");

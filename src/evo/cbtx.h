@@ -48,6 +48,19 @@ public:
                                 // parent without re-executing it
                                 // (exactly why Ethereum's header
                                 // carries gasUsed + baseFeePerGas).
+    uint64_t evmExecTime{0};    // block timestamp the EVM executed
+                                // under. Committed so the TIMESTAMP
+                                // opcode is deterministic for every
+                                // validator: the PoW nonce-search
+                                // loop keeps mutating the header nTime
+                                // after the coinbase is fixed, so a
+                                // miner-precomputed state/receipts
+                                // root would diverge from a validator
+                                // re-executing under the published
+                                // nTime. Both sides instead use this
+                                // committed value → exact parity,
+                                // without touching the mining-time
+                                // loop.
 
     SERIALIZE_METHODS(CCbTx, obj
     )
@@ -58,7 +71,8 @@ public:
         }
         if (obj.nVersion >= EVM_COMMIT_VERSION) {
             READWRITE(obj.evmStateRoot, obj.evmReceiptsRoot,
-                      obj.evmBaseFee, obj.evmGasUsed);
+                      obj.evmBaseFee, obj.evmGasUsed,
+                      obj.evmExecTime);
         }
     }
 
@@ -78,6 +92,7 @@ public:
             obj.pushKV("evmReceiptsRoot", evmReceiptsRoot.ToString());
             obj.pushKV("evmBaseFee", (uint64_t) evmBaseFee);
             obj.pushKV("evmGasUsed", (uint64_t) evmGasUsed);
+            obj.pushKV("evmExecTime", (uint64_t) evmExecTime);
         }
     }
 };
