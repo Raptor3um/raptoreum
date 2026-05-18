@@ -725,6 +725,21 @@ public:
                 /*graceRounds=*/ 10, /*forcedUpdate=*/ false,
                 VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1),
                 /*failed=*/ false, /*heightActivated=*/ 0));
+        // D2 increment 6d — regtest also forces the EVM-commitment
+        // hard fork at height 0 so functional tests / RPC smokes
+        // exercise the full v3 path: the miner produces a CCbTx v3
+        // coinbase committing the EVM roots, every validator
+        // recomputes + enforces them, EIP-1559 burn/tip is live and
+        // EVM_SPEND becomes mineable. Mainnet / testnet stay
+        // UNREGISTERED — they activate via the standard RIP
+        // miner+smartnode vote, configured separately when scheduled.
+        updateManager.Add(
+            Update(EUpdate::EVM_COMMIT, std::string("EVM commit (D2)"),
+                /*bit=*/ 3, /*roundSize=*/ 10, /*startHeight=*/ 0,
+                /*votingPeriod=*/ 10, /*votingMaxRounds=*/ 100,
+                /*graceRounds=*/ 10, /*forcedUpdate=*/ false,
+                VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1),
+                /*failed=*/ false, /*heightActivated=*/ 0));
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");

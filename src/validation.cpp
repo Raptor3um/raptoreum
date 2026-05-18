@@ -18,6 +18,7 @@
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <cuckoocache.h>
+#include <evm/balance.h>
 #include <evm/connectblock.h>
 #include <evm/host.h>
 #include <evm/mpt.h>
@@ -2560,6 +2561,17 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
     // Stays zero when EVM is inactive → legacy behaviour unchanged.
     CAmount nEvmSpendCreditTotal = 0;
 
+    // D2 increment 6c — EIP-1559 priority-fee (tip) the miner earns
+    // from this block's EVM txs, in satoshis. Recomputed by every
+    // validator from execution (never trusted from the block); the
+    // allowed coinbase value rises by exactly this. The base-fee
+    // BURN is destroyed automatically (the sender was debited it in
+    // process.cpp and it is credited nowhere). The sub-satoshi tip
+    // remainder is likewise burned (floor division) — deflationary,
+    // never inflationary. Zero unless a v3 block actually executes
+    // EVM txs.
+    CAmount nEvmCoinbaseTipSat = 0;
+
     if (evmStateCache != nullptr && Updates().IsEvmActive(pindex->pprev)) {
         // Read the coinbase CCbTx once up front. A v3 coinbase commits
         // the EVM execution timestamp (D2 inc 6a): the PoW nonce loop
@@ -2609,6 +2621,17 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
         // works, just nothing is removed from circulation yet.
         // coinbase + prevBlockHash left zero; opcodes that read them get
         // zeros under Phase 2.4e, which is harmless for the typical contract.
+        //
+        // D2 increment 6c — once v3 commits the EIP-1559 base fee, the
+        // EVM executes UNDER it (BASEFEE opcode + the burn/tip split in
+        // process.cpp). We trust the committed value here for execution
+        // and the inc-5 check below independently re-derives it from
+        // the parent and rejects the block if it isn't the canonical
+        // EIP-1559 value — so a wrong committed base fee can never take
+        // economic effect. Pre-v3 stays baseFee 0 (unchanged).
+        if (haveEvmV3) {
+            evmCtx.baseFee = evm::Uint256FromUint64(evmCb.evmBaseFee);
+        }
 
         const auto evmResult = evm::ProcessEvmTransactionsInBlock(
             block, pindex, *evmStateCache, evmCtx);
@@ -2633,6 +2656,14 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
                       __func__, pindex->GetBlockHash().ToString()),
                 REJECT_INVALID, "bad-evm-spend-credit");
         }
+
+        // D2 increment 6c — the miner's EIP-1559 priority-fee income
+        // for this block, recomputed from execution (weis → satoshis,
+        // floor; sub-satoshi remainder burned). Raises the allowed
+        // coinbase value below by exactly this; the base-fee burn is
+        // already destroyed (debited from senders, credited nowhere).
+        nEvmCoinbaseTipSat = static_cast<CAmount>(
+            evmResult.totalCoinbaseTip / evm::kWeisPerSatoshi);
 
         // D2 increment 3 — committed EVM state-root check.
         //
@@ -2897,9 +2928,14 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
 
     // nEvmSpendCreditTotal raises the cap by exactly the destroyed EVM
     // balance realised as coinbase outputs (verified present above).
-    // Non-inflationary: EVM-side supply decreased by the same amount.
+    // nEvmCoinbaseTipSat raises it by exactly the EIP-1559 priority
+    // fees the miner earned (recomputed from execution). Both are
+    // non-inflationary: SPEND credits = EVM balance destroyed 1:1;
+    // the tip was paid by senders' gas debit and the base-fee burn
+    // is destroyed, so total supply only ever decreases or moves.
     if (!IsBlockValueValid(block, pindex->nHeight,
-                           (blockReward + specialTxFees + nEvmSpendCreditTotal),
+                           (blockReward + specialTxFees +
+                            nEvmSpendCreditTotal + nEvmCoinbaseTipSat),
                            strError)) {
         return state.DoS(0, error("ConnectBlock(RAPTOREUM): %s", strError), REJECT_INVALID, "bad-cb-amount");
     }

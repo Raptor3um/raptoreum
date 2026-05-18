@@ -71,6 +71,14 @@ BlockProcessResult ProcessEvmTransactionsInBlock(
     const uint64_t baseFee = BaseFeeUint64(contextTemplate.baseFee);
 
     for (size_t i = 0; i < block.vtx.size(); ++i) {
+        // Defensive: the block-template path (miner v3 precompute,
+        // D2 inc 6b) runs this before the coinbase slot is
+        // materialised, so vtx[0] can be a null placeholder. A null
+        // tx is never a valid EVM tx (and never occurs in a real
+        // connected block, where vtx[0] is the coinbase) — skip it.
+        if (!block.vtx[i]) {
+            continue;
+        }
         const CTransaction& tx = *block.vtx[i];
         const int txType = tx.nType;
         if (txType != TRANSACTION_EVM_DEPLOY &&
