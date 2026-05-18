@@ -139,7 +139,7 @@ docker exec rtm-builder bash -lc "
 Running against `ethereum/tests` v14.0 `BlockchainTests/GeneralStateTests`:
 
 ```
-Cancun fixtures: 20182 pass, 156 fail, 2041 skip
+Cancun fixtures: 20230 pass, 108 fail, 2041 skip
 ```
 
 | Version | Commit | PASS | FAIL | SKIP |
@@ -182,16 +182,22 @@ Cancun fixtures: 20182 pass, 156 fail, 2041 skip
 | Capa B v36 | `0794182d2` | 20055 | 283 | 2041 (top-level CREATE-tx code-deposit gas 200/byte) |
 | Capa B v37 | `7fd8f2d7d` | 20100 | 238 | 2041 (BN_PAIRING validates every G2 even with infinity G1) |
 | Capa B v38 | `36be0ad34` | 20148 | 190 | 2041 (ECRECOVER must request the uncompressed pubkey) |
-| **Capa B v39** | `764507210` | **20182** | **156** | **2041** (Capa B harness: u128 gas*price products — loopMul overflow) |
+| Capa B v39 | `764507210` | 20182 | 156 | 2041 (Capa B harness: u128 gas*price products — loopMul overflow) |
+| Capa B v40 | `04cbed79c` | 20183 | 155 | 2041 (consensus-safety: snapshot/restore EIP-6780 substate sets on revert) |
+| Capa B v41 | `d33b026b8` | 20187 | 151 | 2041 (MODEXP — EIP-2565 gas computed before length early-outs) |
+| Capa B v42 | `2c4387288` | 20220 | 118 | 2041 (dispatch Ethereum precompile for top-level tx-to-precompile) |
+| **Capa B v43** | `e96c07c98` | **20230** | **108** | **2041** (consensus-safety: EIP-7610 collision sees committed storage) |
 
-Pass count is **+246% over v1** (5820 → 20182) — every increment came
+Pass count is **+248% over v1** (5820 → 20230) — every increment came
 from a real production-pipeline or harness-correctness fix uncovered
-by running the fixtures. **~99.2% of applicable Cancun fixtures now
-pass.** The remaining ~156 are dominated by the KZG point-evaluation
-"correct-proof" external vectors (need a real BLS12-381 / c-kzg-4844
-verifier — a vendoring task, ~52 fixtures) and a thin long-tail of
-deeply-nested SELFDESTRUCT value-routing, withdrawals coinbase-gas,
-and 1-wei gas-trace edges.
+by running the fixtures. **~99.5% of applicable Cancun fixtures now
+pass.** v40 and v43 are consensus-safety fixes (reverted-frame
+SELFDESTRUCT leak; EIP-7610 collision blindness to committed storage)
+found by a parallel root-cause investigation. The remaining ~108 are
+dominated by the KZG point-evaluation "correct/incorrect-proof"
+external vectors (real BLS12-381 verification — in progress via the
+already-vendored dashbls/RELIC) and a thin long-tail of deeply-nested
+CREATE/SELFDESTRUCT value-routing and gas-trace edges.
 
 **Skip categories** (all by design, not failures):
 
