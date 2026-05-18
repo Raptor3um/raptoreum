@@ -72,6 +72,7 @@ BITCOIN_TESTS =\
   test/evm_undo_tests.cpp \
   test/evm_reorg_fuzz_tests.cpp \
   test/evm_spend_credit_tests.cpp \
+  test/cbtx_evm_commit_tests.cpp \
   test/eth_rpc_conformance_tests.cpp \
   test/eth_sendrawtx_roundtrip_tests.cpp \
   test/evm_hashing_tests.cpp \

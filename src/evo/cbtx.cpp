@@ -284,6 +284,13 @@ bool CalcCbTxMerkleRootQuorums(const CBlock &block, const CBlockIndex *pindexPre
 }
 
 std::string CCbTx::ToString() const {
-    return strprintf("CCbTx(nVersion=%d, nHeight=%d, merkleRootMNList=%s, merkleRootQuorums=%s)",
-                     nVersion, nHeight, merkleRootMNList.ToString(), merkleRootQuorums.ToString());
+    std::string s = strprintf(
+        "CCbTx(nVersion=%d, nHeight=%d, merkleRootMNList=%s, merkleRootQuorums=%s",
+        nVersion, nHeight, merkleRootMNList.ToString(), merkleRootQuorums.ToString());
+    if (nVersion >= EVM_COMMIT_VERSION) {
+        s += strprintf(", evmStateRoot=%s, evmReceiptsRoot=%s, evmBaseFee=%d",
+                       evmStateRoot.ToString(), evmReceiptsRoot.ToString(),
+                       evmBaseFee);
+    }
+    return s + ")";
 }
