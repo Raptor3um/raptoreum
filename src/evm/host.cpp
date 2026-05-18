@@ -432,6 +432,16 @@ evmc::Result CEvmHost::call(const evmc_message& msg) noexcept
     // storage). evmone delegates transient storage to the host, so
     // the host owns the rollback. Snapshot here, restore on revert.
     auto transientSnap = transient;
+    // EIP-6780 substate: the SELFDESTRUCT-intent set and the
+    // same-tx-created set are part of the frame's substate, exactly
+    // like the warm/transient sets. If this frame reverts, a
+    // SELFDESTRUCT performed inside it must NOT leak into the
+    // caller's view (it would corrupt the end-of-tx deletion set and
+    // evmone's selfdestruct gas/refund return), and an inner CREATE's
+    // sameTxCreated mark must roll back too. Snapshot here, restore
+    // on every revert branch — mirrors the warm-set discipline.
+    auto sdSnap = selfdestructed;
+    auto stcSnap = sameTxCreated;
 
     // --- 1. Value transfer (CALL and CALLCODE only — DELEGATECALL
     //        inherits the outer frame's value; STATICCALL disallows
@@ -505,6 +515,8 @@ evmc::Result CEvmHost::call(const evmc_message& msg) noexcept
                 warmAddresses = std::move(warmAddrsSnap);
                 warmSlots = std::move(warmSlotsSnap);
                 transient = std::move(transientSnap);
+                selfdestructed = std::move(sdSnap);
+                sameTxCreated = std::move(stcSnap);
             }
             return ethResult;
         }
@@ -545,11 +557,13 @@ evmc::Result CEvmHost::call(const evmc_message& msg) noexcept
         // EVMC_REVERT, EVMC_OUT_OF_GAS, EVMC_INVALID_INSTRUCTION,
         // EVMC_STACK_*, EVMC_FAILURE, etc. — all roll back, including
         // the warm-access sets per EIP-2929 and transient storage
-        // per EIP-1153.
+        // per EIP-1153, and the EIP-6780 substate sets.
         state.Revert(snap);
         warmAddresses = std::move(warmAddrsSnap);
         warmSlots = std::move(warmSlotsSnap);
         transient = std::move(transientSnap);
+        selfdestructed = std::move(sdSnap);
+        sameTxCreated = std::move(stcSnap);
     }
 
     return r;
@@ -653,6 +667,12 @@ evmc::Result CEvmHost::CallCreate(const evmc_message& msg) noexcept
     auto warmAddrsSnap = warmAddresses;
     auto warmSlotsSnap = warmSlots;
     auto transientSnap = transient;
+    // EIP-6780 substate (see the matching comment in call()): roll the
+    // SELFDESTRUCT-intent and same-tx-created sets back on every
+    // failure path so a reverted inner CREATE/SELFDESTRUCT can't leak
+    // into the caller.
+    auto sdSnap = selfdestructed;
+    auto stcSnap = sameTxCreated;
 
     // Collision check on the derived address.
     evm::CEvmAccount existing;
@@ -673,6 +693,8 @@ evmc::Result CEvmHost::CallCreate(const evmc_message& msg) noexcept
             warmAddresses = std::move(warmAddrsSnap);
             warmSlots = std::move(warmSlotsSnap);
             transient = std::move(transientSnap);
+            selfdestructed = std::move(sdSnap);
+            sameTxCreated = std::move(stcSnap);
             evmc::Result r;
             r.status_code = EVMC_FAILURE;
             r.gas_left = 0;
@@ -769,6 +791,8 @@ evmc::Result CEvmHost::CallCreate(const evmc_message& msg) noexcept
             warmAddresses = std::move(warmAddrsSnap);
             warmSlots = std::move(warmSlotsSnap);
             transient = std::move(transientSnap);
+            selfdestructed = std::move(sdSnap);
+            sameTxCreated = std::move(stcSnap);
             evmc::Result fail{};
             fail.status_code = EVMC_FAILURE;
             fail.gas_left = 0;
@@ -805,6 +829,8 @@ evmc::Result CEvmHost::CallCreate(const evmc_message& msg) noexcept
         warmAddresses = std::move(warmAddrsSnap);
         warmSlots = std::move(warmSlotsSnap);
         transient = std::move(transientSnap);
+        selfdestructed = std::move(sdSnap);
+        sameTxCreated = std::move(stcSnap);
     }
 
     return r;
