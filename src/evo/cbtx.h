@@ -42,6 +42,12 @@ public:
     uint256 evmStateRoot;       // MPT root of the full EVM world state
     uint256 evmReceiptsRoot;    // trie root of this block's receipts
     uint64_t evmBaseFee{0};     // EIP-1559 base fee (weis) for the block
+    uint64_t evmGasUsed{0};     // total EVM gas used by this block.
+                                // Committed so the NEXT block derives
+                                // its EIP-1559 base fee from the
+                                // parent without re-executing it
+                                // (exactly why Ethereum's header
+                                // carries gasUsed + baseFeePerGas).
 
     SERIALIZE_METHODS(CCbTx, obj
     )
@@ -52,7 +58,7 @@ public:
         }
         if (obj.nVersion >= EVM_COMMIT_VERSION) {
             READWRITE(obj.evmStateRoot, obj.evmReceiptsRoot,
-                      obj.evmBaseFee);
+                      obj.evmBaseFee, obj.evmGasUsed);
         }
     }
 
@@ -71,6 +77,7 @@ public:
             obj.pushKV("evmStateRoot", evmStateRoot.ToString());
             obj.pushKV("evmReceiptsRoot", evmReceiptsRoot.ToString());
             obj.pushKV("evmBaseFee", (uint64_t) evmBaseFee);
+            obj.pushKV("evmGasUsed", (uint64_t) evmGasUsed);
         }
     }
 };

@@ -306,9 +306,10 @@ std::string CCbTx::ToString() const {
         "CCbTx(nVersion=%d, nHeight=%d, merkleRootMNList=%s, merkleRootQuorums=%s",
         nVersion, nHeight, merkleRootMNList.ToString(), merkleRootQuorums.ToString());
     if (nVersion >= EVM_COMMIT_VERSION) {
-        s += strprintf(", evmStateRoot=%s, evmReceiptsRoot=%s, evmBaseFee=%d",
+        s += strprintf(", evmStateRoot=%s, evmReceiptsRoot=%s, "
+                       "evmBaseFee=%d, evmGasUsed=%d",
                        evmStateRoot.ToString(), evmReceiptsRoot.ToString(),
-                       evmBaseFee);
+                       evmBaseFee, evmGasUsed);
     }
     return s + ")";
 }

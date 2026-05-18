@@ -17,6 +17,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <limits>
 #include <vector>
 
 /**
@@ -445,6 +446,40 @@ BOOST_AUTO_TEST_CASE(spend_success_charges_21000_gas_and_records_utxo)
     // Fee split.
     BOOST_CHECK_EQUAL(r.fee.burned, 21000ULL * 2);
     BOOST_CHECK_EQUAL(r.fee.coinbaseTip, 21000ULL * 1);
+}
+
+// D2 increment 5 — EIP-1559 base-fee derivation. The committed
+// evmBaseFee is recompute-validated against this exact function, so
+// pin its spec properties: unchanged at target, rises above (>=+1),
+// falls below, floors at 0, saturates at u64 max, max change ~1/8.
+BOOST_AUTO_TEST_CASE(eip1559_base_fee_derivation)
+{
+    using evm::ComputeNextBaseFee;
+    const uint64_t L = 30'000'000;       // gas limit
+    const uint64_t T = L / 2;            // target (elasticity 2) = 15M
+    const uint64_t B = 1'000'000'000ULL; // 1 gwei
+
+    // Exactly at target → unchanged.
+    BOOST_CHECK_EQUAL(ComputeNextBaseFee(B, T, L), B);
+    // Empty block (used 0 < target) → decreases.
+    BOOST_CHECK_LT(ComputeNextBaseFee(B, 0, L), B);
+    // Full block (used == limit > target) → increases by max ~1/8.
+    const uint64_t up = ComputeNextBaseFee(B, L, L);
+    BOOST_CHECK_GT(up, B);
+    BOOST_CHECK_EQUAL(up, B + B / 8);     // delta = B*(L-T)/T/8 = B/8
+    // Just above target → at least +1 even when the formula rounds
+    // to zero.
+    BOOST_CHECK_GE(ComputeNextBaseFee(B, T + 1, L), B + 1);
+    // Below target by the symmetric amount → -1/8.
+    BOOST_CHECK_EQUAL(ComputeNextBaseFee(B, 0, L), B - B / 8);
+    // Floors at 0, never negative/underflow.
+    BOOST_CHECK_EQUAL(ComputeNextBaseFee(1, 0, L), 1);  // B/8==0 → unchanged-ish
+    BOOST_CHECK_EQUAL(ComputeNextBaseFee(0, 0, L), 0);
+    // Saturates at u64 max on the way up.
+    const uint64_t MAXU = std::numeric_limits<uint64_t>::max();
+    BOOST_CHECK_EQUAL(ComputeNextBaseFee(MAXU, L, L), MAXU);
+    // Degenerate gas limit → unchanged (guard, no div-by-zero).
+    BOOST_CHECK_EQUAL(ComputeNextBaseFee(B, 123, 0), B);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

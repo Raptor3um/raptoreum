@@ -417,4 +417,42 @@ ProcessResult ProcessEvmSpendTx(const CEvmSpendTx& payload,
     return out;
 }
 
+uint64_t ComputeNextBaseFee(uint64_t parentBaseFee,
+                            uint64_t parentGasUsed,
+                            uint64_t parentGasLimit)
+{
+    if (parentGasLimit == 0) {
+        return parentBaseFee;  // degenerate guard (no EVM gas budget)
+    }
+    const uint64_t target = parentGasLimit / kEvmElasticityMultiplier;
+    if (target == 0 || parentGasUsed == target) {
+        return parentBaseFee;  // exactly at target → unchanged
+    }
+    if (parentGasUsed > target) {
+        // Above target: base fee rises by
+        //   max( parentBaseFee * (used-target) / target / DENOM , 1 ).
+        const uint64_t gasDelta = parentGasUsed - target;
+        const __uint128_t num =
+            static_cast<__uint128_t>(parentBaseFee) * gasDelta;
+        uint64_t change = static_cast<uint64_t>(
+            num / target / kEvmBaseFeeMaxChangeDenominator);
+        if (change < 1) {
+            change = 1;  // EIP-1559: minimum +1 when above target
+        }
+        if (parentBaseFee >
+            std::numeric_limits<uint64_t>::max() - change) {
+            return std::numeric_limits<uint64_t>::max();  // saturate
+        }
+        return parentBaseFee + change;
+    }
+    // Below target: base fee falls by
+    //   parentBaseFee * (target-used) / target / DENOM, floored at 0.
+    const uint64_t gasDelta = target - parentGasUsed;
+    const __uint128_t num =
+        static_cast<__uint128_t>(parentBaseFee) * gasDelta;
+    const uint64_t change = static_cast<uint64_t>(
+        num / target / kEvmBaseFeeMaxChangeDenominator);
+    return change >= parentBaseFee ? 0 : parentBaseFee - change;
+}
+
 } // namespace evm

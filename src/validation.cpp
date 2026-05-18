@@ -2661,6 +2661,66 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
                               pindex->GetBlockHash().ToString()),
                         REJECT_INVALID, "bad-evm-receiptsroot");
                 }
+
+                // D2 increment 5 — committed evmGasUsed + EIP-1559
+                // evmBaseFee checks.
+                //
+                // (a) evmGasUsed: the block must commit exactly the
+                //     total EVM gas every validator recomputes — it
+                //     is the input the NEXT block's base fee derives
+                //     from, so an unchecked value would let a miner
+                //     steer future base fees.
+                uint64_t blockEvmGasUsed = 0;
+                for (const auto& tr : evmResult.txResults) {
+                    blockEvmGasUsed +=
+                        static_cast<uint64_t>(tr.apply.gasUsed);
+                }
+                if (cbTxRoots.evmGasUsed != blockEvmGasUsed) {
+                    return state.DoS(100,
+                        error("%s: committed evmGasUsed %d != recomputed "
+                              "%d for block %s",
+                              __func__, cbTxRoots.evmGasUsed,
+                              blockEvmGasUsed,
+                              pindex->GetBlockHash().ToString()),
+                        REJECT_INVALID, "bad-evm-gasused");
+                }
+
+                // (b) evmBaseFee: canonical EIP-1559 value derived
+                //     from the PARENT block's committed base fee +
+                //     gas used (no parent re-execution — that is why
+                //     evmGasUsed is committed). If the parent is not
+                //     a v3 coinbase, THIS is the first committed
+                //     block → the activation base fee.
+                uint64_t expectedBaseFee = evm::kInitialEvmBaseFee;
+                if (pindex->pprev != nullptr) {
+                    CBlock parentBlock;
+                    if (!ReadBlockFromDisk(parentBlock, pindex->pprev,
+                                           chainparams.GetConsensus())) {
+                        return state.DoS(100,
+                            error("%s: cannot read parent block %s for "
+                                  "EIP-1559 base fee",
+                                  __func__,
+                                  pindex->pprev->GetBlockHash().ToString()),
+                            REJECT_INVALID, "bad-evm-basefee");
+                    }
+                    CCbTx parentCb;
+                    if (!parentBlock.vtx.empty() &&
+                        GetTxPayload(*parentBlock.vtx[0], parentCb) &&
+                        parentCb.nVersion >= CCbTx::EVM_COMMIT_VERSION) {
+                        expectedBaseFee = evm::ComputeNextBaseFee(
+                            parentCb.evmBaseFee, parentCb.evmGasUsed,
+                            evmCtx.blockGasLimit);
+                    }
+                }
+                if (cbTxRoots.evmBaseFee != expectedBaseFee) {
+                    return state.DoS(100,
+                        error("%s: committed evmBaseFee %d != expected "
+                              "EIP-1559 %d for block %s",
+                              __func__, cbTxRoots.evmBaseFee,
+                              expectedBaseFee,
+                              pindex->GetBlockHash().ToString()),
+                        REJECT_INVALID, "bad-evm-basefee");
+                }
             }
         }
 

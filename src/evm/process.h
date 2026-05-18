@@ -127,6 +127,38 @@ ProcessResult ProcessEvmSpendTx(const CEvmSpendTx& payload,
                                 CEvmStateCache& cache,
                                 const ExecutionContext& context);
 
+// ---------------------------------------------------------------------
+// EIP-1559 base-fee adjustment (D2).
+// ---------------------------------------------------------------------
+//
+// Standard Ethereum constants. NOTE (plan review A9): the 1/8
+// max-change-per-block was tuned for Ethereum's ~12s blocks; RTM's
+// ~2-min block time means far fewer blocks per unit wall-clock, so
+// the effective responsiveness differs. These are consensus
+// constants the team finalises before the EVM_COMMIT mainnet vote —
+// increment 5 pins the *mechanism* (this deterministic function);
+// the exact denominators remain a documented, single-point tunable.
+static constexpr uint64_t kEvmElasticityMultiplier = 2;
+static constexpr uint64_t kEvmBaseFeeMaxChangeDenominator = 8;
+// First committed (activation) block's base fee, in weis — 1 gwei,
+// matching Ethereum's INITIAL_BASE_FEE.
+static constexpr uint64_t kInitialEvmBaseFee = 1000000000ULL;
+
+/**
+ * Canonical EIP-1559 base fee for a block, computed from the PARENT
+ * block's committed base fee, gas used and gas limit. Pure,
+ * deterministic, overflow-safe integer math (EIP-1559 reference).
+ *
+ * Used to (a) recompute-and-validate the committed cbTx.evmBaseFee
+ * in ConnectBlock and (b) — later, increment 6 — let the miner
+ * produce it. Saturates at uint64 max on the way up and floors at 0
+ * on the way down; below/at target never increases, above target
+ * increases by at least 1 (per the spec).
+ */
+uint64_t ComputeNextBaseFee(uint64_t parentBaseFee,
+                            uint64_t parentGasUsed,
+                            uint64_t parentGasLimit);
+
 } // namespace evm
 
 #endif // RAPTOREUM_EVM_PROCESS_H

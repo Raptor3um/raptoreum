@@ -54,6 +54,7 @@ BOOST_AUTO_TEST_CASE(v2_serialization_is_byte_identical_and_inert)
     cb.evmStateRoot = W(0xCC);
     cb.evmReceiptsRoot = W(0xDD);
     cb.evmBaseFee = 0xDEADBEEF;
+    cb.evmGasUsed = 0xCAFE;
 
     CDataStream s(SER_NETWORK, PROTOCOL_VERSION);
     s << cb;
@@ -70,6 +71,7 @@ BOOST_AUTO_TEST_CASE(v2_serialization_is_byte_identical_and_inert)
     BOOST_CHECK(out.evmStateRoot == uint256());
     BOOST_CHECK(out.evmReceiptsRoot == uint256());
     BOOST_CHECK_EQUAL(out.evmBaseFee, 0u);
+    BOOST_CHECK_EQUAL(out.evmGasUsed, 0u);
 }
 
 // A v1 CCbTx (pre-DIP0008) must still be exactly nVersion+nHeight+
@@ -99,10 +101,13 @@ BOOST_AUTO_TEST_CASE(v3_round_trips_evm_commitments)
     cb.evmStateRoot = W(0x33);
     cb.evmReceiptsRoot = W(0x44);
     cb.evmBaseFee = 1234567890123ULL;
+    cb.evmGasUsed = 9876543210ULL;
 
     CDataStream s(SER_NETWORK, PROTOCOL_VERSION);
     s << cb;
-    BOOST_CHECK_EQUAL(s.size(), 2u + 4u + 32u + 32u + 32u + 32u + 8u);
+    // v2 (70) + evmStateRoot(32) + evmReceiptsRoot(32) +
+    // evmBaseFee(8) + evmGasUsed(8) = 150 bytes.
+    BOOST_CHECK_EQUAL(s.size(), 2u + 4u + 32u + 32u + 32u + 32u + 8u + 8u);
 
     CCbTx out;
     s >> out;
@@ -113,6 +118,7 @@ BOOST_AUTO_TEST_CASE(v3_round_trips_evm_commitments)
     BOOST_CHECK(out.evmStateRoot == W(0x33));
     BOOST_CHECK(out.evmReceiptsRoot == W(0x44));
     BOOST_CHECK_EQUAL(out.evmBaseFee, 1234567890123ULL);
+    BOOST_CHECK_EQUAL(out.evmGasUsed, 9876543210ULL);
 }
 
 // CURRENT_VERSION stays 2 in this increment: v3 is intentionally not
