@@ -2627,6 +2627,40 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
                               pindex->GetBlockHash().ToString()),
                         REJECT_INVALID, "bad-evm-stateroot");
                 }
+
+                // D2 increment 4 — committed EVM receipts-root check.
+                // Recompute the receipts trie from the consensus
+                // execution results (status / running cumulativeGas /
+                // logs) in block EVM-tx order — NOT from the persisted
+                // CEvmReceipt (whose ethTxHash/blockHash are
+                // node-local) — so every validator agrees. Same
+                // gated/inert discipline as evmStateRoot above.
+                std::vector<evm::CEvmReceipt> rr;
+                rr.reserve(evmResult.txResults.size());
+                uint64_t cumGas = 0;
+                for (const auto& tr : evmResult.txResults) {
+                    evm::CEvmReceipt e;
+                    e.status =
+                        (tr.apply.statusCode == EVMC_SUCCESS) ? 1 : 0;
+                    cumGas += static_cast<uint64_t>(tr.apply.gasUsed);
+                    e.cumulativeGasUsed = cumGas;
+                    for (const auto& hostLog : tr.apply.logs) {
+                        e.logs.push_back(evm::ConvertHostLog(hostLog));
+                    }
+                    rr.push_back(std::move(e));
+                }
+                const uint256 expectedReceiptsRoot =
+                    evm::ComputeReceiptsRoot(rr);
+                if (cbTxRoots.evmReceiptsRoot != expectedReceiptsRoot) {
+                    return state.DoS(100,
+                        error("%s: committed evmReceiptsRoot %s != "
+                              "recomputed %s for block %s",
+                              __func__,
+                              cbTxRoots.evmReceiptsRoot.ToString(),
+                              expectedReceiptsRoot.ToString(),
+                              pindex->GetBlockHash().ToString()),
+                        REJECT_INVALID, "bad-evm-receiptsroot");
+                }
             }
         }
 

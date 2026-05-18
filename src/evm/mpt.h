@@ -21,6 +21,7 @@ namespace evm {
 
 class CEvmStateCache;
 class MPTNode;
+struct CEvmReceipt;
 
 /**
  * A compact in-memory snapshot of one account, used by ComputeStateRoot
@@ -60,6 +61,25 @@ uint256 ComputeStateRoot(const std::vector<StateRootAccount>& accounts);
  * computation on cache contents that no other caller needs.
  */
 std::vector<StateRootAccount> CollectAccountsForStateRoot(CEvmStateCache& cache);
+
+/**
+ * D2 — canonical receipts-trie root committed in CCbTx v3.
+ *
+ * MPT keyed by keccak256(8-byte big-endian receipt index, in block
+ * EVM-tx order) → a deterministic encoding of ONLY the
+ * execution-result fields: status, cumulativeGasUsed, logs. The
+ * chain/lookup-derived fields (ethTxHash, blockHash, rtmTxHash,
+ * txIndex, effectiveGasPrice, sender/to/contractAddress) are
+ * deliberately excluded — they can differ per node (ethTxHash comes
+ * from a local cross-index) or are redundant, and committing them
+ * would risk a receiptsRoot divergence. This mirrors Ethereum, whose
+ * receipt commits status / cumulativeGas / bloom / logs only.
+ *
+ * Empty receipt set → the canonical empty-trie hash (same convention
+ * as ComputeStateRoot), so a block with no EVM txs commits a stable
+ * well-known value.
+ */
+uint256 ComputeReceiptsRoot(const std::vector<CEvmReceipt>& receipts);
 
 
 /**

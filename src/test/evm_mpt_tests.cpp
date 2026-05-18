@@ -8,6 +8,7 @@
 #include <evm/balance.h>
 #include <evm/hashing.h>
 #include <evm/mpt.h>
+#include <evm/receipt.h>
 #include <evm/rlp.h>
 #include <evm/state_cache.h>
 #include <evm/state_db.h>
@@ -147,6 +148,61 @@ BOOST_AUTO_TEST_CASE(state_root_over_cache_is_deterministic_and_sensitive)
     const uint256 r4 =
         evm::ComputeStateRoot(evm::CollectAccountsForStateRoot(cache));
     BOOST_CHECK(r4 == r1);
+}
+
+// D2 increment 4: the committed-evmReceiptsRoot consensus check
+// recomputes ComputeReceiptsRoot over the block's execution results.
+// Pin: empty → canonical empty trie; deterministic; sensitive to a
+// status/log change; order-dependent (index-keyed) so reordering
+// receipts is detected.
+BOOST_AUTO_TEST_CASE(receipts_root_deterministic_sensitive_ordered)
+{
+    auto mkLog = [](uint8_t a, uint8_t topic, std::vector<uint8_t> data) {
+        evm::CEvmLog l;
+        std::vector<unsigned char> ad(20, a);
+        l.address = uint160(ad);
+        std::vector<unsigned char> tp(32, topic);
+        l.topics.push_back(uint256(tp));
+        l.data = std::move(data);
+        return l;
+    };
+    auto mkRcpt = [](uint8_t status, uint64_t cumGas,
+                     std::vector<evm::CEvmLog> logs) {
+        evm::CEvmReceipt r;
+        r.status = status;
+        r.cumulativeGasUsed = cumGas;
+        r.logs = std::move(logs);
+        return r;
+    };
+
+    // Empty → canonical empty-trie hash (same as ComputeStateRoot{}).
+    BOOST_CHECK(evm::ComputeReceiptsRoot({}) ==
+                evm::CEvmAccount::EmptyStorageRoot());
+
+    std::vector<evm::CEvmReceipt> a = {
+        mkRcpt(1, 21000, {mkLog(0xAA, 0x01, {0xde, 0xad})}),
+        mkRcpt(0, 50000, {}),
+    };
+    const uint256 r1 = evm::ComputeReceiptsRoot(a);
+    const uint256 r2 = evm::ComputeReceiptsRoot(a);
+    BOOST_CHECK(r1 == r2);                       // deterministic
+    BOOST_CHECK(r1 != uint256{});
+    BOOST_CHECK(r1 != evm::CEvmAccount::EmptyStorageRoot());
+
+    // Flip a status bit → different root (tampered result caught).
+    auto b = a;
+    b[1].status = 1;
+    BOOST_CHECK(evm::ComputeReceiptsRoot(b) != r1);
+
+    // Mutate a log's data → different root.
+    auto c = a;
+    c[0].logs[0].data = {0xbe, 0xef};
+    BOOST_CHECK(evm::ComputeReceiptsRoot(c) != r1);
+
+    // Reorder receipts → different root (trie is index-keyed, so the
+    // position of each receipt is committed).
+    std::vector<evm::CEvmReceipt> swapped = {a[1], a[0]};
+    BOOST_CHECK(evm::ComputeReceiptsRoot(swapped) != r1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

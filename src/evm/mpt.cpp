@@ -11,6 +11,7 @@
 
 #include <evm/account.h>
 #include <evm/hashing.h>
+#include <evm/receipt.h>
 #include <evm/rlp.h>
 #include <evm/state_cache.h>
 #include <evm/state_db.h>
@@ -443,6 +444,73 @@ std::vector<StateRootAccount> CollectAccountsForStateRoot(CEvmStateCache& cache)
         out.push_back(std::move(entry));
     }
     return out;
+}
+
+namespace {
+
+// RLP "quantity": minimal big-endian, value 0 → empty byte string.
+bytes TrimU64(uint64_t v)
+{
+    bytes out;
+    for (int i = 7; i >= 0; --i) {
+        const uint8_t b = static_cast<uint8_t>((v >> (8 * i)) & 0xFF);
+        if (!out.empty() || b != 0) out.push_back(b);
+    }
+    return out;
+}
+
+} // anonymous namespace
+
+uint256 ComputeReceiptsRoot(const std::vector<CEvmReceipt>& receipts)
+{
+    MPT trie;
+    for (size_t i = 0; i < receipts.size(); ++i) {
+        const CEvmReceipt& r = receipts[i];
+
+        // logs list: each log = RLP[ address(20), [topic32...], data ].
+        bytes logsConcat;
+        for (const auto& lg : r.logs) {
+            bytes topicsConcat;
+            for (const auto& t : lg.topics) {
+                bytes te = RlpEncodeBytes(ToBytes32(t));
+                topicsConcat.insert(topicsConcat.end(), te.begin(), te.end());
+            }
+            bytes logPayload;
+            bytes addrRlp   = RlpEncodeBytes(ToBytes20(lg.address));
+            bytes topicsRlp = RlpEncodeList(topicsConcat);
+            bytes dataRlp   = RlpEncodeBytes(lg.data);
+            logPayload.insert(logPayload.end(), addrRlp.begin(),   addrRlp.end());
+            logPayload.insert(logPayload.end(), topicsRlp.begin(), topicsRlp.end());
+            logPayload.insert(logPayload.end(), dataRlp.begin(),   dataRlp.end());
+            bytes logRlp = RlpEncodeList(logPayload);
+            logsConcat.insert(logsConcat.end(), logRlp.begin(), logRlp.end());
+        }
+
+        // receipt = RLP[ status, cumulativeGasUsed, [logs...] ].
+        // Only execution-result fields — see ComputeReceiptsRoot doc.
+        bytes payload;
+        bytes statusRlp = RlpEncodeBytes(TrimU64(r.status));
+        bytes cumRlp    = RlpEncodeBytes(TrimU64(r.cumulativeGasUsed));
+        bytes logsRlp   = RlpEncodeList(logsConcat);
+        payload.insert(payload.end(), statusRlp.begin(), statusRlp.end());
+        payload.insert(payload.end(), cumRlp.begin(),    cumRlp.end());
+        payload.insert(payload.end(), logsRlp.begin(),   logsRlp.end());
+        bytes receiptRlp = RlpEncodeList(payload);
+
+        // Key = keccak256(8-byte big-endian receipt index). Uniform
+        // 32-byte keys: unique and no key a prefix of another, as MPT
+        // requires (yellow paper App. D).
+        uint8_t idxBe[8];
+        for (int b = 7; b >= 0; --b) {
+            idxBe[7 - b] =
+                static_cast<uint8_t>((static_cast<uint64_t>(i) >> (8 * b)) & 0xFF);
+        }
+        uint256 keyHash = Keccak256(bytes(idxBe, idxBe + 8));
+        bytes keyBytes(keyHash.begin(), keyHash.end());
+
+        trie.Insert(keyBytes, std::move(receiptRlp));
+    }
+    return trie.Hash();
 }
 
 } // namespace evm
