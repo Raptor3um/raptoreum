@@ -100,6 +100,30 @@ BlockProcessResult ProcessEvmTransactionsInBlock(
     CEvmStateCache& cache,
     const ExecutionContext& contextTemplate);
 
+/**
+ * Phase 2.4 — verify a block's coinbase realises every EVM_SPEND
+ * UTXO credit, and return their consensus-recomputed sum.
+ *
+ * `credits` is the authoritative set the validator recomputed from
+ * re-executing the block's EVM_SPEND txs (never trusted from the
+ * block). Each credit must match a DISTINCT, not-yet-consumed
+ * coinbase output by EXACT (scriptPubKey, nValue) — multiset
+ * containment, so N identical credits require N matching outputs.
+ *
+ * Returns false (and leaves `total` unspecified) if any credit is
+ * missing from the coinbase, or any credit amount / the aggregate is
+ * out of MoneyRange. On true, `total` is the sum the caller adds to
+ * the allowed coinbase value: non-inflationary, because the EVM side
+ * already destroyed exactly that much balance. This is the security
+ * boundary that stops a miner inflating (cap rises only by the
+ * destroyed amount) or redirecting a SPEND to itself (the credit
+ * must pay its own destination script).
+ */
+bool CheckCoinbaseRealisesSpendCredits(
+    const std::vector<ApplyResult::UtxoCredit>& credits,
+    const CTransaction& coinbase,
+    CAmount& total);
+
 } // namespace evm
 
 #endif // RAPTOREUM_EVM_CONNECTBLOCK_H

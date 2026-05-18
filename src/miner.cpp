@@ -295,6 +295,23 @@ bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries &packa
         if (!llmq::chainLocksHandler->IsTxSafeForMining(it->GetTx().GetHash())) {
             return false;
         }
+        // Phase 2.4 — do NOT select TRANSACTION_EVM_SPEND into a
+        // template yet. ConnectBlock requires the coinbase to realise
+        // each SPEND's UTXO credit, recomputed from re-execution. A
+        // miner cannot precompute matching credits because the block
+        // timestamp is still mutated by the nonce-search loop
+        // (UpdateTime), so a timestamp-dependent SPEND amount would
+        // diverge from the validator's re-execution and the block
+        // would be rejected. Worse, leaving SPEND selectable would
+        // wedge block production (every template would fail its own
+        // TestBlockValidity). Realising SPEND-bearing blocks needs the
+        // execution context fixed + committed in the header (D2 work);
+        // until then SPEND txs stay unmined — a liveness limitation,
+        // never a safety issue (the EVM-side debit only persists if
+        // the block connects, which a rejected block never does).
+        if (it->GetTx().nType == TRANSACTION_EVM_SPEND) {
+            return false;
+        }
     }
     return true;
 }

@@ -9,10 +9,12 @@
 #include <evm/state_cache.h>
 
 #include <evo/specialtx.h>
+#include <amount.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 
 #include <cstring>
+#include <vector>
 
 namespace evm {
 
@@ -137,6 +139,43 @@ BlockProcessResult ProcessEvmTransactionsInBlock(
     }
 
     return out;
+}
+
+bool CheckCoinbaseRealisesSpendCredits(
+    const std::vector<ApplyResult::UtxoCredit>& credits,
+    const CTransaction& coinbase,
+    CAmount& total)
+{
+    total = 0;
+    if (credits.empty()) {
+        return true;  // nothing to realise; cap unchanged
+    }
+    // Multiset containment: each credit consumes one distinct,
+    // exactly-matching coinbase output.
+    std::vector<bool> used(coinbase.vout.size(), false);
+    for (const auto& credit : credits) {
+        if (credit.amount < 0 || !MoneyRange(credit.amount)) {
+            return false;
+        }
+        bool matched = false;
+        for (size_t v = 0; v < coinbase.vout.size(); ++v) {
+            if (used[v]) continue;
+            if (coinbase.vout[v].nValue == credit.amount &&
+                coinbase.vout[v].scriptPubKey == credit.script) {
+                used[v] = true;
+                matched = true;
+                break;
+            }
+        }
+        if (!matched) {
+            return false;
+        }
+        total += credit.amount;
+        if (!MoneyRange(total)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 } // namespace evm

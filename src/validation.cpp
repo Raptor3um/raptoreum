@@ -2540,6 +2540,24 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
     // A null evmStateCache or an inactive EVM gate skips this step
     // entirely; the legacy validation flow continues unchanged.
     // ------------------------------------------------------------------
+    // Phase 2.4 — EVM_SPEND → UTXO credit settlement.
+    //
+    // ApplyEvmSpendTx debits the EVM account and produces a
+    // UtxoCredit{script, amount}. Those satoshis are NOT new money —
+    // they are EVM balance just destroyed on the state side — so they
+    // are realised as additional outputs on the block's coinbase
+    // (the same carrier already used for smartnode / governance
+    // payments). The total is recomputed HERE by every validator from
+    // re-execution (never trusted from the block) and used to:
+    //   (1) raise the allowed coinbase value by EXACTLY that sum
+    //       (non-inflationary: EVM supply went down by the same
+    //       amount), and
+    //   (2) require the coinbase to actually contain each credit
+    //       output, so a miner can neither inflate nor redirect the
+    //       SPEND to itself.
+    // Stays zero when EVM is inactive → legacy behaviour unchanged.
+    CAmount nEvmSpendCreditTotal = 0;
+
     if (evmStateCache != nullptr && Updates().IsEvmActive(pindex->pprev)) {
         evm::ExecutionContext evmCtx;
         evmCtx.chainId = 7373; // TODO: parameterize via chainparams once the
@@ -2562,6 +2580,20 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
                       __func__, evmResult.failedTxIndex,
                       pindex->GetBlockHash().ToString()),
                 REJECT_INVALID, "bad-evm-tx");
+        }
+
+        // Verify the coinbase realises every EVM_SPEND credit (the
+        // SPEND'd RTM was destroyed EVM-side; it MUST reappear as the
+        // exact destination UTXO or funds are lost) and obtain the
+        // consensus-recomputed total used to raise the value cap.
+        if (!evm::CheckCoinbaseRealisesSpendCredits(
+                evmResult.utxoCredits, *block.vtx[0],
+                nEvmSpendCreditTotal)) {
+            return state.DoS(100,
+                error("%s: coinbase does not realise the EVM_SPEND UTXO "
+                      "credits for block %s",
+                      __func__, pindex->GetBlockHash().ToString()),
+                REJECT_INVALID, "bad-evm-spend-credit");
         }
 
         // Phase 3.6 — generate + persist per-tx receipts. We have the
@@ -2701,7 +2733,12 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
     LogPrint(BCLog::BENCHMARK, "      - GetBlockSubsidy: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime5_2 - nTime5_1),
              nTimeSubsidy * MICRO, nTimeSubsidy * MILLI / nBlocksTotal);
 
-    if (!IsBlockValueValid(block, pindex->nHeight, (blockReward + specialTxFees), strError)) {
+    // nEvmSpendCreditTotal raises the cap by exactly the destroyed EVM
+    // balance realised as coinbase outputs (verified present above).
+    // Non-inflationary: EVM-side supply decreased by the same amount.
+    if (!IsBlockValueValid(block, pindex->nHeight,
+                           (blockReward + specialTxFees + nEvmSpendCreditTotal),
+                           strError)) {
         return state.DoS(0, error("ConnectBlock(RAPTOREUM): %s", strError), REJECT_INVALID, "bad-cb-amount");
     }
 
