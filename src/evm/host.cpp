@@ -813,13 +813,28 @@ evmc::Result CEvmHost::CallCreate(const evmc_message& msg) noexcept
         state.SetAccount(newAddr, finalAcc);
 
         state.Commit(snap);
-        std::memcpy(r.create_address.bytes, newAddr.begin(), 20);
 
         // EIP-6780: the new contract address is eligible for
         // SELFDESTRUCT-driven deletion within this transaction.
         evmc::address evmcAddr{};
         std::memcpy(evmcAddr.bytes, newAddr.begin(), 20);
         sameTxCreated.insert(evmcAddr);
+
+        // EVMC contract: a SUCCESSFUL CREATE/CREATE2 yields EMPTY
+        // returndata. evmone surfaces result.output as the *caller*
+        // frame's RETURNDATA buffer (RETURNDATASIZE / RETURNDATACOPY).
+        // The constructor's RETURN bytes were already consumed above as
+        // runtime code; if they leak back, the caller sees a non-zero
+        // RETURNDATASIZE after a successful create and takes the wrong
+        // branch / copies the wrong bytes. Returning a fresh result
+        // also lets `r`'s destructor free evmone's output buffer
+        // correctly (no double-free / leak). gas_left, gas_refund and
+        // create_address are preserved. The REVERT path below
+        // intentionally keeps r.output_* so the revert bytes stay
+        // visible per spec.
+        evmc::Result ok{EVMC_SUCCESS, r.gas_left, r.gas_refund};
+        std::memcpy(ok.create_address.bytes, newAddr.begin(), 20);
+        return ok;
     } else {
         state.Revert(snap);
         warmAddresses = std::move(warmAddrsSnap);
