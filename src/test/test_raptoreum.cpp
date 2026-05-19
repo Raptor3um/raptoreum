@@ -32,6 +32,7 @@
 #include <llmq/quorums_init.h>
 #include <assets/assets.h>
 #include <assets/assetsdb.h>
+#include <evm/state_db.h>
 
 #include <memory>
 
@@ -142,6 +143,12 @@ TestingSetup::TestingSetup(const std::string &chainName) : BasicTestingSetup(cha
     ::ChainstateActive().InitCoinsCache(1 << 23);
     assert(::ChainstateActive().CanFlushToDisk());
     passetsdb.reset(new CAssetsDB(1 << 23, false, true));
+    // Regtest force-activates EVM + the D2 EVM_COMMIT hard fork at
+    // height 0, so the unit chain harness must own an EVM state DB
+    // exactly as the daemon does (init.cpp) — otherwise the miner
+    // cannot build the required v3 coinbase and every TestChainSetup
+    // suite would wedge. In-memory, like pblocktree / the coins DB.
+    pevmstatedb.reset(new evm::CEvmStateDB(1 << 20, /*fMemory=*/true));
     if (!LoadGenesisBlock(chainparams)) {
         throw std::runtime_error("LoadGenesisBlock failed.");
     }
@@ -181,6 +188,7 @@ TestingSetup::~TestingSetup() {
     m_node.chainman = nullptr;
     pblocktree.reset();
     passetsdb.reset();
+    pevmstatedb.reset();
 }
 
 TestChainSetup::TestChainSetup(int blockCount) {
