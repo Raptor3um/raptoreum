@@ -74,6 +74,7 @@ BITCOIN_TESTS =\
   test/evm_spend_credit_tests.cpp \
   test/evm_fund_tests.cpp \
   test/eth_funded_e2e_tests.cpp \
+  test/evm_precompile_abi_tests.cpp \
   test/cbtx_evm_commit_tests.cpp \
   test/evm_d2_consensus_tests.cpp \
   test/eth_rpc_conformance_tests.cpp \
