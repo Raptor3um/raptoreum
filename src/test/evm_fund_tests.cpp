@@ -151,4 +151,82 @@ BOOST_AUTO_TEST_CASE(fund_is_additive_to_existing_balance)
                 evm::Uint256FromUint64((50000ULL + 70000ULL) * kSatToWeis));
 }
 
+// Reorg safety (CRITICAL): a FUND moves RTM UTXO -> EVM by destroying
+// UTXO value and crediting an EVM account in ConnectBlock. If a reorg
+// disconnects that block, DisconnectBlock MUST revert the EVM credit
+// via the block undo journal — otherwise the RTM is duplicated (credit
+// survives EVM-side while the UTXO inputs are also restored) or lost.
+// This drives the real ConnectBlock -> InvalidateBlock -> reconnect
+// path end to end.
+BOOST_AUTO_TEST_CASE(fund_credit_reverts_on_reorg)
+{
+    const CScript cbScript =
+        CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
+    const uint64_t kSatToWeis = 10'000'000'000ULL;
+    const CAmount fundSat = 250000;
+    uint160 evmAcct(std::vector<unsigned char>(20, 0x9C));
+    uint256 toAddr;
+    std::memcpy(toAddr.begin() + 12, evmAcct.begin(), 20);
+
+    CMutableTransaction ftx;
+    ftx.nVersion = 3;
+    ftx.nType = TRANSACTION_EVM_FUND;
+    ftx.vin.resize(1);
+    ftx.vin[0].prevout.hash = m_coinbase_txns[0]->GetHash();
+    ftx.vin[0].prevout.n = 0;
+    ftx.vout.resize(1);
+    ftx.vout[0].nValue = m_coinbase_txns[0]->vout[0].nValue - fundSat - 1000;
+    ftx.vout[0].scriptPubKey = cbScript;
+    {
+        evm::CEvmFundTx p;
+        p.nVersion = evm::EVM_TX_PAYLOAD_VERSION;
+        p.toAddress = toAddr;
+        p.amount = static_cast<uint64_t>(fundSat) * kSatToWeis;
+        SetTxPayload(ftx, p);
+        std::vector<unsigned char> sig;
+        const uint256 h =
+            SignatureHash(cbScript, ftx, 0, SIGHASH_ALL, 0, SigVersion::BASE);
+        BOOST_REQUIRE(coinbaseKey.Sign(h, sig));
+        sig.push_back(static_cast<unsigned char>(SIGHASH_ALL));
+        ftx.vin[0].scriptSig = CScript() << sig;
+    }
+
+    // Account does not exist before the FUND.
+    {
+        evm::CEvmAccount a;
+        BOOST_CHECK(!pevmstatedb->ReadAccount(evmAcct, a));
+    }
+
+    // Connect the FUND block -> account credited.
+    CreateAndProcessBlock({ftx}, cbScript);
+    CBlockIndex* fundTip = ::ChainActive().Tip();
+    {
+        evm::CEvmAccount a;
+        BOOST_REQUIRE(pevmstatedb->ReadAccount(evmAcct, a));
+        BOOST_CHECK(a.balance == evm::Uint256FromUint64(
+            static_cast<uint64_t>(fundSat) * kSatToWeis));
+    }
+
+    // Reorg the FUND block away -> the credit MUST be reverted (the
+    // account, which did not exist before, is erased by the undo).
+    CValidationState state;
+    BOOST_REQUIRE(InvalidateBlock(state, Params(), fundTip));
+    {
+        evm::CEvmAccount a;
+        BOOST_CHECK_MESSAGE(!pevmstatedb->ReadAccount(evmAcct, a),
+            "FUND credit survived a reorg — RTM duplicated/lost");
+    }
+
+    // Reconnect a fresh chain -> producing a new FUND restores the
+    // credit cleanly (proves the rollback left no corruption).
+    ResetBlockFailureFlags(fundTip);
+    CreateAndProcessBlock({ftx}, cbScript);
+    {
+        evm::CEvmAccount a;
+        BOOST_REQUIRE(pevmstatedb->ReadAccount(evmAcct, a));
+        BOOST_CHECK(a.balance == evm::Uint256FromUint64(
+            static_cast<uint64_t>(fundSat) * kSatToWeis));
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
