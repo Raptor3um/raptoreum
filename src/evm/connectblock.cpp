@@ -274,6 +274,7 @@ EvmCoinbaseCommitment ComputeCoinbaseEvmCommitment(
     c.receiptsRoot = ComputeReceiptsRoot(rr);
     c.gasUsed = totGas;
     c.totalCoinbaseTip = mres.totalCoinbaseTip;
+    c.utxoCredits = mres.utxoCredits;  // EVM_SPEND -> coinbase outputs
     c.ok = true;
     return c;
 }

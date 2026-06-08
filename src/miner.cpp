@@ -274,6 +274,16 @@ std::unique_ptr <CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &s
             // coinbase value by exactly the same recomputed amount).
             coinbaseTx.vout[0].nValue += static_cast<CAmount>(
                 commit.totalCoinbaseTip / evm::kWeisPerSatoshi);
+
+            // Realise each EVM_SPEND credit (EVM->UTXO) as a coinbase
+            // output. ConnectBlock's CheckCoinbaseRealisesSpendCredits
+            // REQUIRES these to be present (the SPEND already debited
+            // the EVM account; the destroyed balance must reappear as
+            // the destination UTXO). Without this a SPEND-bearing block
+            // would fail its own TestBlockValidity and wedge mining.
+            for (const auto& credit : commit.utxoCredits) {
+                coinbaseTx.vout.emplace_back(credit.amount, credit.script);
+            }
         }
 
         SetTxPayload(coinbaseTx, cbTx);

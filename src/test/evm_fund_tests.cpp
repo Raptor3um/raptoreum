@@ -229,4 +229,105 @@ BOOST_AUTO_TEST_CASE(fund_credit_reverts_on_reorg)
     }
 }
 
+// SPEND end-to-end (EVM -> UTXO) + reorg safety. Proves the miner now
+// realises the SPEND's UTXO credit as a coinbase output (the gap where
+// lifting the SPEND stopgap left credit-realisation unwired would have
+// wedged any SPEND-bearing block), the EVM account is debited, and a
+// reorg restores the debited balance.
+BOOST_AUTO_TEST_CASE(spend_end_to_end_and_reorg_safe)
+{
+    const CScript cbScript =
+        CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
+    const uint64_t kSatToWeis = 10'000'000'000ULL;
+
+    // 1. FUND the EVM account generously (covers spend amount + gas).
+    uint160 evmAcct(std::vector<unsigned char>(20, 0xD7));
+    uint256 acctWord;
+    std::memcpy(acctWord.begin() + 12, evmAcct.begin(), 20);
+    const CAmount fundSat = 1'000'000;  // 0.01 RTM
+    {
+        CMutableTransaction f;
+        f.nVersion = 3;
+        f.nType = TRANSACTION_EVM_FUND;
+        f.vin.resize(1);
+        f.vin[0].prevout.hash = m_coinbase_txns[0]->GetHash();
+        f.vin[0].prevout.n = 0;
+        f.vout.resize(1);
+        f.vout[0].nValue = m_coinbase_txns[0]->vout[0].nValue - fundSat - 1000;
+        f.vout[0].scriptPubKey = cbScript;
+        evm::CEvmFundTx p;
+        p.nVersion = evm::EVM_TX_PAYLOAD_VERSION;
+        p.toAddress = acctWord;
+        p.amount = static_cast<uint64_t>(fundSat) * kSatToWeis;
+        SetTxPayload(f, p);
+        std::vector<unsigned char> sig;
+        const uint256 h =
+            SignatureHash(cbScript, f, 0, SIGHASH_ALL, 0, SigVersion::BASE);
+        BOOST_REQUIRE(coinbaseKey.Sign(h, sig));
+        sig.push_back(static_cast<unsigned char>(SIGHASH_ALL));
+        f.vin[0].scriptSig = CScript() << sig;
+        CreateAndProcessBlock({f}, cbScript);
+    }
+    evm::CEvmAccount funded;
+    BOOST_REQUIRE(pevmstatedb->ReadAccount(evmAcct, funded));
+    const uint256 fundedBalance = funded.balance;
+
+    // 2. SPEND part of it back to a UTXO. Wrapper carries no vin/vout;
+    //    gas is paid from the EVM balance (process.cpp), and the
+    //    destination satoshis reappear as a coinbase output.
+    const uint64_t spendWeis = 100000ULL * kSatToWeis;  // 0.001 RTM
+    const CScript destScript =
+        CScript() << OP_DUP << OP_HASH160
+                  << std::vector<uint8_t>(20, 0x44)
+                  << OP_EQUALVERIFY << OP_CHECKSIG;
+    CMutableTransaction s;
+    s.nVersion = 3;
+    s.nType = TRANSACTION_EVM_SPEND;
+    {
+        evm::CEvmSpendTx p;
+        p.nVersion = evm::EVM_TX_PAYLOAD_VERSION;
+        p.fromAddress = acctWord;
+        p.amount = spendWeis;
+        p.outputScript = destScript;
+        p.gasLimit = 21000;
+        p.maxFeePerGas = 1'000'000'000ULL;  // >= baseFee
+        p.maxPriorityFeePerGas = 0;
+        p.nonce = 0;
+        SetTxPayload(s, p);
+    }
+
+    const CBlock spendBlock = CreateAndProcessBlock({s}, cbScript);
+    CBlockIndex* spendTip = ::ChainActive().Tip();
+
+    // Block accepted -> the coinbase realised the SPEND credit (miner
+    // fix). The destination output is present in the coinbase.
+    {
+        bool found = false;
+        for (const auto& o : spendBlock.vtx[0]->vout) {
+            if (o.scriptPubKey == destScript &&
+                o.nValue == static_cast<CAmount>(spendWeis / kSatToWeis)) {
+                found = true;
+                break;
+            }
+        }
+        BOOST_CHECK_MESSAGE(found,
+            "SPEND destination UTXO missing from coinbase");
+    }
+
+    // EVM account debited by at least the spend amount (plus gas).
+    evm::CEvmAccount afterSpend;
+    BOOST_REQUIRE(pevmstatedb->ReadAccount(evmAcct, afterSpend));
+    BOOST_CHECK(afterSpend.balance != fundedBalance);
+    BOOST_CHECK(evm::Uint256GreaterOrEqualUint64(fundedBalance, spendWeis));
+
+    // 3. Reorg the SPEND block away -> the EVM debit is reverted (the
+    //    account balance returns to its funded value).
+    CValidationState state;
+    BOOST_REQUIRE(InvalidateBlock(state, Params(), spendTip));
+    evm::CEvmAccount restored;
+    BOOST_REQUIRE(pevmstatedb->ReadAccount(evmAcct, restored));
+    BOOST_CHECK_MESSAGE(restored.balance == fundedBalance,
+        "SPEND debit not reverted on reorg — EVM balance corrupted");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

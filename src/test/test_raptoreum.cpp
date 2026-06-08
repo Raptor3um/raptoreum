@@ -277,6 +277,7 @@ CBlock TestChainSetup::CreateBlock(const std::vector <CMutableTransaction> &txns
         // five committed values to match the validator's recompute;
         // the EIP-1559 tip is an upper bound on coinbase value, and a
         // test coinbase legitimately under-claims it.
+        std::vector<evm::ApplyResult::UtxoCredit> spendCredits;
         if (Updates().IsEvmCommitActive(::ChainActive().Tip()) && pevmstatedb) {
             const auto commit = evm::ComputeCoinbaseEvmCommitment(
                 block, ::ChainActive().Tip(), *pevmstatedb,
@@ -288,10 +289,17 @@ CBlock TestChainSetup::CreateBlock(const std::vector <CMutableTransaction> &txns
             cbTx.evmBaseFee = commit.baseFee;
             cbTx.evmGasUsed = commit.gasUsed;
             cbTx.evmExecTime = commit.execTime;
+            spendCredits = commit.utxoCredits;
         }
 
         CMutableTransaction tmpTx{*block.vtx[0]};
         SetTxPayload(tmpTx, cbTx);
+        // Realise EVM_SPEND credits as coinbase outputs (mirrors the
+        // production miner) so harness blocks carrying SPEND txs pass
+        // ConnectBlock's CheckCoinbaseRealisesSpendCredits.
+        for (const auto& credit : spendCredits) {
+            tmpTx.vout.emplace_back(credit.amount, credit.script);
+        }
         block.vtx[0] = MakeTransactionRef(tmpTx);
     }
 

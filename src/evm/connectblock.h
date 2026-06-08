@@ -144,6 +144,10 @@ struct EvmCoinbaseCommitment
     uint64_t gasUsed{0};
     uint64_t execTime{0};
     uint64_t totalCoinbaseTip{0};  // weis (caller converts to sat)
+    // EVM_SPEND UTXO credits this block produces (EVM->UTXO). The
+    // coinbase builder MUST emit each as an output, or ConnectBlock's
+    // CheckCoinbaseRealisesSpendCredits rejects the block.
+    std::vector<ApplyResult::UtxoCredit> utxoCredits;
 };
 
 /**
