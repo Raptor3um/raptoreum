@@ -207,6 +207,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
                 { "eth_getLogs", 0, "filter" },
                 { "evm_signTransaction", 1, "callObject" },
                 { "evm_sendTransaction", 1, "callObject" },
+                { "evm_fund", 1, "amount" },
+                { "evm_fund", 3, "submit" },
         };
 
 class CRPCConvertTable {

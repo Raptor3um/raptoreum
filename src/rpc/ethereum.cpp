@@ -879,6 +879,26 @@ uint256 ParseEthBlockHash(const UniValue& v, const std::string& name)
     return uint256(beBytes);
 }
 
+// Parse an Ethereum TRANSACTION hash parameter. Unlike a Bitcoin
+// block/tx sha256d hash (shown reversed), the eth tx hash is a keccak
+// digest stored and emitted in NATURAL (forward) byte order via
+// ToEthData / EthTxHash. It must be parsed forward — NO reverse —
+// or the eth-hash -> rtm-hash cross-index lookup (and thus
+// eth_getTransactionReceipt / eth_getTransactionByHash) misses.
+uint256 ParseEthTxHash(const UniValue& v, const std::string& name)
+{
+    if (!v.isStr()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+                          name + " must be a 0x-prefixed 32-byte hex string");
+    }
+    const std::string stripped = StripHexPrefix(v.get_str());
+    if (stripped.size() != 64 || !IsHex(stripped)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+                          name + " must be a 0x-prefixed 32-byte hex string");
+    }
+    return uint256(ParseHex(stripped));  // forward, matches ToEthData
+}
+
 // Compute the on-disk serialised size of a block (matches what
 // Ethereum reports under `size`).
 uint64_t BlockSerializedSize(const CBlock& block)
@@ -1537,7 +1557,7 @@ UniValue eth_getTransactionReceipt(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    const uint256 ethHash = ParseEthBlockHash(request.params[0], "txHash");
+    const uint256 ethHash = ParseEthTxHash(request.params[0], "txHash");
     if (!pevmstatedb) return UniValue(UniValue::VNULL);
 
     // Resolve the eth_hash to the Raptoreum wrapper hash.
@@ -1576,7 +1596,7 @@ UniValue eth_getTransactionByHash(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    const uint256 ethHash = ParseEthBlockHash(request.params[0], "txHash");
+    const uint256 ethHash = ParseEthTxHash(request.params[0], "txHash");
     if (!pevmstatedb) return UniValue(UniValue::VNULL);
 
     uint256 rtmHash;

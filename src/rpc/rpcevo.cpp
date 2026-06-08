@@ -31,6 +31,13 @@
 
 #include <netbase.h>
 #include <assets/assets.h>
+#include <evm/apply.h>    // kWeisPerSatoshi
+#include <evm/evmtx.h>    // CEvmFundTx
+#include <key_io.h>
+#include <util/strencodings.h>  // IsHex, ParseHex
+
+#include <algorithm>
+#include <limits>
 
 #include <bls/bls.h>
 #include <limits.h>
@@ -1508,6 +1515,113 @@ UniValue protx_diff(const JSONRPCRequest &request) {
     return ret;
 }
 
+UniValue evm_fund(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"evm_fund",
+        "\nMove RTM from the UTXO side into an EVM account (the AAL "
+        "funding bridge). Spends wallet UTXOs at <fundaddress> and "
+        "credits the EVM account <evmaddress> by <amount>. The amount "
+        "leaves the UTXO money supply and reappears as EVM balance "
+        "(supply-conserving). This is the bootstrap that lets a fresh "
+        "EVM account hold RTM and pay gas.\n"
+        + HELP_REQUIRING_PASSPHRASE,
+        {
+            {"evmaddress", RPCArg::Type::STR, RPCArg::Optional::NO,
+             "0x-prefixed 20-byte EVM account to credit"},
+            {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO,
+             "Amount of RTM to move into the EVM account"},
+            {"fundaddress", RPCArg::Type::STR, RPCArg::Optional::NO,
+             "Wallet address supplying the RTM (source of UTXO inputs)"},
+            {"submit", RPCArg::Type::BOOL, /* default */ "true",
+             "Broadcast the tx (true) or return the signed hex (false)"},
+        },
+        RPCResult{RPCResult::Type::STR_HEX, "txid",
+                  "The funding transaction id (or signed hex if submit=false)"},
+        RPCExamples{
+            HelpExampleCli("evm_fund",
+                "\"0x000000000000000000000000000000000000000a\" 1.5 \"RtmFundAddr..\"")
+        },
+    }.Check(request);
+
+#ifdef ENABLE_WALLET
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
+    EnsureWalletIsUnlocked(pwallet);
+
+    // Parse the destination EVM address (0x + 40 hex).
+    std::string addrStr = request.params[0].get_str();
+    if (addrStr.rfind("0x", 0) == 0 || addrStr.rfind("0X", 0) == 0) {
+        addrStr = addrStr.substr(2);
+    }
+    if (addrStr.size() != 40 || !IsHex(addrStr)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+            "evmaddress must be a 0x-prefixed 20-byte hex address");
+    }
+    const std::vector<unsigned char> addrBytes = ParseHex(addrStr);
+    uint160 evmAddr(addrBytes);
+
+    // Amount: RTM -> satoshis -> weis (exact 10^10 multiple).
+    const CAmount amountSat = AmountFromValue(request.params[1]);
+    if (amountSat <= 0) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "amount must be positive");
+    }
+    const uint64_t kWeisPerSat = evm::kWeisPerSatoshi;
+    if (static_cast<uint64_t>(amountSat) >
+        std::numeric_limits<uint64_t>::max() / kWeisPerSat) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+            "amount too large to represent as EVM u64 weis");
+    }
+    const uint64_t amountWeis =
+        static_cast<uint64_t>(amountSat) * kWeisPerSat;
+
+    CTxDestination fundDest = DecodeDestination(request.params[2].get_str());
+    if (!IsValidDestination(fundDest)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
+            "invalid fundaddress");
+    }
+    const bool fSubmit = request.params[3].isNull()
+        ? true : ParseBoolV(request.params[3], "submit");
+
+    CMutableTransaction tx;
+    tx.nVersion = 3;
+    tx.nType = TRANSACTION_EVM_FUND;
+
+    evm::CEvmFundTx ptx;
+    ptx.nVersion = evm::EVM_TX_PAYLOAD_VERSION;
+    ptx.toAddress.SetNull();
+    std::memcpy(ptx.toAddress.begin() + 12, evmAddr.begin(), 20);
+    ptx.amount = amountWeis;
+
+    // Phantom recipient: a standard P2PKH to a fixed burn-ish keyhash,
+    // distinct from the change script, of value = amountSat. It makes
+    // coin selection cover inputs for the funded amount; we delete it
+    // before signing, so that amount becomes the excess that
+    // checkSpecialTxFee routes to the EVM (the output never reaches the
+    // wire / chain). Unique script => unambiguous removal vs change.
+    const CScript phantom = CScript() << OP_DUP << OP_HASH160
+        << std::vector<uint8_t>(20, 0x01) << OP_EQUALVERIFY << OP_CHECKSIG;
+    tx.vout.emplace_back(amountSat, phantom);
+
+    FundSpecialTx(pwallet, tx, ptx, fundDest);
+
+    const size_t before = tx.vout.size();
+    tx.vout.erase(std::remove_if(tx.vout.begin(), tx.vout.end(),
+        [&](const CTxOut& o) { return o.scriptPubKey == phantom; }),
+        tx.vout.end());
+    if (tx.vout.size() == before) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR,
+            "evm_fund: phantom output missing after funding");
+    }
+
+    SetTxPayload(tx, ptx);
+    return SignAndSendSpecialTx(request, tx, fSubmit);
+#else
+    throw JSONRPCError(RPC_METHOD_NOT_FOUND,
+        "evm_fund requires wallet support (built without ENABLE_WALLET)");
+#endif // ENABLE_WALLET
+}
+
 [[noreturn]] void protx_help() {
     RPCHelpMan{"protx",
                "Set of commands to execute ProTx related actions.\n"
@@ -1572,6 +1686,7 @@ static const CRPCCommand commands[] =
                 //  --------------------- ------------------------  -----------------------
                 {"evo", "bls",   &_bls,  {}},
                 {"evo", "protx", &protx, {}},
+                {"evo", "evm_fund", &evm_fund, {"evmaddress", "amount", "fundaddress", "submit"}},
         };
 
 void RegisterEvoRPCCommands(CRPCTable &tableRPC) {
