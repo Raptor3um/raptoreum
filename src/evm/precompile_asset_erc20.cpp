@@ -5,6 +5,7 @@
 #include <evm/precompiles.h>
 
 #include <assets/assets.h>
+#include <evm/asset_ledger.h>
 #include <evm/balance.h>
 #include <evm/hashing.h>
 #include <evm/host.h>
@@ -85,19 +86,6 @@ constexpr uint32_t kSelTransferFrom = 0x23B872DD;
 constexpr uint32_t kSelApprove      = 0x095EA7B3;
 constexpr uint32_t kSelAllowance    = 0xDD62ED3E;
 
-// EVM-side ledger storage layout in the per-asset precompile's own
-// storage trie (Solidity-compatible, so standard tools can inspect):
-//   mapping(address=>uint256) balanceOf      at slot 0
-//   mapping(address=>mapping(address=>uint256)) allowance at slot 1
-//   uint256 wrappedSupply (totalSupply)      at slot 2
-// Balances live in the EVM state cache -> committed in evmStateRoot and
-// reverted by the reorg undo journal, exactly like any contract storage.
-// Amounts are capped at uint64 (asset supply is int64), reusing the
-// FUND/SPEND balance helpers.
-constexpr uint64_t kSlotBalance   = 0;
-constexpr uint64_t kSlotAllowance = 1;
-constexpr uint64_t kSlotWrappedSupply = 2;
-
 // Canonical ERC-20 event topic0 hashes (keccak of the event signature).
 //   Transfer(address,address,uint256)
 //   Approval(address,address,uint256)
@@ -132,32 +120,20 @@ evmc::bytes32 ToBytes32(const uint256& u)
     std::memcpy(b.bytes, u.begin(), 32);
     return b;
 }
-evmc::bytes32 KeccakKey(const std::vector<uint8_t>& a, const std::vector<uint8_t>& b)
-{
-    std::vector<uint8_t> buf;
-    buf.reserve(a.size() + b.size());
-    buf.insert(buf.end(), a.begin(), a.end());
-    buf.insert(buf.end(), b.begin(), b.end());
-    return ToBytes32(Keccak256(buf));
-}
-// mapping(address=>uint256) at slot S: key = keccak(pad(addr) ++ pad(S)).
+// Storage slots delegate to evm/asset_ledger.h — the SINGLE SOURCE OF
+// TRUTH shared with the wrap/unwrap apply path, so a balance credited by
+// wrap is the exact slot balanceOf() reads here.
 evmc::bytes32 BalanceSlot(const uint160& holder)
 {
-    return KeccakKey(Pad32Addr(holder), Pad32Uint(kSlotBalance));
+    return ToBytes32(AssetBalanceSlot(holder));
 }
-// mapping(address=>mapping(address=>uint256)) at slot S:
-//   inner = keccak(pad(owner) ++ pad(S)); key = keccak(pad(spender) ++ inner).
 evmc::bytes32 AllowanceSlot(const uint160& owner, const uint160& spender)
 {
-    const evmc::bytes32 inner =
-        KeccakKey(Pad32Addr(owner), Pad32Uint(kSlotAllowance));
-    return KeccakKey(Pad32Addr(spender),
-                     std::vector<uint8_t>(inner.bytes, inner.bytes + 32));
+    return ToBytes32(AssetAllowanceSlot(owner, spender));
 }
-evmc::bytes32 ScalarSlot(uint64_t s)
+evmc::bytes32 WrappedSupplySlotB32()
 {
-    std::vector<uint8_t> v = Pad32Uint(s);
-    return ToBytes32(uint256(v));
+    return ToBytes32(AssetWrappedSupplySlot());
 }
 uint256 LoadU256(CEvmHost& host, const evmc::address& a, const evmc::bytes32& slot)
 {
@@ -325,7 +301,7 @@ evmc::Result ExecuteAssetErc20Precompile(CEvmHost& host,
     // total) and is not the ERC-20 totalSupply of the wrapped token.
     case kSelTotalSupply: {
         const uint256 wrapped =
-            LoadU256(host, msg.code_address, ScalarSlot(kSlotWrappedSupply));
+            LoadU256(host, msg.code_address, WrappedSupplySlotB32());
         std::vector<uint8_t> w(wrapped.begin(), wrapped.end());
         output.insert(output.end(), w.begin(), w.end());
         return PrecompileSuccess(msg.gas, kPrecompileGasCost, std::move(output));
