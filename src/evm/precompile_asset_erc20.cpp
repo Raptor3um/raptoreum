@@ -5,11 +5,15 @@
 #include <evm/precompiles.h>
 
 #include <assets/assets.h>
+#include <evm/balance.h>
+#include <evm/hashing.h>
+#include <evm/host.h>
 #include <hash.h>
 #include <validation.h>
 
 #include <cstring>
 #include <string>
+#include <vector>
 
 namespace evm {
 
@@ -71,6 +75,139 @@ constexpr uint32_t kSelSymbol      = 0x95D89B41;
 constexpr uint32_t kSelDecimals    = 0x313CE567;
 constexpr uint32_t kSelTotalSupply = 0x18160DDD;
 constexpr uint32_t kSelBalanceOf   = 0x70A08231;
+// D4 mirror — ERC-20 write surface over the EVM-side ledger.
+//   transfer(address,uint256)              -> a9059cbb
+//   transferFrom(address,address,uint256)  -> 23b872dd
+//   approve(address,uint256)               -> 095ea7b3
+//   allowance(address,address)             -> dd62ed3e
+constexpr uint32_t kSelTransfer     = 0xA9059CBB;
+constexpr uint32_t kSelTransferFrom = 0x23B872DD;
+constexpr uint32_t kSelApprove      = 0x095EA7B3;
+constexpr uint32_t kSelAllowance    = 0xDD62ED3E;
+
+// EVM-side ledger storage layout in the per-asset precompile's own
+// storage trie (Solidity-compatible, so standard tools can inspect):
+//   mapping(address=>uint256) balanceOf      at slot 0
+//   mapping(address=>mapping(address=>uint256)) allowance at slot 1
+//   uint256 wrappedSupply (totalSupply)      at slot 2
+// Balances live in the EVM state cache -> committed in evmStateRoot and
+// reverted by the reorg undo journal, exactly like any contract storage.
+// Amounts are capped at uint64 (asset supply is int64), reusing the
+// FUND/SPEND balance helpers.
+constexpr uint64_t kSlotBalance   = 0;
+constexpr uint64_t kSlotAllowance = 1;
+constexpr uint64_t kSlotWrappedSupply = 2;
+
+// Canonical ERC-20 event topic0 hashes (keccak of the event signature).
+//   Transfer(address,address,uint256)
+//   Approval(address,address,uint256)
+const uint8_t kTopicTransfer[32] = {
+    0xdd,0xf2,0x52,0xad,0x1b,0xe2,0xc8,0x9b,0x69,0xc2,0xb0,0x68,0xfc,0x37,0x8d,0xaa,
+    0x95,0x2b,0xa7,0xf1,0x63,0xc4,0xa1,0x16,0x28,0xf5,0x5a,0x4d,0xf5,0x23,0xb3,0xef};
+const uint8_t kTopicApproval[32] = {
+    0x8c,0x5b,0xe1,0xe5,0xeb,0xec,0x7d,0x5b,0xd1,0x4f,0x71,0x42,0x7d,0x1e,0x84,0xf3,
+    0xdd,0x03,0x14,0xc0,0xf7,0xb2,0x29,0x1e,0x5b,0x20,0x0a,0xc8,0xc7,0xc3,0xb9,0x25};
+
+uint160 AddrToUint160(const evmc::address& a)
+{
+    uint160 o;
+    std::memcpy(o.begin(), a.bytes, 20);
+    return o;
+}
+std::vector<uint8_t> Pad32Addr(const uint160& a)
+{
+    std::vector<uint8_t> v(32, 0);
+    std::memcpy(v.data() + 12, a.begin(), 20);
+    return v;
+}
+std::vector<uint8_t> Pad32Uint(uint64_t n)
+{
+    std::vector<uint8_t> v(32, 0);
+    for (int i = 0; i < 8; ++i) v[31 - i] = static_cast<uint8_t>((n >> (8 * i)) & 0xFF);
+    return v;
+}
+evmc::bytes32 ToBytes32(const uint256& u)
+{
+    evmc::bytes32 b{};
+    std::memcpy(b.bytes, u.begin(), 32);
+    return b;
+}
+evmc::bytes32 KeccakKey(const std::vector<uint8_t>& a, const std::vector<uint8_t>& b)
+{
+    std::vector<uint8_t> buf;
+    buf.reserve(a.size() + b.size());
+    buf.insert(buf.end(), a.begin(), a.end());
+    buf.insert(buf.end(), b.begin(), b.end());
+    return ToBytes32(Keccak256(buf));
+}
+// mapping(address=>uint256) at slot S: key = keccak(pad(addr) ++ pad(S)).
+evmc::bytes32 BalanceSlot(const uint160& holder)
+{
+    return KeccakKey(Pad32Addr(holder), Pad32Uint(kSlotBalance));
+}
+// mapping(address=>mapping(address=>uint256)) at slot S:
+//   inner = keccak(pad(owner) ++ pad(S)); key = keccak(pad(spender) ++ inner).
+evmc::bytes32 AllowanceSlot(const uint160& owner, const uint160& spender)
+{
+    const evmc::bytes32 inner =
+        KeccakKey(Pad32Addr(owner), Pad32Uint(kSlotAllowance));
+    return KeccakKey(Pad32Addr(spender),
+                     std::vector<uint8_t>(inner.bytes, inner.bytes + 32));
+}
+evmc::bytes32 ScalarSlot(uint64_t s)
+{
+    std::vector<uint8_t> v = Pad32Uint(s);
+    return ToBytes32(uint256(v));
+}
+uint256 LoadU256(CEvmHost& host, const evmc::address& a, const evmc::bytes32& slot)
+{
+    const evmc::bytes32 w = host.get_storage(a, slot);
+    uint256 u;
+    std::memcpy(u.begin(), w.bytes, 32);
+    return u;
+}
+void StoreU256(CEvmHost& host, const evmc::address& a, const evmc::bytes32& slot,
+               const uint256& v)
+{
+    host.set_storage(a, slot, ToBytes32(v));
+}
+
+// Move `amount` units of the wrapped asset from `from` to `to` in the
+// EVM-side ledger of contract `c`. Returns false (no mutation) if the
+// sender's balance is insufficient. Self-transfer is a no-op net.
+bool Erc20Move(CEvmHost& host, const evmc::address& c,
+               const uint160& from, const uint160& to, uint64_t amount)
+{
+    uint256 fromBal = LoadU256(host, c, BalanceSlot(from));
+    if (!Uint256GreaterOrEqualUint64(fromBal, amount)) {
+        return false;
+    }
+    if (from == to) {
+        return true;  // balance unchanged; avoids double load/store races
+    }
+    uint256 toBal = LoadU256(host, c, BalanceSlot(to));
+    if (!Uint256SubUint64(fromBal, amount)) return false;
+    if (!Uint256AddUint64(toBal, amount)) return false;  // overflow guard
+    StoreU256(host, c, BalanceSlot(from), fromBal);
+    StoreU256(host, c, BalanceSlot(to), toBal);
+    return true;
+}
+
+// Emit a standard ERC-20 Transfer/Approval log:
+//   topics = [topic0, indexed addr1, indexed addr2], data = abi(amount).
+void EmitErc20Event(CEvmHost& host, const evmc::address& c,
+                    const uint8_t topic0[32], const uint160& a1,
+                    const uint160& a2, uint64_t amount)
+{
+    evmc::bytes32 topics[3];
+    std::memcpy(topics[0].bytes, topic0, 32);
+    const std::vector<uint8_t> p1 = Pad32Addr(a1);
+    const std::vector<uint8_t> p2 = Pad32Addr(a2);
+    std::memcpy(topics[1].bytes, p1.data(), 32);
+    std::memcpy(topics[2].bytes, p2.data(), 32);
+    const std::vector<uint8_t> data = Pad32Uint(amount);
+    host.emit_log(c, data.data(), data.size(), topics, 3);
+}
 
 uint32_t ReadSelector(const std::vector<uint8_t>& input)
 {
@@ -129,7 +266,7 @@ std::vector<uint8_t> AbiEncodeStringResult(const std::string& s)
 
 } // anonymous namespace
 
-evmc::Result ExecuteAssetErc20Precompile(CEvmHost& /*host*/,
+evmc::Result ExecuteAssetErc20Precompile(CEvmHost& host,
                                          const evmc_message& msg)
 {
     if (msg.gas < kPrecompileGasCost) {
@@ -181,29 +318,107 @@ evmc::Result ExecuteAssetErc20Precompile(CEvmHost& /*host*/,
     }
 
     // -- totalSupply() returns (uint256) ----------------------------
+    // D4 mirror: totalSupply is the WRAPPED supply (sum of EVM-side
+    // balances), so sum(balanceOf) == totalSupply per ERC-20. It is 0
+    // until units are wrapped in (M2 wrap/unwrap); the UTXO-side
+    // circulatingSupply is a separate quantity (the asset's true
+    // total) and is not the ERC-20 totalSupply of the wrapped token.
     case kSelTotalSupply: {
-        // CAssetMetaData::circulatingSupply is a CAmount (int64). For
-        // ABI uint256 we widen via the uint64 writer (sufficient
-        // until per-asset supply exceeds 2^63; CAmount is signed
-        // int64 so anything above that is already invalid).
-        const int64_t supply = meta.circulatingSupply;
-        AbiWriteUint64(output, supply < 0 ? 0 : static_cast<uint64_t>(supply));
+        const uint256 wrapped =
+            LoadU256(host, msg.code_address, ScalarSlot(kSlotWrappedSupply));
+        std::vector<uint8_t> w(wrapped.begin(), wrapped.end());
+        output.insert(output.end(), w.begin(), w.end());
         return PrecompileSuccess(msg.gas, kPrecompileGasCost, std::move(output));
     }
 
-    // -- balanceOf(address) returns (uint256) -----------------------
-    // MVP: always 0 until the D4-revised bidirectional mirror lands.
-    // The map key in CAssets::mapAssetAddressAmount is a base58
-    // string (UTXO-style P2PKH) — EVM 20-byte addresses derive from
-    // a different hash of the same pubkey and don't appear in that
-    // map. Real bridging happens via the wrap/unwrap pattern (Q-A2).
+    // -- balanceOf(address) returns (uint256) — EVM-side ledger ------
     case kSelBalanceOf: {
         if (args.size() < 32) return PrecompileFailure(msg.gas);
         uint160 addr;
         if (!AbiReadAddress(args, 0, addr)) {
             return PrecompileFailure(msg.gas);
         }
-        AbiWriteUint64(output, 0);
+        const uint256 bal = LoadU256(host, msg.code_address, BalanceSlot(addr));
+        std::vector<uint8_t> b(bal.begin(), bal.end());
+        output.insert(output.end(), b.begin(), b.end());
+        return PrecompileSuccess(msg.gas, kPrecompileGasCost, std::move(output));
+    }
+
+    // -- allowance(address owner, address spender) returns (uint256) --
+    case kSelAllowance: {
+        uint160 owner, spender;
+        if (!AbiReadAddress(args, 0, owner) ||
+            !AbiReadAddress(args, 32, spender)) {
+            return PrecompileFailure(msg.gas);
+        }
+        const uint256 a =
+            LoadU256(host, msg.code_address, AllowanceSlot(owner, spender));
+        std::vector<uint8_t> v(a.begin(), a.end());
+        output.insert(output.end(), v.begin(), v.end());
+        return PrecompileSuccess(msg.gas, kPrecompileGasCost, std::move(output));
+    }
+
+    // -- approve(address spender, uint256 amount) returns (bool) -----
+    case kSelApprove: {
+        if (msg.flags & EVMC_STATIC) return PrecompileFailure(msg.gas);
+        uint160 spender; uint64_t amount = 0;
+        if (!AbiReadAddress(args, 0, spender) ||
+            !AbiReadUint64(args, 32, amount)) {
+            return PrecompileFailure(msg.gas);
+        }
+        const uint160 owner = AddrToUint160(msg.sender);
+        StoreU256(host, msg.code_address, AllowanceSlot(owner, spender),
+                  evm::Uint256FromUint64(amount));
+        EmitErc20Event(host, msg.code_address, kTopicApproval, owner,
+                       spender, amount);
+        AbiWriteBool(output, true);
+        return PrecompileSuccess(msg.gas, kPrecompileGasCost, std::move(output));
+    }
+
+    // -- transfer(address to, uint256 amount) returns (bool) --------
+    case kSelTransfer: {
+        if (msg.flags & EVMC_STATIC) return PrecompileFailure(msg.gas);
+        uint160 to; uint64_t amount = 0;
+        if (!AbiReadAddress(args, 0, to) ||
+            !AbiReadUint64(args, 32, amount)) {
+            return PrecompileFailure(msg.gas);
+        }
+        const uint160 from = AddrToUint160(msg.sender);
+        if (!Erc20Move(host, msg.code_address, from, to, amount)) {
+            return PrecompileFailure(msg.gas);  // insufficient balance
+        }
+        EmitErc20Event(host, msg.code_address, kTopicTransfer, from, to,
+                       amount);
+        AbiWriteBool(output, true);
+        return PrecompileSuccess(msg.gas, kPrecompileGasCost, std::move(output));
+    }
+
+    // -- transferFrom(address from, address to, uint256 amount) ------
+    case kSelTransferFrom: {
+        if (msg.flags & EVMC_STATIC) return PrecompileFailure(msg.gas);
+        uint160 from, to; uint64_t amount = 0;
+        if (!AbiReadAddress(args, 0, from) ||
+            !AbiReadAddress(args, 32, to) ||
+            !AbiReadUint64(args, 64, amount)) {
+            return PrecompileFailure(msg.gas);
+        }
+        const uint160 spender = AddrToUint160(msg.sender);
+        // Spend the allowance first (require >= amount), then move.
+        const evmc::bytes32 aslot = AllowanceSlot(from, spender);
+        uint256 allow = LoadU256(host, msg.code_address, aslot);
+        if (!Uint256GreaterOrEqualUint64(allow, amount)) {
+            return PrecompileFailure(msg.gas);  // allowance too low
+        }
+        if (!Erc20Move(host, msg.code_address, from, to, amount)) {
+            return PrecompileFailure(msg.gas);  // insufficient balance
+        }
+        // Decrement the allowance (skip the unlimited-approval sentinel
+        // max-uint64 convention is not used here; always decrement).
+        Uint256SubUint64(allow, amount);
+        StoreU256(host, msg.code_address, aslot, allow);
+        EmitErc20Event(host, msg.code_address, kTopicTransfer, from, to,
+                       amount);
+        AbiWriteBool(output, true);
         return PrecompileSuccess(msg.gas, kPrecompileGasCost, std::move(output));
     }
 
