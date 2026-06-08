@@ -16,25 +16,36 @@
 CChain &ChainActive();
 
 bool CheckTransaction(const CTransaction &tx, CValidationState &state, int nHeight, CAmount blockReward) {
-    bool allowEmptyTxInOut = false;
+    bool allowEmptyVin = false;
+    bool allowEmptyVout = false;
     if (tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
-        allowEmptyTxInOut = true;
+        allowEmptyVin = true;
+        allowEmptyVout = true;
     }
-    // EVM-typed special transactions (Phase 1) carry their payload in
+    // EVM DEPLOY/CALL/SPEND (Phase 1) carry their payload in
     // vExtraPayload and have no UTXO-side inputs or outputs — gas/value
     // accounting happens entirely against the EVM state database in
-    // ProcessEvm*Tx (Phase 2.4). Permit them to be vin/vout-empty so
-    // the existing UTXO-shape consensus rules don't reject the wrapper.
+    // ProcessEvm*Tx. Permit them to be vin/vout-empty so the existing
+    // UTXO-shape consensus rules don't reject the wrapper.
     if (tx.nType == TRANSACTION_EVM_DEPLOY ||
         tx.nType == TRANSACTION_EVM_CALL ||
         tx.nType == TRANSACTION_EVM_SPEND) {
-        allowEmptyTxInOut = true;
+        allowEmptyVin = true;
+        allowEmptyVout = true;
+    }
+    // EVM_FUND is funded by REAL UTXO inputs (the source of the credited
+    // RTM), so it MUST have inputs — but a change output is optional (a
+    // FUND that consumes its inputs exactly as amount + fee has no
+    // change). Require vin, allow empty vout.
+    if (tx.nType == TRANSACTION_EVM_FUND) {
+        allowEmptyVin = false;
+        allowEmptyVout = true;
     }
 
     // Basic checks that don't depend on any context
-    if (!allowEmptyTxInOut && tx.vin.empty())
+    if (!allowEmptyVin && tx.vin.empty())
         return state.DoS(10, false, REJECT_INVALID, "bad-txns-vin-empty");
-    if (!allowEmptyTxInOut && tx.vout.empty())
+    if (!allowEmptyVout && tx.vout.empty())
         return state.DoS(10, false, REJECT_INVALID, "bad-txns-vout-empty");
     // Size limits
     if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_LEGACY_BLOCK_SIZE)

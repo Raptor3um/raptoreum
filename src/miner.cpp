@@ -251,83 +251,29 @@ std::unique_ptr <CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &s
                     "%s: EVM_COMMIT active but pevmstatedb uninitialised",
                     __func__));
             }
-            cbTx.nVersion = CCbTx::EVM_COMMIT_VERSION;
-            // Committed EVM exec time. Must satisfy the validator
-            // bound  pprev.MTP < evmExecTime <= header nTime  for
-            // every nonce attempt. The template's pblock->nTime can
-            // equal pprev MTP on fast chains (regtest), so floor it
-            // at MTP+1 — exactly what UpdateTime() will set the final
-            // header nTime to, and the nonce loop only RAISES nTime,
-            // so evmExecTime <= final header nTime always holds. The
-            // SAME value drives the execution context below, so the
-            // miner's own roots are computed under the time it
-            // commits (self-consistent + matches the validator).
-            const int64_t evmExecTime = std::max<int64_t>(
-                pindexPrev->GetMedianTimePast() + 1,
-                static_cast<int64_t>(pblock->nTime));
-            cbTx.evmExecTime = static_cast<uint64_t>(evmExecTime);
-
-            // EIP-1559 base fee FIRST (from the parent's committed
-            // value, or the activation initial) — the EVM must execute
-            // under it so the burn/tip split is the one the validator
-            // recomputes (D2 inc 6c). Same derivation as ConnectBlock.
-            uint64_t baseFee = evm::kInitialEvmBaseFee;
-            CBlock parentBlk;
-            if (ReadBlockFromDisk(parentBlk, pindexPrev,
-                                  chainparams.GetConsensus())) {
-                CCbTx parentCb;
-                if (!parentBlk.vtx.empty() &&
-                    GetTxPayload(*parentBlk.vtx[0], parentCb) &&
-                    parentCb.nVersion >= CCbTx::EVM_COMMIT_VERSION) {
-                    baseFee = evm::ComputeNextBaseFee(
-                        parentCb.evmBaseFee, parentCb.evmGasUsed,
-                        30'000'000);
-                }
-            }
-            cbTx.evmBaseFee = baseFee;
-
-            evm::CEvmStateCache mcache(*pevmstatedb);  // throwaway, never flushed
-            evm::ExecutionContext mctx;
-            mctx.chainId = 7373;
-            mctx.blockHeight = static_cast<uint64_t>(nHeight);
-            mctx.blockTimestamp = evmExecTime;  // == committed value
-            mctx.blockGasLimit = 30'000'000;
-            mctx.baseFee = evm::Uint256FromUint64(baseFee);
-
-            const auto mres = evm::ProcessEvmTransactionsInBlock(
-                *pblock, pindexPrev, mcache, mctx);
-            if (!mres.ok) {
+            // Compute the v3 EVM commitment over the assembled block via
+            // the shared helper — the SAME code ConnectBlock and the
+            // test harness use, so miner output == validator recompute.
+            const auto commit = evm::ComputeCoinbaseEvmCommitment(
+                *pblock, pindexPrev, *pevmstatedb,
+                chainparams.GetConsensus());
+            if (!commit.ok) {
                 throw std::runtime_error(strprintf(
                     "%s: EVM processing failed building v3 coinbase",
                     __func__));
             }
-
-            cbTx.evmStateRoot = evm::ComputeStateRoot(
-                evm::CollectAccountsForStateRoot(mcache));
-
-            std::vector<evm::CEvmReceipt> rr;
-            rr.reserve(mres.txResults.size());
-            uint64_t cumGas = 0, totGas = 0;
-            for (const auto& tr : mres.txResults) {
-                evm::CEvmReceipt e;
-                e.status = (tr.apply.statusCode == EVMC_SUCCESS) ? 1 : 0;
-                const uint64_t g = static_cast<uint64_t>(tr.apply.gasUsed);
-                cumGas += g;
-                totGas += g;
-                e.cumulativeGasUsed = cumGas;
-                for (const auto& hl : tr.apply.logs) {
-                    e.logs.push_back(evm::ConvertHostLog(hl));
-                }
-                rr.push_back(std::move(e));
-            }
-            cbTx.evmReceiptsRoot = evm::ComputeReceiptsRoot(rr);
-            cbTx.evmGasUsed = totGas;
+            cbTx.nVersion = CCbTx::EVM_COMMIT_VERSION;
+            cbTx.evmStateRoot = commit.stateRoot;
+            cbTx.evmReceiptsRoot = commit.receiptsRoot;
+            cbTx.evmBaseFee = commit.baseFee;
+            cbTx.evmGasUsed = commit.gasUsed;
+            cbTx.evmExecTime = commit.execTime;
 
             // D2 inc 6c — claim the EIP-1559 priority fees (weis →
             // satoshis, floor; the validator raises the allowed
             // coinbase value by exactly the same recomputed amount).
             coinbaseTx.vout[0].nValue += static_cast<CAmount>(
-                mres.totalCoinbaseTip / evm::kWeisPerSatoshi);
+                commit.totalCoinbaseTip / evm::kWeisPerSatoshi);
         }
 
         SetTxPayload(coinbaseTx, cbTx);

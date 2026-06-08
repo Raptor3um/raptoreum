@@ -53,6 +53,8 @@ bool CheckSpecialTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CVali
                 return evm::CheckEvmCallTx(tx, pindexPrev, state);
             case TRANSACTION_EVM_SPEND:
                 return evm::CheckEvmSpendTx(tx, pindexPrev, state);
+            case TRANSACTION_EVM_FUND:
+                return evm::CheckEvmFundTx(tx, pindexPrev, state);
         }
     } catch (const std::exception &e) {
         LogPrintf("%s -- failed: %s\n", __func__, e.what());
@@ -88,7 +90,10 @@ bool ProcessSpecialTx(const CTransaction &tx, const CBlockIndex *pindex, CValida
         case TRANSACTION_EVM_DEPLOY:
         case TRANSACTION_EVM_CALL:
         case TRANSACTION_EVM_SPEND:
-            // Phase 1: scaffolding only. Execution lands in Phase 2 (see PLAN.md).
+        case TRANSACTION_EVM_FUND:
+            // EVM state changes are applied in ConnectBlock via the EVM
+            // pipeline (ProcessEvmTransactionsInBlock + ApplyEvm*Tx), not
+            // here — this hook only validates structure.
             return true;
     }
     return state.DoS(100, false, REJECT_INVALID, "bad-tx-type-proc");
@@ -120,7 +125,9 @@ bool UndoSpecialTx(const CTransaction &tx, const CBlockIndex *pindex) {
         case TRANSACTION_EVM_DEPLOY:
         case TRANSACTION_EVM_CALL:
         case TRANSACTION_EVM_SPEND:
-            // Phase 1: nothing to undo (no state changes applied yet).
+        case TRANSACTION_EVM_FUND:
+            // EVM state changes are undone via the EVM reorg journal
+            // (CEvmStateUndo / ApplyUndoToDB) in DisconnectBlock, not here.
             return true;
     }
     return false;

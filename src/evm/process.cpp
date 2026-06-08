@@ -417,6 +417,29 @@ ProcessResult ProcessEvmSpendTx(const CEvmSpendTx& payload,
     return out;
 }
 
+ProcessResult ProcessEvmFundTx(const CEvmFundTx& payload,
+                               CEvmStateCache& cache,
+                               const ExecutionContext& context)
+{
+    const int snap = cache.Snapshot();
+    ApplyResult inner = ApplyEvmFundTx(payload, cache, context);
+    ProcessResult out;
+    if (inner.statusCode != EVMC_SUCCESS) {
+        // Unreachable for a tx that passed CheckEvmFundTx (precision
+        // pre-validated; balance overflow impossible for real amounts).
+        // Treat as block-invalidating rather than silently dropping a
+        // credit the UTXO side already paid for.
+        cache.Revert(snap);
+        out.preflightFailed = true;
+        return out;
+    }
+    cache.Commit(snap);
+    out.apply = std::move(inner);
+    out.preflightFailed = false;
+    // No fee: FUND executes no EVM code (fee.burned = coinbaseTip = 0).
+    return out;
+}
+
 uint64_t ComputeNextBaseFee(uint64_t parentBaseFee,
                             uint64_t parentGasUsed,
                             uint64_t parentGasLimit)

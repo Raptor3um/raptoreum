@@ -6,13 +6,21 @@
 
 #include <evm/balance.h>
 #include <evm/evmtx.h>
+#include <evm/mpt.h>
+#include <evm/receipt.h>
 #include <evm/state_cache.h>
+#include <evm/state_db.h>
 
+#include <evo/cbtx.h>
 #include <evo/specialtx.h>
 #include <amount.h>
+#include <chain.h>
+#include <consensus/params.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <validation.h>   // ReadBlockFromDisk
 
+#include <algorithm>
 #include <cstring>
 #include <vector>
 
@@ -83,7 +91,8 @@ BlockProcessResult ProcessEvmTransactionsInBlock(
         const int txType = tx.nType;
         if (txType != TRANSACTION_EVM_DEPLOY &&
             txType != TRANSACTION_EVM_CALL &&
-            txType != TRANSACTION_EVM_SPEND) {
+            txType != TRANSACTION_EVM_SPEND &&
+            txType != TRANSACTION_EVM_FUND) {
             continue; // not an EVM tx — caller handles it via UpdateCoins etc.
         }
 
@@ -112,7 +121,7 @@ BlockProcessResult ProcessEvmTransactionsInBlock(
             const auto perTxCtx = PerTxContext(contextTemplate,
                                               payload.senderHash, effective);
             result = ProcessEvmCallTx(payload, cache, perTxCtx);
-        } else { // TRANSACTION_EVM_SPEND
+        } else if (txType == TRANSACTION_EVM_SPEND) {
             CEvmSpendTx payload;
             if (!GetTxPayload(tx, payload)) {
                 out.ok = false;
@@ -124,6 +133,17 @@ BlockProcessResult ProcessEvmTransactionsInBlock(
             const auto perTxCtx = PerTxContext(contextTemplate,
                                               payload.fromAddress, effective);
             result = ProcessEvmSpendTx(payload, cache, perTxCtx);
+        } else { // TRANSACTION_EVM_FUND
+            CEvmFundTx payload;
+            if (!GetTxPayload(tx, payload)) {
+                out.ok = false;
+                out.failedTxIndex = static_cast<int>(i);
+                return out;
+            }
+            // FUND has no gas/fee fields and no EVM sender; the
+            // execution context's per-tx fields are unused. Pass the
+            // block template ctx straight through.
+            result = ProcessEvmFundTx(payload, cache, contextTemplate);
         }
 
         if (result.preflightFailed) {
@@ -184,6 +204,78 @@ bool CheckCoinbaseRealisesSpendCredits(
         }
     }
     return true;
+}
+
+EvmCoinbaseCommitment ComputeCoinbaseEvmCommitment(
+    const CBlock& block, const CBlockIndex* pindexPrev,
+    CEvmStateDB& db, const Consensus::Params& consensus)
+{
+    EvmCoinbaseCommitment c;
+
+    // execTime = max(parent MTP + 1, block.nTime): inside the
+    // validator's (MTP, headerTime] window for every nonce (the nonce
+    // loop only raises nTime), and identical for miner + harness.
+    const int64_t execTime = std::max<int64_t>(
+        pindexPrev ? pindexPrev->GetMedianTimePast() + 1 : 0,
+        static_cast<int64_t>(block.nTime));
+    c.execTime = static_cast<uint64_t>(execTime);
+
+    // EIP-1559 base fee from the parent's committed (baseFee, gasUsed),
+    // or the activation initial when the parent is pre-v3.
+    uint64_t baseFee = kInitialEvmBaseFee;
+    if (pindexPrev != nullptr) {
+        CBlock parentBlk;
+        if (ReadBlockFromDisk(parentBlk, pindexPrev, consensus)) {
+            CCbTx parentCb;
+            if (!parentBlk.vtx.empty() &&
+                GetTxPayload(*parentBlk.vtx[0], parentCb) &&
+                parentCb.nVersion >= CCbTx::EVM_COMMIT_VERSION) {
+                baseFee = ComputeNextBaseFee(parentCb.evmBaseFee,
+                                             parentCb.evmGasUsed,
+                                             30'000'000);
+            }
+        }
+    }
+    c.baseFee = baseFee;
+
+    CEvmStateCache mcache(db);  // throwaway, never flushed
+    ExecutionContext mctx;
+    mctx.chainId = 7373;
+    mctx.blockHeight =
+        static_cast<uint64_t>(pindexPrev ? pindexPrev->nHeight + 1 : 0);
+    mctx.blockTimestamp = execTime;
+    mctx.blockGasLimit = 30'000'000;
+    mctx.baseFee = Uint256FromUint64(baseFee);
+
+    const auto mres = ProcessEvmTransactionsInBlock(block, pindexPrev,
+                                                    mcache, mctx);
+    if (!mres.ok) {
+        c.ok = false;
+        return c;
+    }
+
+    c.stateRoot = ComputeStateRoot(CollectAccountsForStateRoot(mcache));
+
+    std::vector<CEvmReceipt> rr;
+    rr.reserve(mres.txResults.size());
+    uint64_t cumGas = 0, totGas = 0;
+    for (const auto& tr : mres.txResults) {
+        CEvmReceipt e;
+        e.status = (tr.apply.statusCode == EVMC_SUCCESS) ? 1 : 0;
+        const uint64_t g = static_cast<uint64_t>(tr.apply.gasUsed);
+        cumGas += g;
+        totGas += g;
+        e.cumulativeGasUsed = cumGas;
+        for (const auto& hl : tr.apply.logs) {
+            e.logs.push_back(ConvertHostLog(hl));
+        }
+        rr.push_back(std::move(e));
+    }
+    c.receiptsRoot = ComputeReceiptsRoot(rr);
+    c.gasUsed = totGas;
+    c.totalCoinbaseTip = mres.totalCoinbaseTip;
+    c.ok = true;
+    return c;
 }
 
 } // namespace evm

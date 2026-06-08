@@ -596,4 +596,49 @@ ApplyResult ApplyEvmSpendTx(const CEvmSpendTx& payload,
     return out;
 }
 
+// ----------------------------------------------------------------------
+// AAL — ApplyEvmFundTx (UTXO -> EVM funding, inverse of SpendTx)
+// ----------------------------------------------------------------------
+
+ApplyResult ApplyEvmFundTx(const CEvmFundTx& payload,
+                           CEvmStateCache& cache,
+                           const ExecutionContext& /*context*/)
+{
+    ApplyResult out;
+
+    // 1. Precision: weis must be an exact multiple of 10^10 so the
+    //    credit matches the satoshi amount removed from the UTXO side.
+    if (payload.amount == 0 || payload.amount % kWeisPerSatoshi != 0) {
+        out.statusCode = EVMC_FAILURE;
+        return out;
+    }
+
+    // 2. Destination EVM account — force-create if absent (funding a
+    //    fresh address is the whole point of FUND).
+    uint160 toAddr;
+    std::memcpy(toAddr.begin(), payload.toAddress.begin() + 12, 20);
+
+    evm::CEvmAccount account;
+    if (!cache.GetAccount(toAddr, account)) {
+        account = evm::CEvmAccount(
+            /*nonce=*/ 0,
+            /*balance=*/ uint256(),
+            /*codeHash=*/ evm::CEvmAccount::EmptyCodeHash(),
+            /*storageRoot=*/ evm::CEvmAccount::EmptyStorageRoot());
+    }
+
+    // 3. Credit the balance (overflow-checked) and write back.
+    if (!Uint256AddUint64(account.balance, payload.amount)) {
+        // Would overflow the 256-bit balance — refuse rather than
+        // corrupt supply. (Unreachable for any real RTM amount.)
+        out.statusCode = EVMC_FAILURE;
+        return out;
+    }
+    cache.SetAccount(toAddr, account);
+
+    out.statusCode = EVMC_SUCCESS;
+    out.gasUsed = 0;  // FUND executes no EVM code
+    return out;
+}
+
 } // namespace evm

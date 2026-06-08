@@ -209,6 +209,42 @@ struct CEvmSpendTx
     std::string ToString() const;
 };
 
+/**
+ * Payload for TRANSACTION_EVM_FUND (AAL: UTXO -> EVM funding bridge).
+ *
+ * The transaction spends real UTXO inputs (the source of funds, validated by
+ * the normal UTXO machinery) and credits `amount` weis to the EVM account
+ * `toAddress`. The funded amount leaves the UTXO money supply (subtracted
+ * from the miner-claimable fee in checkSpecialTxFee, NOT added to the
+ * coinbase allowance) and reappears as EVM balance when ApplyEvmFundTx runs
+ * in ConnectBlock — exactly mirroring how TRANSACTION_EVM_SPEND removes EVM
+ * balance and recreates it as a coinbase UTXO output. Supply-conserving.
+ *
+ * FUND does NOT execute EVM code, so it carries no gas / fee-rate fields:
+ * the only cost is the ordinary UTXO miner fee (Vin - Vout - amount).
+ */
+struct CEvmFundTx
+{
+    uint16_t nVersion{EVM_TX_PAYLOAD_VERSION};
+
+    /** Destination EVM account (low 160 bits used). */
+    uint256 toAddress;
+
+    /** Amount in RTM weis to credit. Must be an exact multiple of
+     *  kWeisPerSatoshi (10^10) so it round-trips losslessly against the
+     *  satoshi amount removed from the UTXO side. */
+    uint64_t amount{0};
+
+    SERIALIZE_METHODS(CEvmFundTx, obj)
+    {
+        READWRITE(obj.nVersion);
+        READWRITE(obj.toAddress);
+        READWRITE(obj.amount);
+    }
+
+    std::string ToString() const;
+};
+
 // ----------------------------------------------------------------------------
 // Validation entry points (Phase 1: structure-only).
 // ----------------------------------------------------------------------------
@@ -237,6 +273,10 @@ bool CheckEvmCallTx(const CTransaction& tx,
                    CValidationState& state);
 
 bool CheckEvmSpendTx(const CTransaction& tx,
+                    const CBlockIndex* pindexPrev,
+                    CValidationState& state);
+
+bool CheckEvmFundTx(const CTransaction& tx,
                     const CBlockIndex* pindexPrev,
                     CValidationState& state);
 

@@ -43,7 +43,15 @@ enum {
     // of their asset for DeFi composability. Strictly opt-in: assets that never
     // opt in remain permanently UTXO-only.
     TRANSACTION_WRAP_ASSET = 17,      // Lock Smart Asset units, mint wrapped ERC-20.
-    TRANSACTION_UNWRAP_ASSET = 18     // Burn wrapped ERC-20, release Smart Asset units.
+    TRANSACTION_UNWRAP_ASSET = 18,    // Burn wrapped ERC-20, release Smart Asset units.
+    // UTXO -> EVM funding bridge (AAL). Spends real UTXO inputs and credits
+    // an EVM account by the same amount: the inverse of TRANSACTION_EVM_SPEND
+    // (EVM -> UTXO). The funded amount LEAVES the UTXO money supply (it is
+    // removed from the miner-claimable fee, NOT paid to the coinbase) and
+    // REAPPEARS as EVM balance — supply-conserving. This is the bootstrap
+    // that makes EVM accounts usable (a fresh account has no balance and
+    // cannot even pay gas until funded). Gated behind Updates().IsEvmActive().
+    TRANSACTION_EVM_FUND = 19
 };
 
 /** An outpoint - a combination of a transaction hash and an index n into its vout */

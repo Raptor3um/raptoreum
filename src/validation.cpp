@@ -407,7 +407,8 @@ ContextualCheckTransaction(const CTransaction &tx, CValidationState &state, cons
                 // ProcessEvm*Tx during ConnectBlock.
                 tx.nType != TRANSACTION_EVM_DEPLOY &&
                 tx.nType != TRANSACTION_EVM_CALL &&
-                tx.nType != TRANSACTION_EVM_SPEND) {
+                tx.nType != TRANSACTION_EVM_SPEND &&
+                tx.nType != TRANSACTION_EVM_FUND) {
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
             }
             if (tx.IsCoinBase() && tx.nType != TRANSACTION_COINBASE)

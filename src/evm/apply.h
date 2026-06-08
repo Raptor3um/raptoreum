@@ -214,6 +214,33 @@ ApplyResult ApplyEvmSpendTx(const CEvmSpendTx& payload,
                             CEvmStateCache& cache,
                             const ExecutionContext& context);
 
+/**
+ * Execute a CEvmFundTx against the cache (AAL: UTXO -> EVM funding).
+ *
+ * The inverse of ApplyEvmSpendTx. The transaction's real UTXO inputs
+ * are consumed by the normal UTXO machinery; the funded amount is
+ * removed from the miner-claimable fee in checkSpecialTxFee (it leaves
+ * the UTXO money supply). Here we credit it to the EVM side:
+ *
+ *   1. Verify payload.amount is an exact multiple of kWeisPerSatoshi
+ *      (10^10) so it round-trips against the satoshi amount removed
+ *      from the UTXO side.
+ *
+ *   2. Load (or force-create, EIP-161 style) the destination EVM
+ *      account — funding a brand-new address is the whole point, so an
+ *      absent account is created with nonce 0, empty code/storage.
+ *
+ *   3. Credit account.balance += payload.amount (overflow-checked)
+ *      and write it back through the cache.
+ *
+ * No gas, no nonce, no UTXO credit — FUND does not execute EVM code.
+ * The credit lands in the EVM state cache and is committed in the
+ * block's evmStateRoot (D2) like any other state change.
+ */
+ApplyResult ApplyEvmFundTx(const CEvmFundTx& payload,
+                           CEvmStateCache& cache,
+                           const ExecutionContext& context);
+
 } // namespace evm
 
 #endif // RAPTOREUM_EVM_APPLY_H

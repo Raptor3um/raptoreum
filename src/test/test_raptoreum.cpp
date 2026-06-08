@@ -32,7 +32,9 @@
 #include <llmq/quorums_init.h>
 #include <assets/assets.h>
 #include <assets/assetsdb.h>
+#include <evm/connectblock.h>
 #include <evm/state_db.h>
+#include <update/update.h>
 
 #include <memory>
 
@@ -266,6 +268,28 @@ CBlock TestChainSetup::CreateBlock(const std::vector <CMutableTransaction> &txns
         if (!CalcCbTxMerkleRootQuorums(block, ::ChainActive().Tip(), cbTx.merkleRootQuorums, state)) {
             BOOST_ASSERT(false);
         }
+        // D2 — when the EVM-commitment hard fork is active, the
+        // coinbase must commit the EVM roots over the FINAL assembled
+        // block (we just replaced block.vtx with the passed-in txns,
+        // which may include EVM txs). Recompute via the SAME shared
+        // helper the miner and validator use, so the harness produces
+        // valid v3 blocks carrying EVM transactions. We only need the
+        // five committed values to match the validator's recompute;
+        // the EIP-1559 tip is an upper bound on coinbase value, and a
+        // test coinbase legitimately under-claims it.
+        if (Updates().IsEvmCommitActive(::ChainActive().Tip()) && pevmstatedb) {
+            const auto commit = evm::ComputeCoinbaseEvmCommitment(
+                block, ::ChainActive().Tip(), *pevmstatedb,
+                chainparams.GetConsensus());
+            BOOST_ASSERT(commit.ok);
+            cbTx.nVersion = CCbTx::EVM_COMMIT_VERSION;
+            cbTx.evmStateRoot = commit.stateRoot;
+            cbTx.evmReceiptsRoot = commit.receiptsRoot;
+            cbTx.evmBaseFee = commit.baseFee;
+            cbTx.evmGasUsed = commit.gasUsed;
+            cbTx.evmExecTime = commit.execTime;
+        }
+
         CMutableTransaction tmpTx{*block.vtx[0]};
         SetTxPayload(tmpTx, cbTx);
         block.vtx[0] = MakeTransactionRef(tmpTx);

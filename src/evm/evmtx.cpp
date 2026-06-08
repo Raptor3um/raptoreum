@@ -7,6 +7,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <consensus/validation.h>
+#include <evm/apply.h>   // kWeisPerSatoshi
 #include <evo/specialtx.h>
 #include <tinyformat.h>
 #include <update/update.h>
@@ -44,6 +45,13 @@ std::string CEvmSpendTx::ToString() const
         "maxFeePerGas=%u, maxPriorityFeePerGas=%u, nonce=%u)",
         nVersion, fromAddress.ToString().substr(0, 8) + "..", amount,
         gasLimit, maxFeePerGas, maxPriorityFeePerGas, nonce);
+}
+
+std::string CEvmFundTx::ToString() const
+{
+    return strprintf(
+        "CEvmFundTx(nVersion=%u, to=%s, amount=%u)",
+        nVersion, toAddress.ToString().substr(0, 8) + "..", amount);
 }
 
 // ----------------------------------------------------------------------------
@@ -172,6 +180,33 @@ bool CheckEvmSpendTx(const CTransaction& tx,
     }
     if (payload.outputScript.empty()) {
         return state.DoS(100, false, REJECT_INVALID, "bad-evm-spend-script");
+    }
+    return true;
+}
+
+bool CheckEvmFundTx(const CTransaction& tx,
+                    const CBlockIndex* pindexPrev,
+                    CValidationState& state)
+{
+    CEvmFundTx payload;
+    if (!GetTxPayload(tx, payload)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-evm-fund-payload");
+    }
+    // FUND carries no gas/fee fields, so it does not use CheckEvmCommon;
+    // it gates on EVM activation + version + amount validity directly.
+    if (!IsEvmActive(pindexPrev)) {
+        return state.DoS(10, false, REJECT_INVALID, "evm-not-activated");
+    }
+    if (payload.nVersion != EVM_TX_PAYLOAD_VERSION) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-evm-tx-version");
+    }
+    if (payload.amount == 0) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-evm-fund-amount");
+    }
+    // Must round-trip losslessly against the satoshi amount removed from
+    // the UTXO side (consensus accounting is in satoshis).
+    if (payload.amount % kWeisPerSatoshi != 0) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-evm-fund-precision");
     }
     return true;
 }

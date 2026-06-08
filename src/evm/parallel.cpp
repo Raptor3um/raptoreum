@@ -37,6 +37,7 @@ struct PreflightedTx
     CEvmDeployTx deployPayload;
     CEvmCallTx callPayload;
     CEvmSpendTx spendPayload;
+    CEvmFundTx fundPayload;
 };
 
 uint64_t BaseFeeUint64(const uint256& baseFee)
@@ -82,6 +83,8 @@ PreflightedTx PreflightOne(const CTransaction& tx, int blockIndex)
         if (GetTxPayload(tx, out.callPayload)) out.deserOk = true;
     } else if (tx.nType == TRANSACTION_EVM_SPEND) {
         if (GetTxPayload(tx, out.spendPayload)) out.deserOk = true;
+    } else if (tx.nType == TRANSACTION_EVM_FUND) {
+        if (GetTxPayload(tx, out.fundPayload)) out.deserOk = true;
     } else {
         // Caller filters out non-EVM txs before queuing — defensive.
         out.deserOk = false;
@@ -106,7 +109,7 @@ BlockProcessResult ParallelProcessEvmTransactionsInBlock(
     for (size_t i = 0; i < block.vtx.size(); ++i) {
         const int t = block.vtx[i]->nType;
         if (t == TRANSACTION_EVM_DEPLOY || t == TRANSACTION_EVM_CALL ||
-            t == TRANSACTION_EVM_SPEND)
+            t == TRANSACTION_EVM_SPEND || t == TRANSACTION_EVM_FUND)
         {
             evmIndices.push_back(static_cast<int>(i));
         }
@@ -163,13 +166,15 @@ BlockProcessResult ParallelProcessEvmTransactionsInBlock(
             const auto ctx = PerTxContext(contextTemplate,
                                           p.senderHash, eff);
             result = ProcessEvmCallTx(p, cache, ctx);
-        } else { // SPEND
+        } else if (pf.txType == TRANSACTION_EVM_SPEND) {
             const auto& p = pf.spendPayload;
             const uint64_t eff = EffectiveGasPriceForCtx(
                 baseFee, p.maxFeePerGas, p.maxPriorityFeePerGas);
             const auto ctx = PerTxContext(contextTemplate,
                                           p.fromAddress, eff);
             result = ProcessEvmSpendTx(p, cache, ctx);
+        } else { // FUND — no gas/fee, no EVM sender
+            result = ProcessEvmFundTx(pf.fundPayload, cache, contextTemplate);
         }
 
         if (result.preflightFailed) {

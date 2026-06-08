@@ -226,6 +226,39 @@ BOOST_AUTO_TEST_CASE(spend_tx_via_vextrapayload)
 }
 
 // ----------------------------------------------------------------------------
+// CEvmFundTx round-trip (UTXO -> EVM funding bridge)
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(fund_tx_round_trip)
+{
+    evm::CEvmFundTx in;
+    in.nVersion = evm::EVM_TX_PAYLOAD_VERSION;
+    in.toAddress = uint256S("0x000000000000000000000000dddddddddddddddddddddddddddddddddddddddd");
+    in.amount = 7'000'000'000ULL;
+
+    evm::CEvmFundTx out = RoundTrip(in);
+
+    BOOST_CHECK_EQUAL(out.nVersion, in.nVersion);
+    BOOST_CHECK(out.toAddress == in.toAddress);
+    BOOST_CHECK_EQUAL(out.amount, in.amount);
+}
+
+BOOST_AUTO_TEST_CASE(fund_tx_via_vextrapayload)
+{
+    evm::CEvmFundTx in;
+    in.nVersion = evm::EVM_TX_PAYLOAD_VERSION;
+    in.toAddress = uint256S("0x000000000000000000000000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+    in.amount = 10'000'000'000ULL; // 1 satoshi worth of weis
+
+    CTransaction tx = MakeTxWithPayload(TRANSACTION_EVM_FUND, in);
+
+    evm::CEvmFundTx out;
+    BOOST_REQUIRE(GetTxPayload(tx, out));
+    BOOST_CHECK(out.toAddress == in.toAddress);
+    BOOST_CHECK_EQUAL(out.amount, in.amount);
+}
+
+// ----------------------------------------------------------------------------
 // Defaults and limit constants
 // ----------------------------------------------------------------------------
 
@@ -259,6 +292,7 @@ BOOST_AUTO_TEST_CASE(tx_type_values_stable)
     BOOST_CHECK_EQUAL(TRANSACTION_EVM_DEPLOY, 11);
     BOOST_CHECK_EQUAL(TRANSACTION_EVM_CALL, 12);
     BOOST_CHECK_EQUAL(TRANSACTION_EVM_SPEND, 13);
+    BOOST_CHECK_EQUAL(TRANSACTION_EVM_FUND, 19);
 }
 
 // ----------------------------------------------------------------------------

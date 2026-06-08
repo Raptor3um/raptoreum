@@ -9,15 +9,19 @@
 #include <evm/host.h>
 #include <evm/process.h>
 
+#include <uint256.h>
+
 #include <cstdint>
 #include <vector>
 
 class CBlock;
 class CBlockIndex;
+namespace Consensus { struct Params; }
 
 namespace evm {
 
 class CEvmStateCache;
+class CEvmStateDB;
 
 /**
  * Aggregate outcome of processing all EVM-typed transactions in a single
@@ -123,6 +127,37 @@ bool CheckCoinbaseRealisesSpendCredits(
     const std::vector<ApplyResult::UtxoCredit>& credits,
     const CTransaction& coinbase,
     CAmount& total);
+
+/**
+ * D2 — the five EVM consensus values a v3 coinbase commits, computed
+ * over a fully-assembled block. Single source of truth shared by the
+ * miner (CreateNewBlock) and the test harness (CreateBlock) so a
+ * coinbase is always built over the SAME block the validator will
+ * re-execute — miner output == validator recompute.
+ */
+struct EvmCoinbaseCommitment
+{
+    bool ok{false};
+    uint256 stateRoot;
+    uint256 receiptsRoot;
+    uint64_t baseFee{0};
+    uint64_t gasUsed{0};
+    uint64_t execTime{0};
+    uint64_t totalCoinbaseTip{0};  // weis (caller converts to sat)
+};
+
+/**
+ * Compute the v3 EVM coinbase commitment for `block` built on
+ * `pindexPrev`, executing the block's EVM txs against a THROWAWAY
+ * cache over `db` (never flushed). Derives execTime = max(parent MTP
+ * + 1, block.nTime), the EIP-1559 base fee from the parent's
+ * committed value, and the state/receipts roots + gas used + tip from
+ * a deterministic ProcessEvmTransactionsInBlock pass. `ok=false` if
+ * the EVM pass fails (the block cannot be built/validated).
+ */
+EvmCoinbaseCommitment ComputeCoinbaseEvmCommitment(
+    const CBlock& block, const CBlockIndex* pindexPrev,
+    CEvmStateDB& db, const Consensus::Params& consensus);
 
 } // namespace evm
 

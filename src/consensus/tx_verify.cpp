@@ -19,6 +19,8 @@
 #include <timedata.h>
 #include <assets/assets.h>
 #include <assets/assetstype.h>
+#include <evm/apply.h>   // kWeisPerSatoshi
+#include <evm/evmtx.h>   // CEvmFundTx
 
 // TODO remove the following dependencies
 #include <chain.h>
@@ -106,6 +108,31 @@ checkSpecialTxFee(const CTransaction &tx, CAmount &nFeeTotal, CAmount &specialTx
             // (mempool, block validation, RPC). Ensuring the activation gate
             // is checked at every entry point means a future refactor that
             // bypasses CheckSpecialTx still cannot accept an EVM tx pre-fork.
+            // EVM_FUND (AAL: UTXO -> EVM funding). The funded amount must
+            // LEAVE the UTXO money supply WITHOUT being claimable by the
+            // coinbase: it reappears as EVM balance (ApplyEvmFundTx). So,
+            // unlike the asset/future fees above, it is subtracted from the
+            // miner-claimable fee but NOT returned via specialTxFee (which
+            // is added to the coinbase value allowance in ConnectBlock).
+            // Leaving specialTxFee at 0 ensures the miner cannot claim it;
+            // CheckTxInputs' `txfee < 0` guard then enforces that the
+            // inputs cover (fund amount + a non-negative miner fee).
+            case TRANSACTION_EVM_FUND: {
+                if (!Updates().IsEvmActive(::ChainActive().Tip())) {
+                    return false;
+                }
+                evm::CEvmFundTx fund;
+                if (GetTxPayload(tx.vExtraPayload, fund)) {
+                    if (fund.amount % evm::kWeisPerSatoshi != 0) {
+                        return false;  // non-round amount cannot settle
+                    }
+                    const CAmount fundSat = static_cast<CAmount>(
+                        fund.amount / evm::kWeisPerSatoshi);
+                    nFeeTotal -= fundSat;  // removed from UTXO supply
+                    // specialTxFee deliberately left 0 (not coinbase-claimable).
+                }
+                break;
+            }
             case TRANSACTION_EVM_DEPLOY:
             case TRANSACTION_EVM_CALL:
             case TRANSACTION_EVM_SPEND:

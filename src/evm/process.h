@@ -127,6 +127,22 @@ ProcessResult ProcessEvmSpendTx(const CEvmSpendTx& payload,
                                 CEvmStateCache& cache,
                                 const ExecutionContext& context);
 
+/**
+ * Process a CEvmFundTx (AAL: UTXO -> EVM funding).
+ *
+ * FUND is funded by the transaction's UTXO inputs, not by an EVM
+ * account, so it has NO gas/EIP-1559 pre-flight and NO fee split: it
+ * simply credits the destination EVM account (ApplyEvmFundTx) under a
+ * snapshot. A failure (unreachable for a tx that passed CheckEvmFundTx
+ * — precision is pre-validated, overflow is impossible for real
+ * amounts) is reported as preflightFailed so ConnectBlock rejects the
+ * block. The UTXO-side accounting (removing the funded amount from the
+ * miner-claimable fee) lives in checkSpecialTxFee.
+ */
+ProcessResult ProcessEvmFundTx(const CEvmFundTx& payload,
+                               CEvmStateCache& cache,
+                               const ExecutionContext& context);
+
 // ---------------------------------------------------------------------
 // EIP-1559 base-fee adjustment (D2).
 // ---------------------------------------------------------------------
