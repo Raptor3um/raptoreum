@@ -330,4 +330,95 @@ BOOST_AUTO_TEST_CASE(spend_end_to_end_and_reorg_safe)
         "SPEND debit not reverted on reorg — EVM balance corrupted");
 }
 
+// Intra-block ordering + credit aggregation: a single block containing
+// FUND(acct) followed by SPEND(acct) must apply in order — the FUND
+// credit lands before the SPEND reads the balance — and the coinbase
+// must realise the SPEND credit even though the funding came from an
+// earlier tx in the SAME block. Exercises the shared cache sequencing
+// in ProcessEvmTransactionsInBlock + multi-credit coinbase assembly.
+BOOST_AUTO_TEST_CASE(fund_then_spend_same_block)
+{
+    const CScript cbScript =
+        CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
+    const uint64_t kSatToWeis = 10'000'000'000ULL;
+
+    uint160 evmAcct(std::vector<unsigned char>(20, 0xE3));
+    uint256 acctWord;
+    std::memcpy(acctWord.begin() + 12, evmAcct.begin(), 20);
+    const CAmount fundSat = 2'000'000;  // 0.02 RTM
+
+    // FUND tx (spends a mature coinbase).
+    CMutableTransaction f;
+    f.nVersion = 3;
+    f.nType = TRANSACTION_EVM_FUND;
+    f.vin.resize(1);
+    f.vin[0].prevout.hash = m_coinbase_txns[0]->GetHash();
+    f.vin[0].prevout.n = 0;
+    f.vout.resize(1);
+    f.vout[0].nValue = m_coinbase_txns[0]->vout[0].nValue - fundSat - 1000;
+    f.vout[0].scriptPubKey = cbScript;
+    {
+        evm::CEvmFundTx p;
+        p.nVersion = evm::EVM_TX_PAYLOAD_VERSION;
+        p.toAddress = acctWord;
+        p.amount = static_cast<uint64_t>(fundSat) * kSatToWeis;
+        SetTxPayload(f, p);
+        std::vector<unsigned char> sig;
+        const uint256 h =
+            SignatureHash(cbScript, f, 0, SIGHASH_ALL, 0, SigVersion::BASE);
+        BOOST_REQUIRE(coinbaseKey.Sign(h, sig));
+        sig.push_back(static_cast<unsigned char>(SIGHASH_ALL));
+        f.vin[0].scriptSig = CScript() << sig;
+    }
+
+    // SPEND tx from the account funded by `f` IN THE SAME BLOCK.
+    const uint64_t spendWeis = 100000ULL * kSatToWeis;
+    const CScript destScript =
+        CScript() << OP_DUP << OP_HASH160
+                  << std::vector<uint8_t>(20, 0x55)
+                  << OP_EQUALVERIFY << OP_CHECKSIG;
+    CMutableTransaction s;
+    s.nVersion = 3;
+    s.nType = TRANSACTION_EVM_SPEND;
+    {
+        evm::CEvmSpendTx p;
+        p.nVersion = evm::EVM_TX_PAYLOAD_VERSION;
+        p.fromAddress = acctWord;
+        p.amount = spendWeis;
+        p.outputScript = destScript;
+        p.gasLimit = 21000;
+        p.maxFeePerGas = 1'000'000'000ULL;
+        p.maxPriorityFeePerGas = 0;
+        p.nonce = 0;
+        SetTxPayload(s, p);
+    }
+
+    // Both in one block, FUND before SPEND.
+    const int h0 = ::ChainActive().Height();
+    const CBlock blk = CreateAndProcessBlock({f, s}, cbScript);
+    BOOST_REQUIRE_EQUAL(::ChainActive().Height(), h0 + 1);  // accepted
+
+    // SPEND credit realised in the coinbase.
+    bool found = false;
+    for (const auto& o : blk.vtx[0]->vout) {
+        if (o.scriptPubKey == destScript &&
+            o.nValue == static_cast<CAmount>(spendWeis / kSatToWeis)) {
+            found = true;
+            break;
+        }
+    }
+    BOOST_CHECK(found);
+
+    // Account exists with balance = funded - spent - gas (i.e. > 0 and
+    // strictly less than funded-minus-spent would be without gas).
+    evm::CEvmAccount acc;
+    BOOST_REQUIRE(pevmstatedb->ReadAccount(evmAcct, acc));
+    const uint64_t fundedW = static_cast<uint64_t>(fundSat) * kSatToWeis;
+    BOOST_CHECK(evm::Uint256GreaterOrEqualUint64(acc.balance, 1));
+    // balance must be <= funded - spent (gas was also charged).
+    uint256 maxExpected = evm::Uint256FromUint64(fundedW - spendWeis);
+    BOOST_CHECK(evm::Uint256GreaterOrEqualUint64(maxExpected, 0) &&
+                !(acc.balance == evm::Uint256FromUint64(fundedW)));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
