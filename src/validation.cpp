@@ -408,7 +408,13 @@ ContextualCheckTransaction(const CTransaction &tx, CValidationState &state, cons
                 tx.nType != TRANSACTION_EVM_DEPLOY &&
                 tx.nType != TRANSACTION_EVM_CALL &&
                 tx.nType != TRANSACTION_EVM_SPEND &&
-                tx.nType != TRANSACTION_EVM_FUND) {
+                tx.nType != TRANSACTION_EVM_FUND &&
+                // D4 Smart-Asset mirror bridge (UTXO <-> EVM ledger). The
+                // UTXO-side burn/mint is validated in CheckWrapAssetTx /
+                // CheckUnwrapAssetTx; the EVM-side credit/debit runs in
+                // ProcessEvm*Tx during ConnectBlock.
+                tx.nType != TRANSACTION_WRAP_ASSET &&
+                tx.nType != TRANSACTION_UNWRAP_ASSET) {
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
             }
             if (tx.IsCoinBase() && tx.nType != TRANSACTION_COINBASE)

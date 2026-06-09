@@ -440,6 +440,50 @@ ProcessResult ProcessEvmFundTx(const CEvmFundTx& payload,
     return out;
 }
 
+ProcessResult ProcessEvmWrapAssetTx(const CWrapAssetTx& payload,
+                                    CEvmStateCache& cache,
+                                    const ExecutionContext& context)
+{
+    const int snap = cache.Snapshot();
+    ApplyResult inner = ApplyWrapAssetTx(payload, cache, context);
+    ProcessResult out;
+    if (inner.statusCode != EVMC_SUCCESS) {
+        // Unreachable for a tx that passed CheckWrapAssetTx (overflow only).
+        // Block-invalidating: the UTXO burn already removed the units.
+        cache.Revert(snap);
+        out.preflightFailed = true;
+        return out;
+    }
+    cache.Commit(snap);
+    out.apply = std::move(inner);
+    out.preflightFailed = false;
+    // No fee: WRAP executes no EVM code.
+    return out;
+}
+
+ProcessResult ProcessEvmUnwrapAssetTx(const CUnwrapAssetTx& payload,
+                                      CEvmStateCache& cache,
+                                      const ExecutionContext& context)
+{
+    const int snap = cache.Snapshot();
+    ApplyResult inner = ApplyUnwrapAssetTx(payload, cache, context);
+    ProcessResult out;
+    if (inner.statusCode != EVMC_SUCCESS) {
+        // The sender does not hold enough wrapped units. The UTXO-side mint
+        // was already validated structurally, so the only safe action is to
+        // reject the whole block — the mint must never stand without its
+        // matching EVM-side burn.
+        cache.Revert(snap);
+        out.preflightFailed = true;
+        return out;
+    }
+    cache.Commit(snap);
+    out.apply = std::move(inner);
+    out.preflightFailed = false;
+    // No fee: UNWRAP executes no EVM code.
+    return out;
+}
+
 uint64_t ComputeNextBaseFee(uint64_t parentBaseFee,
                             uint64_t parentGasUsed,
                             uint64_t parentGasLimit)

@@ -4,13 +4,20 @@
 
 #include <evm/evmtx.h>
 
+#include <assets/assets.h>
+#include <assets/assetstype.h>
 #include <chain.h>
 #include <chainparams.h>
+#include <coins.h>
 #include <consensus/validation.h>
 #include <evm/apply.h>   // kWeisPerSatoshi
 #include <evo/specialtx.h>
 #include <tinyformat.h>
 #include <update/update.h>
+
+#include <map>
+#include <set>
+#include <string>
 
 namespace evm {
 
@@ -54,6 +61,22 @@ std::string CEvmFundTx::ToString() const
         nVersion, toAddress.ToString().substr(0, 8) + "..", amount);
 }
 
+std::string CWrapAssetTx::ToString() const
+{
+    return strprintf(
+        "CWrapAssetTx(nVersion=%u, assetId=%s, evmRecipient=%s, amount=%u)",
+        nVersion, assetId.substr(0, 12), evmRecipient.ToString().substr(0, 8) + "..",
+        amount);
+}
+
+std::string CUnwrapAssetTx::ToString() const
+{
+    return strprintf(
+        "CUnwrapAssetTx(nVersion=%u, assetId=%s, evmSender=%s, amount=%u)",
+        nVersion, assetId.substr(0, 12), evmSender.ToString().substr(0, 8) + "..",
+        amount);
+}
+
 // ----------------------------------------------------------------------------
 // Validation entry points (Phase 1: structure-only + hard reject).
 // ----------------------------------------------------------------------------
@@ -94,6 +117,65 @@ namespace {
 bool IsEvmActive(const CBlockIndex* pindexPrev)
 {
     return Updates().IsEvmActive(pindexPrev);
+}
+
+// Sum per-assetId base-unit amounts across a tx's asset INPUTS (read from
+// the spent coins in `view`) and asset OUTPUTS (tx.vout). Standalone mirror
+// of the accounting in tx_verify.cpp::checkOutput, so wrap/unwrap can
+// re-impose a constrained conservation while being exempt from the global
+// checkAssetsOutputs rule.
+void GatherAssetDeltas(const CTransaction& tx, const CCoinsViewCache& view,
+                       std::map<std::string, CAmount>& vinSum,
+                       std::map<std::string, CAmount>& voutSum)
+{
+    for (const auto& in : tx.vin) {
+        const Coin& coin = view.AccessCoin(in.prevout);
+        if (coin.IsSpent()) continue;
+        if (!coin.out.scriptPubKey.IsAssetScript()) continue;
+        CAssetTransfer t;
+        if (!GetTransferAsset(coin.out.scriptPubKey, t)) continue;
+        vinSum[t.assetId] += t.nAmount;
+    }
+    for (const auto& out : tx.vout) {
+        if (!out.scriptPubKey.IsAssetScript()) continue;
+        CAssetTransfer t;
+        if (!GetTransferAsset(out.scriptPubKey, t)) continue;
+        voutSum[t.assetId] += t.nAmount;
+    }
+}
+
+// Re-impose a CONSTRAINED asset conservation: exactly `assetId` may have a
+// net (vout - vin) delta of `expectedDelta`, and EVERY other asset touched
+// by the tx must be balanced (vin == vout). For wrap, expectedDelta is
+// negative (units burned from the UTXO side); for unwrap, positive (units
+// minted back). This is what keeps the checkAssetsOutputs exemption from
+// being abused to mint/burn arbitrary assets.
+bool CheckConstrainedAssetDelta(const CTransaction& tx, const CCoinsViewCache& view,
+                                CValidationState& state, const std::string& assetId,
+                                CAmount expectedDelta, const char* rejectReason)
+{
+    std::map<std::string, CAmount> vinSum, voutSum;
+    GatherAssetDeltas(tx, view, vinSum, voutSum);
+
+    std::set<std::string> ids;
+    for (const auto& kv : vinSum) ids.insert(kv.first);
+    for (const auto& kv : voutSum) ids.insert(kv.first);
+
+    for (const auto& id : ids) {
+        const CAmount vin = vinSum.count(id) ? vinSum.at(id) : 0;
+        const CAmount vout = voutSum.count(id) ? voutSum.at(id) : 0;
+        const CAmount delta = vout - vin;
+        const CAmount want = (id == assetId) ? expectedDelta : 0;
+        if (delta != want) {
+            return state.DoS(100, false, REJECT_INVALID, rejectReason);
+        }
+    }
+    // If the target asset never appeared in the tx at all, its delta is 0,
+    // which only satisfies a zero expectation.
+    if (!ids.count(assetId) && expectedDelta != 0) {
+        return state.DoS(100, false, REJECT_INVALID, rejectReason);
+    }
+    return true;
 }
 
 /** Common Phase-1 structural checks shared by all three EVM tx types. */
@@ -207,6 +289,77 @@ bool CheckEvmFundTx(const CTransaction& tx,
     // the UTXO side (consensus accounting is in satoshis).
     if (payload.amount % kWeisPerSatoshi != 0) {
         return state.DoS(100, false, REJECT_INVALID, "bad-evm-fund-precision");
+    }
+    return true;
+}
+
+bool CheckWrapAssetTx(const CTransaction& tx,
+                      const CBlockIndex* pindexPrev,
+                      CValidationState& state,
+                      const CCoinsViewCache& view,
+                      CAssetsCache* assetsCache)
+{
+    CWrapAssetTx payload;
+    if (!GetTxPayload(tx, payload)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-evm-wrap-payload");
+    }
+    if (!IsEvmActive(pindexPrev)) {
+        return state.DoS(10, false, REJECT_INVALID, "evm-not-activated");
+    }
+    if (payload.nVersion != EVM_TX_PAYLOAD_VERSION) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-evm-tx-version");
+    }
+    if (payload.amount == 0 || !MoneyRange(static_cast<CAmount>(payload.amount))) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-evm-wrap-amount");
+    }
+    CAssetMetaData meta;
+    if (payload.assetId.empty() || assetsCache == nullptr ||
+        !assetsCache->GetAssetMetaData(payload.assetId, meta)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-evm-wrap-asset");
+    }
+    // The wrapped asset must be burned from the UTXO side by EXACTLY amount
+    // (inputs exceed outputs by amount); no other asset may be perturbed.
+    if (!CheckConstrainedAssetDelta(tx, view, state, payload.assetId,
+                                    -static_cast<CAmount>(payload.amount),
+                                    "bad-evm-wrap-delta")) {
+        return false;
+    }
+    return true;
+}
+
+bool CheckUnwrapAssetTx(const CTransaction& tx,
+                        const CBlockIndex* pindexPrev,
+                        CValidationState& state,
+                        const CCoinsViewCache& view,
+                        CAssetsCache* assetsCache)
+{
+    CUnwrapAssetTx payload;
+    if (!GetTxPayload(tx, payload)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-evm-unwrap-payload");
+    }
+    if (!IsEvmActive(pindexPrev)) {
+        return state.DoS(10, false, REJECT_INVALID, "evm-not-activated");
+    }
+    if (payload.nVersion != EVM_TX_PAYLOAD_VERSION) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-evm-tx-version");
+    }
+    if (payload.amount == 0 || !MoneyRange(static_cast<CAmount>(payload.amount))) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-evm-unwrap-amount");
+    }
+    CAssetMetaData meta;
+    if (payload.assetId.empty() || assetsCache == nullptr ||
+        !assetsCache->GetAssetMetaData(payload.assetId, meta)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-evm-unwrap-asset");
+    }
+    // The unwrapped asset must be minted onto the UTXO side by EXACTLY
+    // amount (outputs exceed inputs by amount); no other asset perturbed.
+    // The EVM-side debit that backs this mint (proving the sender holds the
+    // wrapped units) is enforced in ApplyUnwrapAssetTx at ConnectBlock: a
+    // shortfall rejects the whole block, so the mint can never stand alone.
+    if (!CheckConstrainedAssetDelta(tx, view, state, payload.assetId,
+                                    static_cast<CAmount>(payload.amount),
+                                    "bad-evm-unwrap-delta")) {
+        return false;
     }
     return true;
 }

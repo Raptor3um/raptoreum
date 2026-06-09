@@ -92,7 +92,9 @@ BlockProcessResult ProcessEvmTransactionsInBlock(
         if (txType != TRANSACTION_EVM_DEPLOY &&
             txType != TRANSACTION_EVM_CALL &&
             txType != TRANSACTION_EVM_SPEND &&
-            txType != TRANSACTION_EVM_FUND) {
+            txType != TRANSACTION_EVM_FUND &&
+            txType != TRANSACTION_WRAP_ASSET &&
+            txType != TRANSACTION_UNWRAP_ASSET) {
             continue; // not an EVM tx — caller handles it via UpdateCoins etc.
         }
 
@@ -133,7 +135,7 @@ BlockProcessResult ProcessEvmTransactionsInBlock(
             const auto perTxCtx = PerTxContext(contextTemplate,
                                               payload.fromAddress, effective);
             result = ProcessEvmSpendTx(payload, cache, perTxCtx);
-        } else { // TRANSACTION_EVM_FUND
+        } else if (txType == TRANSACTION_EVM_FUND) {
             CEvmFundTx payload;
             if (!GetTxPayload(tx, payload)) {
                 out.ok = false;
@@ -144,6 +146,24 @@ BlockProcessResult ProcessEvmTransactionsInBlock(
             // execution context's per-tx fields are unused. Pass the
             // block template ctx straight through.
             result = ProcessEvmFundTx(payload, cache, contextTemplate);
+        } else if (txType == TRANSACTION_WRAP_ASSET) {
+            CWrapAssetTx payload;
+            if (!GetTxPayload(tx, payload)) {
+                out.ok = false;
+                out.failedTxIndex = static_cast<int>(i);
+                return out;
+            }
+            // WRAP/UNWRAP carry no gas/fee fields and no EVM sender; the
+            // per-tx ctx fields are unused, like FUND.
+            result = ProcessEvmWrapAssetTx(payload, cache, contextTemplate);
+        } else { // TRANSACTION_UNWRAP_ASSET
+            CUnwrapAssetTx payload;
+            if (!GetTxPayload(tx, payload)) {
+                out.ok = false;
+                out.failedTxIndex = static_cast<int>(i);
+                return out;
+            }
+            result = ProcessEvmUnwrapAssetTx(payload, cache, contextTemplate);
         }
 
         if (result.preflightFailed) {

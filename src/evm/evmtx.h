@@ -16,6 +16,8 @@
 
 class CBlockIndex;
 class CValidationState;
+class CCoinsViewCache;
+class CAssetsCache;
 
 /**
  * Payload structures for EVM transaction types (Phase 1 scaffolding).
@@ -245,6 +247,90 @@ struct CEvmFundTx
     std::string ToString() const;
 };
 
+/**
+ * Payload for TRANSACTION_WRAP_ASSET (D4 Smart-Asset mirror, UTXO -> EVM).
+ *
+ * Moves `amount` base units of a Smart Asset from the UTXO side to the
+ * EVM-side ERC-20 ledger of that asset (credited to `evmRecipient`). The
+ * transaction spends the user's asset UTXOs and re-outputs `amount` FEWER
+ * units than it consumes — the difference is the wrapped amount, removed
+ * from the UTXO supply of the asset. Like MINT, the wrap tx is exempt from
+ * the per-tx asset input==output conservation rule (checkAssetsOutputs);
+ * CheckWrapAssetTx re-imposes a CONSTRAINED conservation instead: for the
+ * wrapped assetId, sum(asset inputs) - sum(asset outputs) == amount, and
+ * for every OTHER assetId, inputs == outputs (nothing else may be created
+ * or destroyed). The EVM-side credit happens in ApplyWrapAssetTx during
+ * ConnectBlock and is reverted by the EVM reorg undo journal; the UTXO-side
+ * burn is reverted by the normal input-restore path. Supply-conserving:
+ *   sum(UTXO asset balances) + EVM wrappedSupply == circulatingSupply.
+ *
+ * WRAP executes no EVM code, so it carries no gas / fee-rate fields.
+ */
+struct CWrapAssetTx
+{
+    uint16_t nVersion{EVM_TX_PAYLOAD_VERSION};
+
+    /** The Smart Asset being wrapped (assetId == creation tx hash string). */
+    std::string assetId;
+
+    /** Destination EVM account credited in the ERC-20 ledger (low 160 bits). */
+    uint256 evmRecipient;
+
+    /** Base units to wrap. Must equal the asset in/out delta of `assetId`. */
+    uint64_t amount{0};
+
+    SERIALIZE_METHODS(CWrapAssetTx, obj)
+    {
+        READWRITE(obj.nVersion);
+        READWRITE(obj.assetId);
+        READWRITE(obj.evmRecipient);
+        READWRITE(obj.amount);
+    }
+
+    std::string ToString() const;
+};
+
+/**
+ * Payload for TRANSACTION_UNWRAP_ASSET (D4 Smart-Asset mirror, EVM -> UTXO).
+ *
+ * The reverse of wrap: debits `amount` base units from `evmSender` in the
+ * asset's EVM-side ERC-20 ledger (and reduces wrappedSupply), then mints
+ * `amount` units back onto the UTXO side as ordinary asset-transfer
+ * outputs. Like MINT, the unwrap tx is exempt from the conservation rule;
+ * CheckUnwrapAssetTx re-imposes the mirror constraint: for `assetId`,
+ * sum(asset outputs) - sum(asset inputs) == amount, and every OTHER assetId
+ * is balanced. The EVM-side debit (which proves the sender holds the wrapped
+ * units) happens in ApplyUnwrapAssetTx during ConnectBlock; if it fails the
+ * whole block is rejected, so the minted UTXO output can never exist without
+ * a matching EVM burn. Reorg-safe via the EVM undo journal + UTXO output
+ * removal. Supply-conserving against the same invariant as wrap.
+ *
+ * UNWRAP executes no EVM code, so it carries no gas / fee-rate fields.
+ */
+struct CUnwrapAssetTx
+{
+    uint16_t nVersion{EVM_TX_PAYLOAD_VERSION};
+
+    /** The Smart Asset being unwrapped. */
+    std::string assetId;
+
+    /** Source EVM account debited in the ERC-20 ledger (low 160 bits). */
+    uint256 evmSender;
+
+    /** Base units to unwrap. Must equal the asset out/in delta of `assetId`. */
+    uint64_t amount{0};
+
+    SERIALIZE_METHODS(CUnwrapAssetTx, obj)
+    {
+        READWRITE(obj.nVersion);
+        READWRITE(obj.assetId);
+        READWRITE(obj.evmSender);
+        READWRITE(obj.amount);
+    }
+
+    std::string ToString() const;
+};
+
 // ----------------------------------------------------------------------------
 // Validation entry points (Phase 1: structure-only).
 // ----------------------------------------------------------------------------
@@ -279,6 +365,21 @@ bool CheckEvmSpendTx(const CTransaction& tx,
 bool CheckEvmFundTx(const CTransaction& tx,
                     const CBlockIndex* pindexPrev,
                     CValidationState& state);
+
+// Wrap/unwrap need the UTXO view (to sum asset inputs) and the asset cache
+// (to verify the assetId exists). They re-impose a constrained asset
+// conservation since the txs are exempt from checkAssetsOutputs.
+bool CheckWrapAssetTx(const CTransaction& tx,
+                      const CBlockIndex* pindexPrev,
+                      CValidationState& state,
+                      const CCoinsViewCache& view,
+                      CAssetsCache* assetsCache);
+
+bool CheckUnwrapAssetTx(const CTransaction& tx,
+                        const CBlockIndex* pindexPrev,
+                        CValidationState& state,
+                        const CCoinsViewCache& view,
+                        CAssetsCache* assetsCache);
 
 } // namespace evm
 

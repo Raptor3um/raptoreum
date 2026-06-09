@@ -433,7 +433,17 @@ bool Consensus::CheckTxInputs(const CTransaction &tx, CValidationState &state, c
             return false;
     }
 
-    if (tx.nType != TRANSACTION_MINT_ASSET) {
+    // MINT creates units (outputs without inputs); WRAP burns units to the
+    // EVM ledger (inputs exceed outputs by the wrapped amount); UNWRAP mints
+    // units back from the EVM ledger (outputs exceed inputs). All three are
+    // exempt from the strict per-tx input==output asset conservation here.
+    // The exempted txs each re-impose a CONSTRAINED conservation in their
+    // own CheckSpecialTx handler (CheckWrapAssetTx / CheckUnwrapAssetTx /
+    // CheckMintAssetTx) so the exemption cannot be abused to create or
+    // destroy arbitrary assets.
+    if (tx.nType != TRANSACTION_MINT_ASSET &&
+        tx.nType != TRANSACTION_WRAP_ASSET &&
+        tx.nType != TRANSACTION_UNWRAP_ASSET) {
         if (!checkAssetsOutputs(state, nAssetVin, nAssetVout, mapVinIds, mapVoutIds))
             return false;
     }

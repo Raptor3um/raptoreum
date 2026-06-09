@@ -5,6 +5,7 @@
 #include <evm/apply.h>
 
 #include <evm/account.h>
+#include <evm/asset_ledger.h>
 #include <evm/balance.h>
 #include <evm/hashing.h>
 #include <evm/precompiles_eth.h>
@@ -638,6 +639,67 @@ ApplyResult ApplyEvmFundTx(const CEvmFundTx& payload,
 
     out.statusCode = EVMC_SUCCESS;
     out.gasUsed = 0;  // FUND executes no EVM code
+    return out;
+}
+
+// ----------------------------------------------------------------------
+// D4 Smart-Asset mirror — ApplyWrapAssetTx / ApplyUnwrapAssetTx
+// ----------------------------------------------------------------------
+
+ApplyResult ApplyWrapAssetTx(const CWrapAssetTx& payload,
+                             CEvmStateCache& cache,
+                             const ExecutionContext& /*context*/)
+{
+    ApplyResult out;
+
+    if (payload.amount == 0 || payload.assetId.empty()) {
+        out.statusCode = EVMC_FAILURE;
+        return out;
+    }
+
+    // Credit the wrapped units to the recipient's EVM-side ERC-20 ledger
+    // (balanceOf += amount, wrappedSupply += amount). The UTXO-side burn
+    // of the same amount was validated in CheckWrapAssetTx.
+    uint160 holder;
+    std::memcpy(holder.begin(), payload.evmRecipient.begin() + 12, 20);
+
+    if (!CreditAssetLedger(cache, payload.assetId, holder, payload.amount)) {
+        // uint64 overflow of the wrapped balance/supply — unreachable for
+        // any real asset supply; refuse rather than corrupt the mirror.
+        out.statusCode = EVMC_FAILURE;
+        return out;
+    }
+
+    out.statusCode = EVMC_SUCCESS;
+    out.gasUsed = 0;  // WRAP executes no EVM code
+    return out;
+}
+
+ApplyResult ApplyUnwrapAssetTx(const CUnwrapAssetTx& payload,
+                               CEvmStateCache& cache,
+                               const ExecutionContext& /*context*/)
+{
+    ApplyResult out;
+
+    if (payload.amount == 0 || payload.assetId.empty()) {
+        out.statusCode = EVMC_FAILURE;
+        return out;
+    }
+
+    // Debit the wrapped units from the sender's EVM-side ledger. This is
+    // the authorization for the UTXO-side mint: if the sender does not hold
+    // `amount` wrapped units, the debit fails and (via the caller) the whole
+    // block is rejected, so the minted asset output can never stand alone.
+    uint160 holder;
+    std::memcpy(holder.begin(), payload.evmSender.begin() + 12, 20);
+
+    if (!DebitAssetLedger(cache, payload.assetId, holder, payload.amount)) {
+        out.statusCode = EVMC_FAILURE;  // insufficient wrapped balance
+        return out;
+    }
+
+    out.statusCode = EVMC_SUCCESS;
+    out.gasUsed = 0;  // UNWRAP executes no EVM code
     return out;
 }
 

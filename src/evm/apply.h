@@ -241,6 +241,46 @@ ApplyResult ApplyEvmFundTx(const CEvmFundTx& payload,
                            CEvmStateCache& cache,
                            const ExecutionContext& context);
 
+/**
+ * Execute a CWrapAssetTx against the cache (D4 mirror: UTXO -> EVM ledger).
+ *
+ * The UTXO-side burn (asset inputs exceed outputs by payload.amount) is
+ * handled by the normal asset machinery + the conservation exemption; here
+ * we credit the wrapped units to the EVM-side ERC-20 ledger:
+ *
+ *   1. holder = low 160 bits of payload.evmRecipient.
+ *   2. CreditAssetLedger(cache, assetId, holder, amount): balanceOf[holder]
+ *      += amount and wrappedSupply += amount, in the asset's precompile
+ *      storage trie (the exact slots balanceOf()/totalSupply() read).
+ *
+ * No gas, no nonce. Overflow (impossible for real supply) -> EVMC_FAILURE,
+ * which the caller turns into a block-level rejection so the UTXO burn that
+ * already happened can never stand without its EVM credit.
+ */
+ApplyResult ApplyWrapAssetTx(const CWrapAssetTx& payload,
+                             CEvmStateCache& cache,
+                             const ExecutionContext& context);
+
+/**
+ * Execute a CUnwrapAssetTx against the cache (D4 mirror: EVM ledger -> UTXO).
+ *
+ * The inverse of wrap. The UTXO-side mint (asset outputs exceed inputs by
+ * payload.amount) is the spendable result; here we debit the EVM ledger,
+ * which is what PROVES the sender actually holds the wrapped units:
+ *
+ *   1. holder = low 160 bits of payload.evmSender.
+ *   2. DebitAssetLedger(cache, assetId, holder, amount): require
+ *      balanceOf[holder] >= amount and wrappedSupply >= amount, then
+ *      subtract both.
+ *
+ * If the holder's balance (or wrappedSupply) is insufficient, returns
+ * EVMC_FAILURE WITHOUT mutating state; the caller rejects the whole block,
+ * so the minted UTXO output can never exist without a matching EVM burn.
+ */
+ApplyResult ApplyUnwrapAssetTx(const CUnwrapAssetTx& payload,
+                               CEvmStateCache& cache,
+                               const ExecutionContext& context);
+
 } // namespace evm
 
 #endif // RAPTOREUM_EVM_APPLY_H

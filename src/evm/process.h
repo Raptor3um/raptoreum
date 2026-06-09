@@ -143,6 +143,26 @@ ProcessResult ProcessEvmFundTx(const CEvmFundTx& payload,
                                CEvmStateCache& cache,
                                const ExecutionContext& context);
 
+/**
+ * Process a CWrapAssetTx / CUnwrapAssetTx (D4 Smart-Asset mirror).
+ *
+ * Like FUND, these execute no EVM code: no gas, no EIP-1559 pre-flight, no
+ * fee split. They credit (wrap) or debit (unwrap) the asset's EVM-side
+ * ERC-20 ledger under a snapshot via ApplyWrap/UnwrapAssetTx. A failure is
+ * reported as preflightFailed so ConnectBlock rejects the whole block:
+ *   - wrap: balance/supply overflow (unreachable for real supply);
+ *   - unwrap: the sender does not hold enough wrapped units — rejecting the
+ *     block is mandatory, since the UTXO-side mint was already validated and
+ *     must never stand without its matching EVM burn.
+ */
+ProcessResult ProcessEvmWrapAssetTx(const CWrapAssetTx& payload,
+                                    CEvmStateCache& cache,
+                                    const ExecutionContext& context);
+
+ProcessResult ProcessEvmUnwrapAssetTx(const CUnwrapAssetTx& payload,
+                                      CEvmStateCache& cache,
+                                      const ExecutionContext& context);
+
 // ---------------------------------------------------------------------
 // EIP-1559 base-fee adjustment (D2).
 // ---------------------------------------------------------------------

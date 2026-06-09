@@ -41,6 +41,16 @@ bool CheckTransaction(const CTransaction &tx, CValidationState &state, int nHeig
         allowEmptyVin = false;
         allowEmptyVout = true;
     }
+    // WRAP_ASSET burns asset units from REAL asset UTXO inputs into the EVM
+    // ledger, so it MUST have inputs; its outputs (asset/RTM change) are
+    // optional when it wraps its whole input and pays the fee exactly.
+    // Require vin, allow empty vout — same shape as FUND. UNWRAP_ASSET mints
+    // asset outputs (vout non-empty) funded by UTXO fee inputs (vin
+    // non-empty), so the default require-both rule already fits it.
+    if (tx.nType == TRANSACTION_WRAP_ASSET) {
+        allowEmptyVin = false;
+        allowEmptyVout = true;
+    }
 
     // Basic checks that don't depend on any context
     if (!allowEmptyVin && tx.vin.empty())
