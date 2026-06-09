@@ -246,14 +246,22 @@ jobs:
           cd ethereum-tests
           git sparse-checkout set BlockchainTests/GeneralStateTests
 
-      - name: Capa B + reorg fuzz (consensus regression gate)
+      - name: Capa B + reorg fuzz + D4 mirror (consensus regression gate)
         shell: bash
         run: |
           set -euo pipefail
           chmod +x test_raptoreum
+          # Capa B (Cancun fixtures) + reorg fuzz, plus the consensus-critical
+          # EVM-native suites: the D4 Smart-Asset bidirectional mirror
+          # (wrap/unwrap structural delta binding, apply-level credit/debit,
+          # the T-mirror convergence invariants, the ERC-20 ledger surface),
+          # the value bridges (FUND/SPEND), the D2 commitment + CCbTx v3, and
+          # the structural EVM-tx validation. These are hard gates: a
+          # regression in any one blocks the build, not just the Windows
+          # full-suite run.
           EVM_OFFICIAL_TESTS_PATH="$PWD/ethereum-tests/BlockchainTests/GeneralStateTests" \
             ./test_raptoreum \
-              --run_test=evm_official_blockchaintest_tests,evm_reorg_fuzz_tests \
+              --run_test=evm_official_blockchaintest_tests,evm_reorg_fuzz_tests,evm_wrap_consensus_tests,evm_asset_wrap_tests,evm_asset_mirror_convergence_tests,evm_asset_erc20_tests,evm_evmtx_validation_tests,evm_fund_tests,evm_spend_credit_tests,evm_d2_consensus_tests,cbtx_evm_commit_tests \
               --log_level=message 2>&1 | tee evm_consensus_gate.log
           # test_raptoreum's exit code already reflects the baseline
           # gate (non-zero on any unexpected failure); `set -o pipefail`
