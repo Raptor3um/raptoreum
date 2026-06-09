@@ -994,16 +994,43 @@ uint64_t BlockSerializedSize(const CBlock& block)
     return ::GetSerializeSize(block, PROTOCOL_VERSION);
 }
 
+// The Ethereum-facing hash for a transaction. An EVM tx is identified by
+// its ETHEREUM identity so that a block listing, a receipt, and
+// eth_getTransactionByHash all agree (a dApp iterating block txs can look
+// up their receipts): the keccak `ethTxHash` recorded at
+// eth_sendRawTransaction time, or — for EVM txs created by other paths
+// that have no cross-index entry — the forward rtmTxHash (exactly the
+// fallback FormatReceiptForRpc / eth_getTransactionByHash already use).
+// Non-EVM txs keep their RTM txid (reversed display), their canonical id.
+std::string EthFacingTxHash(const CTransaction& tx)
+{
+    const bool isEvm = tx.nType == TRANSACTION_EVM_DEPLOY ||
+                       tx.nType == TRANSACTION_EVM_CALL ||
+                       tx.nType == TRANSACTION_EVM_SPEND ||
+                       tx.nType == TRANSACTION_EVM_FUND ||
+                       tx.nType == TRANSACTION_WRAP_ASSET ||
+                       tx.nType == TRANSACTION_UNWRAP_ASSET;
+    if (!isEvm) {
+        return Uint256ToEthHex(tx.GetHash());
+    }
+    uint256 ethHash;
+    if (pevmstatedb && pevmstatedb->ReadRtmToEthHash(tx.GetHash(), ethHash)) {
+        return ToEthData(ethHash);
+    }
+    return ToEthData(tx.GetHash());  // forward, matches the receipt fallback
+}
+
 // Build the Ethereum-shaped tx object for `eth_getBlockByX` with
-// fullTx=true. Subset of fields — sufficient for MetaMask + most
-// explorers; missing fields default to zero/empty.
+// fullTx=true (also reused by eth_getTransactionByHash). Subset of
+// fields — sufficient for MetaMask + most explorers; missing fields
+// default to zero/empty.
 UniValue FormatTransactionForBlock(const CTransaction& tx,
                                   const uint256& blockHash,
                                   uint64_t blockHeight,
                                   uint64_t txIndex)
 {
     UniValue out(UniValue::VOBJ);
-    out.pushKV("hash", Uint256ToEthHex(tx.GetHash()));
+    out.pushKV("hash", EthFacingTxHash(tx));
     out.pushKV("blockHash", Uint256ToEthHex(blockHash));
     out.pushKV("blockNumber", ToEthQuantity(blockHeight));
     out.pushKV("transactionIndex", ToEthQuantity(txIndex));
@@ -1106,7 +1133,7 @@ UniValue FormatBlock(CBlockIndex* pindex, const CBlock& block, bool fullTx)
                 *block.vtx[i], blockHash,
                 static_cast<uint64_t>(pindex->nHeight), i));
         } else {
-            txs.push_back(Uint256ToEthHex(block.vtx[i]->GetHash()));
+            txs.push_back(EthFacingTxHash(*block.vtx[i]));
         }
     }
     out.pushKV("transactions", txs);
@@ -1701,13 +1728,33 @@ UniValue eth_getTransactionByHash(const JSONRPCRequest& request)
     if (!pevmstatedb->ReadEthToRtmHash(ethHash, rtmHash)) {
         rtmHash = ethHash;
     }
-    // Reuse receipt to extract sender/to/coords. For richer fields
-    // (value/input/gas) the wrapper tx itself would need to be
-    // loaded — a txindex follow-up.
     evm::CEvmReceipt receipt;
     if (!LoadReceiptByRtmHash(rtmHash, receipt)) {
         return UniValue(UniValue::VNULL);
     }
+
+    // Preferred path: load the wrapper tx from its block and project the
+    // FULL Ethereum tx shape (value/input/gas/nonce/maxFeePerGas/...),
+    // identical to the fullTx=true block listing — and with the same
+    // hash convention, so block ↔ receipt ↔ getTransactionByHash agree.
+    {
+        LOCK(cs_main);
+        const auto it = ::BlockIndex().find(receipt.blockHash);
+        if (it != ::BlockIndex().end() && it->second != nullptr) {
+            CBlock block;
+            if (ReadBlockFromDisk(block, it->second, Params().GetConsensus()) &&
+                receipt.txIndex < block.vtx.size() &&
+                block.vtx[receipt.txIndex]) {
+                return FormatTransactionForBlock(*block.vtx[receipt.txIndex],
+                                                 receipt.blockHash,
+                                                 receipt.blockHeight,
+                                                 receipt.txIndex);
+            }
+        }
+    }
+
+    // Fallback (block unreadable / pruned): the receipt-only projection.
+    // sender/to/coords are present; the richer payload fields are absent.
     UniValue out(UniValue::VOBJ);
     out.pushKV("hash", ToEthData(receipt.ethTxHash.IsNull()
                                  ? receipt.rtmTxHash : receipt.ethTxHash));

@@ -222,12 +222,65 @@ BOOST_AUTO_TEST_CASE(fund_then_deploy_then_receipt_by_eth_hash)
     const UniValue ca = find_value(receipt, "contractAddress");
     BOOST_CHECK(ca.isStr() && ca.get_str().rfind("0x", 0) == 0);
 
-    // eth_getTransactionByHash also resolves by the eth hash.
+    // eth_getTransactionByHash also resolves by the eth hash, and now
+    // projects the FULL Ethereum tx shape (FUP-3.4): a contract creation
+    // has to=null, the deploy bytecode as `input`, the gas limit, nonce 0.
     UniValue bp(UniValue::VARR);
     bp.push_back(ethTxHash);
     const UniValue byHash = CallRpc("eth_getTransactionByHash", bp);
     BOOST_REQUIRE(byHash.isObject());
     BOOST_CHECK_EQUAL(find_value(byHash, "hash").get_str(), ethTxHash);
+    BOOST_CHECK_EQUAL(find_value(byHash, "input").get_str(), "0x6005600401");
+    BOOST_CHECK_EQUAL(find_value(byHash, "gas").get_str(), "0x249f0"); // 150000
+    BOOST_CHECK_EQUAL(find_value(byHash, "nonce").get_str(), "0x0");
+    BOOST_CHECK(find_value(byHash, "to").isNull());  // contract creation
+
+    // 5. Cross-reference (FUP-3.7): the SAME eth tx hash must appear in the
+    //    block listing — both the fullTx=true objects and the hash array.
+    //    Before the fix the block emitted the reversed sha256d (and, for
+    //    sendRawTransaction txs, never the keccak hash at all), so a dApp
+    //    iterating block txs could not look up their receipts.
+    const std::string blockHashStr =
+        find_value(receipt, "blockHash").get_str();
+    {
+        UniValue gp(UniValue::VARR);
+        gp.push_back(blockHashStr);
+        gp.push_back(true);  // fullTx
+        const UniValue blk = CallRpc("eth_getBlockByHash", gp);
+        BOOST_REQUIRE(blk.isObject());
+        // baseFeePerGas is present (post-London clients require it).
+        BOOST_CHECK(find_value(blk, "baseFeePerGas").isStr());
+        const UniValue& txObjs = find_value(blk, "transactions");
+        BOOST_REQUIRE(txObjs.isArray());
+        bool foundObj = false;
+        for (size_t i = 0; i < txObjs.size(); ++i) {
+            if (txObjs[i].isObject() &&
+                find_value(txObjs[i], "hash").get_str() == ethTxHash) {
+                foundObj = true;
+                BOOST_CHECK_EQUAL(
+                    find_value(txObjs[i], "input").get_str(), "0x6005600401");
+            }
+        }
+        BOOST_CHECK_MESSAGE(foundObj,
+            "block fullTx listing must carry the eth tx hash (cross-ref)");
+    }
+    {
+        UniValue gp(UniValue::VARR);
+        gp.push_back(blockHashStr);
+        gp.push_back(false);  // hash-only listing
+        const UniValue blk = CallRpc("eth_getBlockByHash", gp);
+        const UniValue& hashes = find_value(blk, "transactions");
+        BOOST_REQUIRE(hashes.isArray());
+        bool foundHash = false;
+        for (size_t i = 0; i < hashes.size(); ++i) {
+            if (hashes[i].isStr() && hashes[i].get_str() == ethTxHash) {
+                foundHash = true;
+                break;
+            }
+        }
+        BOOST_CHECK_MESSAGE(foundHash,
+            "block hash-list must contain the eth tx hash (cross-ref)");
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
