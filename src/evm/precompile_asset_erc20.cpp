@@ -12,6 +12,7 @@
 #include <hash.h>
 #include <validation.h>
 
+#include <array>
 #include <cstring>
 #include <string>
 #include <vector>
@@ -204,26 +205,26 @@ std::vector<uint8_t> ArgsSlice(const std::vector<uint8_t>& input)
 // Collisions in the 12-byte tag are extremely unlikely for the
 // asset population sizes we care about; if a clash ever happens,
 // asset creation registers a longer suffix — a follow-up.)
-std::vector<uint8_t> AddressToAssetTag(const evmc::address& addr)
+std::array<uint8_t, 12> AddressToAssetTag(const evmc::address& addr)
 {
-    return std::vector<uint8_t>(addr.bytes + 8, addr.bytes + 20);
+    std::array<uint8_t, 12> tag{};
+    std::memcpy(tag.data(), addr.bytes + 8, 12);
+    return tag;
 }
 
-// Resolve the precompile address to an assetId via linear scan
-// over passetsCache->mapAsset. Returns "" on miss.
+// Resolve the precompile address to an assetId. Delegates to
+// CAssetsCache::ResolveAssetIdByTag, which uses a self-correcting hint
+// index (O(log N) warm, O(N) cold) whose result is always verified
+// against mapAsset — identical to the former linear scan, just faster.
+// Returns "" on miss.
 std::string ResolveAssetIdFromAddress(const evmc::address& addr)
 {
     if (!passetsCache) return {};
-    const std::vector<uint8_t> tag = AddressToAssetTag(addr);
+    const std::array<uint8_t, 12> tag = AddressToAssetTag(addr);
     LOCK(cs_main);
-    for (const auto& kv : passetsCache->mapAsset) {
-        const std::string& assetId = kv.first;
-        const std::vector<unsigned char> bytes(assetId.begin(), assetId.end());
-        const uint160 h160 = Hash160(bytes);
-        // h160 layout: 20 bytes; we want bytes [8..20) to match the tag.
-        if (std::memcmp(h160.begin() + 8, tag.data(), 12) == 0) {
-            return assetId;
-        }
+    std::string assetId;
+    if (passetsCache->ResolveAssetIdByTag(tag, assetId)) {
+        return assetId;
     }
     return {};
 }
