@@ -79,6 +79,7 @@ BITCOIN_TESTS =\
   test/evm_asset_erc20_tests.cpp \
   test/evm_asset_wrap_tests.cpp \
   test/evm_asset_mirror_convergence_tests.cpp \
+  test/evm_wrap_consensus_tests.cpp \
   test/evm_phase4_precompiles_tests.cpp \
   test/evm_mn_precompile_tests.cpp \
   test/cbtx_evm_commit_tests.cpp \
