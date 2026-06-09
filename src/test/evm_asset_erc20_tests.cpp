@@ -262,7 +262,10 @@ BOOST_FIXTURE_TEST_SUITE(evm_asset_erc20_tests, TestingSetup)
 BOOST_AUTO_TEST_CASE(asset_erc20_read_surface)
 {
     const std::string assetId = "TESTASSETID0001";
-    SeedAsset(assetId, "GOLD", /*decimals=*/8);
+    // Seed with decimalPoint=4 (NOT 8) to lock that the wrapped token
+    // reports 8 decimals regardless of the asset's decimalPoint — the
+    // EVM ledger is COIN-scaled (1e8) for every asset.
+    SeedAsset(assetId, "GOLD", /*decimals=*/4);
 
     evm::CEvmStateDB db(1 << 20, /*fMemory=*/true);
     evm::CEvmStateCache cache(db);
@@ -271,7 +274,7 @@ BOOST_AUTO_TEST_CASE(asset_erc20_read_surface)
     const evmc::address addr = AssetPrecompileAddress(assetId);
     BOOST_REQUIRE(evm::IsPrecompileAddress(addr));
 
-    // decimals() -> 8
+    // decimals() -> 8 (the wrapped-token scale, NOT the asset's decimalPoint=4)
     {
         const evmc::Result r =
             CallAsset(host, addr, Selector(0x313ce567));

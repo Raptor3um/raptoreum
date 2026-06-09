@@ -288,8 +288,17 @@ evmc::Result ExecuteAssetErc20Precompile(CEvmHost& host,
     }
 
     // -- decimals() returns (uint8) ---------------------------------
+    // The wrapped token ALWAYS reports 8 decimals, NOT the asset's
+    // decimalPoint. The EVM-side ledger mirrors the UTXO asset amount in
+    // its native consensus unit `nAmount`, which is COIN-scaled (1e8) for
+    // EVERY asset regardless of decimalPoint (decimalPoint only restricts
+    // which fractional amounts are valid, not the scale). Reporting 8 makes
+    // balanceOf / 10**decimals display the correct whole-unit value in any
+    // ERC-20 client; reporting decimalPoint would mis-scale the display for
+    // any asset whose decimalPoint != 8. The mirror stays exact in base
+    // units either way; this only fixes the human-facing decimal point.
     case kSelDecimals: {
-        AbiWriteUint8(output, meta.decimalPoint);
+        AbiWriteUint8(output, 8);
         return PrecompileSuccess(msg.gas, kPrecompileGasCost, std::move(output));
     }
 
