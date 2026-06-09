@@ -18,10 +18,13 @@
 #include <evm/smoke.h>
 #include <key.h>
 #include <key_io.h>
+#include <evm/process.h>
 #include <evm/state_cache.h>
 #include <evm/state_db.h>
+#include <evo/cbtx.h>
 #include <evo/specialtx.h>
 #include <node/transaction.h>
+#include <update/update.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <rpc/protocol.h>
@@ -39,6 +42,7 @@
 #include <univalue.h>
 
 #include <cstdint>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -183,6 +187,39 @@ std::string BalanceAsEthQuantity(const uint256& balance)
     return "0x" + hex;
 }
 
+// Read the EVM commitment (CCbTx v3) from a block's coinbase. Returns
+// false if the block predates EVM_COMMIT (pre-fork, or a network where
+// EVM_COMMIT is not yet registered), in which case the EVM-derived RPC
+// fields fall back to zero.
+bool ReadEvmCommitment(const CBlock& block, CCbTx& cbOut)
+{
+    if (block.vtx.empty() || !block.vtx[0]) return false;
+    if (!GetTxPayload(*block.vtx[0], cbOut)) return false;
+    return cbOut.nVersion >= CCbTx::EVM_COMMIT_VERSION;
+}
+
+// The base fee a transaction needs to be included in the NEXT block: the
+// EIP-1559 recurrence applied to the tip's committed (baseFee, gasUsed).
+// Zero when EVM_COMMIT is inactive. Used by eth_gasPrice /
+// eth_maxPriorityFeePerGas so wallets size fees against the live market.
+uint64_t NextBlockEvmBaseFeeWei()
+{
+    LOCK(cs_main);
+    const CBlockIndex* tip = ::ChainActive().Tip();
+    if (tip == nullptr || !Updates().IsEvmCommitActive(tip)) return 0;
+    CBlock block;
+    if (!ReadBlockFromDisk(block, tip, Params().GetConsensus())) return 0;
+    CCbTx cb;
+    if (!ReadEvmCommitment(block, cb)) return 0;
+    return evm::ComputeNextBaseFee(cb.evmBaseFee, cb.evmGasUsed,
+                                   /*gasLimit=*/30'000'000);
+}
+
+// Suggested EIP-1559 priority fee (tip) in weis: a fixed 1 gwei default —
+// non-zero (so wallets don't build a zero-tip tx that the mempool drops)
+// without over-charging. Clients are free to override.
+static constexpr uint64_t kSuggestedPriorityFeeWei = 1'000'000'000ULL;
+
 // ----------------------------------------------------------------------
 // Phase 0 — evm_executeReadOnly  (developer probe, no consensus impact)
 // ----------------------------------------------------------------------
@@ -315,9 +352,9 @@ UniValue eth_blockNumber(const JSONRPCRequest& request)
 UniValue eth_gasPrice(const JSONRPCRequest& request)
 {
     RPCHelpMan{"eth_gasPrice",
-        "\nReturns a recommended gas price in weis.\n"
-        "\nUntil EIP-1559 base-fee dynamics activate (FUP-1/FUP-2), this\n"
-        "always returns 0x0 — the active fee is the priority component only.\n",
+        "\nReturns a recommended gas price in weis: the next block's EIP-1559\n"
+        "base fee (from the committed D2 base-fee recurrence) plus a suggested\n"
+        "priority fee. Zero on chains where EVM_COMMIT is not yet active.\n",
         {},
         RPCResult{RPCResult::Type::STR, "gasPrice", "Recommended gas price as a quantity hex"},
         RPCExamples{
@@ -326,7 +363,13 @@ UniValue eth_gasPrice(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    return ToEthQuantity(0);
+    const uint64_t baseFee = NextBlockEvmBaseFeeWei();
+    // gasPrice (legacy field) = baseFee + tip; saturate rather than wrap.
+    const uint64_t gasPrice =
+        (baseFee > std::numeric_limits<uint64_t>::max() - kSuggestedPriorityFeeWei)
+            ? std::numeric_limits<uint64_t>::max()
+            : baseFee + kSuggestedPriorityFeeWei;
+    return ToEthQuantity(gasPrice);
 }
 
 UniValue eth_getBalance(const JSONRPCRequest& request)
@@ -1023,6 +1066,11 @@ UniValue FormatBlock(CBlockIndex* pindex, const CBlock& block, bool fullTx)
 {
     UniValue out(UniValue::VOBJ);
     const uint256 blockHash = block.GetHash();
+
+    // EVM-derived fields come from the coinbase v3 commitment when present.
+    CCbTx cb;
+    const bool haveEvm = ReadEvmCommitment(block, cb);
+
     out.pushKV("number", ToEthQuantity(static_cast<uint64_t>(pindex->nHeight)));
     out.pushKV("hash", Uint256ToEthHex(blockHash));
     out.pushKV("parentHash", Uint256ToEthHex(block.hashPrevBlock));
@@ -1032,8 +1080,11 @@ UniValue FormatBlock(CBlockIndex* pindex, const CBlock& block, bool fullTx)
     out.pushKV("sha3Uncles", kZeroWord);     // no uncles in Raptoreum
     out.pushKV("logsBloom", ZeroLogsBloom()); // FUP: aggregate from receipts
     out.pushKV("transactionsRoot", Uint256ToEthHex(block.hashMerkleRoot));
-    out.pushKV("stateRoot", kZeroWord);   // FUP-1 / D2 header field
-    out.pushKV("receiptsRoot", kZeroWord); // FUP-1 / D2 header field
+    // EVM state / receipts roots from the D2 commitment (zero pre-fork).
+    out.pushKV("stateRoot",
+               haveEvm ? Uint256ToEthHex(cb.evmStateRoot) : kZeroWord);
+    out.pushKV("receiptsRoot",
+               haveEvm ? Uint256ToEthHex(cb.evmReceiptsRoot) : kZeroWord);
     // Miner / coinbase: the first output of the coinbase tx carries
     // the script we'd map to an Ethereum-style address. Until the
     // proper UTXO→EVM-address mapping lands, return zero.
@@ -1042,8 +1093,11 @@ UniValue FormatBlock(CBlockIndex* pindex, const CBlock& block, bool fullTx)
     out.pushKV("totalDifficulty", ToEthQuantity(pindex->nBits));
     out.pushKV("extraData", "0x");
     out.pushKV("size", ToEthQuantity(BlockSerializedSize(block)));
-    out.pushKV("gasLimit", ToEthQuantity(30'000'000)); // FUP-1 / D2
-    out.pushKV("gasUsed", ToEthQuantity(0));           // FUP: sum from receipts
+    out.pushKV("gasLimit", ToEthQuantity(30'000'000)); // D2 EVM gas budget
+    out.pushKV("gasUsed", ToEthQuantity(haveEvm ? cb.evmGasUsed : 0));
+    // baseFeePerGas — post-London clients (ethers/viem) require this to
+    // build EIP-1559 txs; sourced from the committed base fee.
+    out.pushKV("baseFeePerGas", ToEthQuantity(haveEvm ? cb.evmBaseFee : 0));
     out.pushKV("timestamp", ToEthQuantity(static_cast<uint64_t>(block.GetBlockTime())));
     UniValue txs(UniValue::VARR);
     for (size_t i = 0; i < block.vtx.size(); ++i) {
@@ -1296,13 +1350,12 @@ UniValue eth_hashrate(const JSONRPCRequest& request)
 UniValue eth_maxPriorityFeePerGas(const JSONRPCRequest& request)
 {
     RPCHelpMan{"eth_maxPriorityFeePerGas",
-        "\nReturns the suggested EIP-1559 max-priority-fee-per-gas.\n"
-        "\nReports 0x0 until base-fee dynamics activate (FUP-1/FUP-2).\n",
+        "\nReturns the suggested EIP-1559 max-priority-fee-per-gas (tip) in weis.\n",
         {},
         RPCResult{RPCResult::Type::STR, "fee", "0x-prefixed quantity"},
         RPCExamples{HelpExampleCli("eth_maxPriorityFeePerGas", "")},
     }.Check(request);
-    return ToEthQuantity(0);
+    return ToEthQuantity(kSuggestedPriorityFeeWei);
 }
 
 UniValue net_version(const JSONRPCRequest& request)

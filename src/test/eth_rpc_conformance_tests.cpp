@@ -301,4 +301,45 @@ BOOST_AUTO_TEST_CASE(estimate_gas_includes_intrinsic)
     BOOST_CHECK_EQUAL(estimate("0xa1b200"), 21036u);
 }
 
+// EIP-1559 fee surface: maxPriorityFeePerGas must be a non-zero tip (so
+// wallets don't build a zero-tip tx the mempool drops), and gasPrice must
+// be baseFee + tip >= the tip. Reporting 0x0 (the old behaviour) broke
+// MetaMask fee sizing once the base fee went live.
+BOOST_AUTO_TEST_CASE(eip1559_fee_surface_is_nonzero)
+{
+    const UniValue tip = CallEth("eth_maxPriorityFeePerGas",
+                                 UniValue(UniValue::VARR));
+    BOOST_REQUIRE(tip.isStr());
+    BOOST_CHECK(IsEthQuantity(tip.get_str()));
+    // 1 gwei suggested tip.
+    BOOST_CHECK_EQUAL(tip.get_str(), "0x3b9aca00");
+
+    const UniValue gp = CallEth("eth_gasPrice", UniValue(UniValue::VARR));
+    BOOST_REQUIRE(gp.isStr());
+    BOOST_CHECK(IsEthQuantity(gp.get_str()));
+    const uint64_t gasPrice = std::stoull(gp.get_str().substr(2), nullptr, 16);
+    const uint64_t tipWei = std::stoull(tip.get_str().substr(2), nullptr, 16);
+    // gasPrice = baseFee + tip, so it is at least the tip.
+    BOOST_CHECK(gasPrice >= tipWei);
+}
+
+// The block object must carry the post-London fields ethers/viem require:
+// baseFeePerGas (sourced from the D2 commitment) and a real gasUsed.
+BOOST_AUTO_TEST_CASE(block_object_has_eip1559_and_evm_fields)
+{
+    const UniValue blk = CallEth("eth_getBlockByNumber", Arr({"0x0", false}));
+    BOOST_REQUIRE(blk.isObject());
+    for (const char* field : {"baseFeePerGas", "gasUsed", "stateRoot",
+                              "receiptsRoot"}) {
+        const UniValue& v = find_value(blk, field);
+        BOOST_CHECK_MESSAGE(!v.isNull(),
+            "block object missing required field: " << field);
+        BOOST_REQUIRE(v.isStr());
+    }
+    BOOST_CHECK(IsEthQuantity(find_value(blk, "baseFeePerGas").get_str()));
+    BOOST_CHECK(IsEthQuantity(find_value(blk, "gasUsed").get_str()));
+    BOOST_CHECK(IsEthData(find_value(blk, "stateRoot").get_str()));
+    BOOST_CHECK(IsEthData(find_value(blk, "receiptsRoot").get_str()));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
