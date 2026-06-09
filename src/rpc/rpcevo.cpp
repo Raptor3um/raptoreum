@@ -31,8 +31,10 @@
 
 #include <netbase.h>
 #include <assets/assets.h>
+#include <assets/assetstype.h>  // CAssetTransfer, GetTransferAsset
 #include <evm/apply.h>    // kWeisPerSatoshi
-#include <evm/evmtx.h>    // CEvmFundTx
+#include <evm/asset_ledger.h>  // AssetErc20Address
+#include <evm/evmtx.h>    // CEvmFundTx / CWrapAssetTx / CUnwrapAssetTx
 #include <key_io.h>
 #include <util/strencodings.h>  // IsHex, ParseHex
 
@@ -1622,6 +1624,283 @@ UniValue evm_fund(const JSONRPCRequest& request)
 #endif // ENABLE_WALLET
 }
 
+#ifdef ENABLE_WALLET
+// Parse a 0x-prefixed 20-byte EVM address argument into the low 160 bits
+// of a uint256 (the payload field shape used by FUND/WRAP/UNWRAP).
+static uint256 ParseEvmAddressTo256(const std::string& in, const char* field)
+{
+    std::string s = in;
+    if (s.rfind("0x", 0) == 0 || s.rfind("0X", 0) == 0) s = s.substr(2);
+    if (s.size() != 40 || !IsHex(s)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+            strprintf("%s must be a 0x-prefixed 20-byte hex address", field));
+    }
+    const std::vector<unsigned char> bytes = ParseHex(s);
+    uint256 w;
+    w.SetNull();
+    std::memcpy(w.begin() + 12, bytes.data(), 20);
+    return w;
+}
+#endif // ENABLE_WALLET
+
+UniValue wrap_asset(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"wrap_asset",
+        "\nWrap Smart Asset units into the EVM-side ERC-20 ledger (D4 "
+        "mirror, UTXO -> EVM). Spends the wallet's UTXOs holding <assetid>, "
+        "burns <amount> units from the UTXO side, and credits them to the "
+        "EVM account <evmrecipient> as the asset's wrapped ERC-20 token "
+        "(callable at its per-asset precompile address). Supply-conserving: "
+        "the units leave the UTXO side and reappear as wrappedSupply.\n"
+        + HELP_REQUIRING_PASSPHRASE,
+        {
+            {"assetid", RPCArg::Type::STR, RPCArg::Optional::NO,
+             "Asset id or name to wrap"},
+            {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO,
+             "Quantity of the asset to wrap"},
+            {"evmrecipient", RPCArg::Type::STR, RPCArg::Optional::NO,
+             "0x-prefixed 20-byte EVM account to credit with the wrapped token"},
+            {"changeaddress", RPCArg::Type::STR, /* default */ "wallet default",
+             "Address to receive the RTM and asset change"},
+            {"submit", RPCArg::Type::BOOL, /* default */ "true",
+             "Broadcast the tx (true) or return the signed hex (false)"},
+        },
+        RPCResult{RPCResult::Type::STR_HEX, "txid",
+                  "The wrap transaction id (or signed hex if submit=false)"},
+        RPCExamples{
+            HelpExampleCli("wrap_asset",
+                "\"GOLD\" 10 \"0x000000000000000000000000000000000000aaaa\"")
+        },
+    }.Check(request);
+
+#ifdef ENABLE_WALLET
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
+    EnsureWalletIsUnlocked(pwallet);
+
+    if (!Updates().IsEvmActive(::ChainActive().Tip())) {
+        throw JSONRPCError(RPC_INVALID_REQUEST, "EVM is not active on this chain");
+    }
+
+    CAssetMetaData meta;
+    if (!passetsCache->GetAssetMetaData(request.params[0].get_str(), meta)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Asset metadata not found");
+    }
+    const std::string assetId = meta.assetId;
+
+    const CAmount nAmount = AmountFromValue(request.params[1]);
+    if (nAmount <= 0 || !validateAmount(nAmount, meta.decimalPoint)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid amount for asset precision");
+    }
+    if (meta.isUnique) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "unique (NFT) assets cannot be wrapped");
+    }
+
+    const uint256 evmRecipient = ParseEvmAddressTo256(request.params[2].get_str(),
+                                                      "evmrecipient");
+
+    CTxDestination changeDest = CNoDestination();
+    if (request.params.size() > 3 && !request.params[3].isNull() &&
+        !request.params[3].get_str().empty()) {
+        changeDest = DecodeDestination(request.params[3].get_str());
+        if (!IsValidDestination(changeDest)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "invalid changeaddress");
+        }
+    }
+    const bool fSubmit = request.params.size() <= 4 || request.params[4].isNull()
+        ? true : ParseBoolV(request.params[4], "submit");
+
+    std::map<std::string, std::vector<COutput>> mapAssetCoins;
+    pwallet->AvailableAssets(mapAssetCoins);
+    if (!mapAssetCoins.count(assetId)) {
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS,
+                           strprintf("Wallet holds no units of asset %s", assetId));
+    }
+
+    evm::CWrapAssetTx payload;
+    payload.nVersion = evm::EVM_TX_PAYLOAD_VERSION;
+    payload.assetId = assetId;
+    payload.evmRecipient = evmRecipient;
+    payload.amount = static_cast<uint64_t>(nAmount);
+
+    // Phantom asset output of `amount` units to a unique recognizable
+    // script. CreateTransaction (a plain asset transfer) selects the asset
+    // UTXOs covering it and creates asset change for the leftover; we then
+    // DELETE the phantom so the wrapped amount is burned from the UTXO side
+    // (asset inputs exceed outputs by exactly `amount`). Mirrors the
+    // phantom-RTM-burn evm_fund uses. Unique keyhash 0x02.. distinguishes it.
+    CScript phantom = CScript() << OP_DUP << OP_HASH160
+        << std::vector<uint8_t>(20, 0x02) << OP_EQUALVERIFY << OP_CHECKSIG;
+    CAssetTransfer(assetId, nAmount).BuildAssetTransaction(phantom);
+
+    CCoinControl coinControl;
+    coinControl.destChange = changeDest;
+    coinControl.assetDestChange = changeDest;
+
+    std::vector<CRecipient> vecSend = {{phantom, 0, false}};
+    CTransactionRef wtx;
+    CAmount nFee;
+    int nChangePos = -1;
+    std::string strFailReason;
+    const int payloadSize =
+        static_cast<int>(::GetSerializeSize(payload, PROTOCOL_VERSION));
+    // sign=false so we can re-type the tx and drop the phantom before signing.
+    if (!pwallet->CreateTransaction(vecSend, wtx, nFee, nChangePos, strFailReason,
+                                    coinControl, /*sign=*/false, payloadSize)) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
+    }
+
+    CMutableTransaction tx(*wtx);
+    tx.nVersion = 3;
+    tx.nType = TRANSACTION_WRAP_ASSET;
+    const size_t before = tx.vout.size();
+    tx.vout.erase(std::remove_if(tx.vout.begin(), tx.vout.end(),
+        [&](const CTxOut& o) { return o.scriptPubKey == phantom; }),
+        tx.vout.end());
+    if (tx.vout.size() == before) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR,
+            "wrap_asset: phantom asset output missing after funding");
+    }
+
+    SetTxPayload(tx, payload);
+    return SignAndSendSpecialTx(request, tx, fSubmit);
+#else
+    throw JSONRPCError(RPC_METHOD_NOT_FOUND,
+        "wrap_asset requires wallet support (built without ENABLE_WALLET)");
+#endif // ENABLE_WALLET
+}
+
+UniValue unwrap_asset(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"unwrap_asset",
+        "\nUnwrap Smart Asset units from the EVM-side ERC-20 ledger back to "
+        "the UTXO side (D4 mirror, EVM -> UTXO). Debits <amount> wrapped "
+        "units from the EVM account <evmsender> and mints them back as "
+        "ordinary asset units to <rtmrecipient>. The EVM-side debit (which "
+        "proves <evmsender> holds the wrapped units) is enforced at block "
+        "connection: if it is short the whole block is rejected, so the "
+        "minted UTXO output can never stand without its EVM burn. "
+        "Supply-conserving.\n"
+        + HELP_REQUIRING_PASSPHRASE,
+        {
+            {"assetid", RPCArg::Type::STR, RPCArg::Optional::NO,
+             "Asset id or name to unwrap"},
+            {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO,
+             "Quantity of the asset to unwrap"},
+            {"evmsender", RPCArg::Type::STR, RPCArg::Optional::NO,
+             "0x-prefixed 20-byte EVM account holding the wrapped token"},
+            {"rtmrecipient", RPCArg::Type::STR, RPCArg::Optional::NO,
+             "Raptoreum address to receive the unwrapped asset units"},
+            {"fundaddress", RPCArg::Type::STR, RPCArg::Optional::NO,
+             "Wallet address supplying the RTM network fee"},
+            {"submit", RPCArg::Type::BOOL, /* default */ "true",
+             "Broadcast the tx (true) or return the signed hex (false)"},
+        },
+        RPCResult{RPCResult::Type::STR_HEX, "txid",
+                  "The unwrap transaction id (or signed hex if submit=false)"},
+        RPCExamples{
+            HelpExampleCli("unwrap_asset",
+                "\"GOLD\" 10 \"0x000000000000000000000000000000000000aaaa\" "
+                "\"RtmRecipientAddr..\" \"RtmFeeAddr..\"")
+        },
+    }.Check(request);
+
+#ifdef ENABLE_WALLET
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
+    EnsureWalletIsUnlocked(pwallet);
+
+    if (!Updates().IsEvmActive(::ChainActive().Tip())) {
+        throw JSONRPCError(RPC_INVALID_REQUEST, "EVM is not active on this chain");
+    }
+
+    CAssetMetaData meta;
+    if (!passetsCache->GetAssetMetaData(request.params[0].get_str(), meta)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Asset metadata not found");
+    }
+    const std::string assetId = meta.assetId;
+
+    const CAmount nAmount = AmountFromValue(request.params[1]);
+    if (nAmount <= 0 || !validateAmount(nAmount, meta.decimalPoint)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid amount for asset precision");
+    }
+    if (meta.isUnique) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "unique (NFT) assets cannot be unwrapped");
+    }
+
+    const uint256 evmSender = ParseEvmAddressTo256(request.params[2].get_str(),
+                                                   "evmsender");
+
+    CTxDestination toDest = DecodeDestination(request.params[3].get_str());
+    if (!IsValidDestination(toDest)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "invalid rtmrecipient");
+    }
+    CTxDestination fundDest = DecodeDestination(request.params[4].get_str());
+    if (!IsValidDestination(fundDest)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "invalid fundaddress");
+    }
+    const bool fSubmit = request.params.size() <= 5 || request.params[5].isNull()
+        ? true : ParseBoolV(request.params[5], "submit");
+
+    CMutableTransaction tx;
+    tx.nVersion = 3;
+    tx.nType = TRANSACTION_UNWRAP_ASSET;
+
+    evm::CUnwrapAssetTx payload;
+    payload.nVersion = evm::EVM_TX_PAYLOAD_VERSION;
+    payload.assetId = assetId;
+    payload.evmSender = evmSender;
+    payload.amount = static_cast<uint64_t>(nAmount);
+
+    // Fund the RTM network fee only (no asset output yet, so the wallet's
+    // coin selection stays on the RTM side). FundSpecialTx adds RTM inputs +
+    // change and writes the payload into vExtraPayload.
+    FundSpecialTx(pwallet, tx, payload, fundDest);
+
+    // Append the asset MINT output: `amount` units of assetId to the
+    // recipient, with no asset inputs — the unwrap conservation exemption
+    // allows it, and CheckUnwrapAssetTx binds it to exactly `amount`.
+    CScript assetScript = GetScriptForDestination(toDest);
+    CAssetTransfer(assetId, nAmount).BuildAssetTransaction(assetScript);
+    tx.vout.emplace_back(0, assetScript);
+
+    SetTxPayload(tx, payload);
+    return SignAndSendSpecialTx(request, tx, fSubmit);
+#else
+    throw JSONRPCError(RPC_METHOD_NOT_FOUND,
+        "unwrap_asset requires wallet support (built without ENABLE_WALLET)");
+#endif // ENABLE_WALLET
+}
+
+UniValue get_asset_evm_address(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"get_asset_evm_address",
+        "\nReturn the deterministic EVM precompile address at which a Smart "
+        "Asset is callable as an ERC-20 token (its wrapped form, D4 mirror). "
+        "The address is 0xA55E70_0000000000 || hash160(assetId)[8:20]; add it "
+        "to MetaMask / a Solidity contract as the token's contract address.\n",
+        {
+            {"assetid", RPCArg::Type::STR, RPCArg::Optional::NO,
+             "Asset id (creation txid) of the Smart Asset"},
+        },
+        RPCResult{RPCResult::Type::STR_HEX, "address",
+                  "0x-prefixed 20-byte EVM precompile address"},
+        RPCExamples{
+            HelpExampleCli("get_asset_evm_address",
+                "\"1f199e935aa4d924626cd5b362234df9cc42bd10bd291256f47c22d47ab7fa54\"")
+        },
+    }.Check(request);
+
+    CAssetMetaData meta;
+    if (!passetsCache->GetAssetMetaData(request.params[0].get_str(), meta)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Asset metadata not found");
+    }
+    const evmc::address addr = evm::AssetErc20Address(meta.assetId);
+    return "0x" + HexStr(std::vector<uint8_t>(addr.bytes, addr.bytes + 20));
+}
+
 [[noreturn]] void protx_help() {
     RPCHelpMan{"protx",
                "Set of commands to execute ProTx related actions.\n"
@@ -1687,6 +1966,9 @@ static const CRPCCommand commands[] =
                 {"evo", "bls",   &_bls,  {}},
                 {"evo", "protx", &protx, {}},
                 {"evo", "evm_fund", &evm_fund, {"evmaddress", "amount", "fundaddress", "submit"}},
+                {"evo", "wrap_asset", &wrap_asset, {"assetid", "amount", "evmrecipient", "changeaddress", "submit"}},
+                {"evo", "unwrap_asset", &unwrap_asset, {"assetid", "amount", "evmsender", "rtmrecipient", "fundaddress", "submit"}},
+                {"evo", "get_asset_evm_address", &get_asset_evm_address, {"assetid"}},
         };
 
 void RegisterEvoRPCCommands(CRPCTable &tableRPC) {

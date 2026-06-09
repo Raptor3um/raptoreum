@@ -209,6 +209,10 @@ static const CRPCConvertParam vRPCConvertParams[] =
                 { "evm_sendTransaction", 1, "callObject" },
                 { "evm_fund", 1, "amount" },
                 { "evm_fund", 3, "submit" },
+                { "wrap_asset", 1, "amount" },
+                { "wrap_asset", 4, "submit" },
+                { "unwrap_asset", 1, "amount" },
+                { "unwrap_asset", 5, "submit" },
         };
 
 class CRPCConvertTable {
