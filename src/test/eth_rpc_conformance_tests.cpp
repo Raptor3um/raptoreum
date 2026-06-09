@@ -340,6 +340,10 @@ BOOST_AUTO_TEST_CASE(block_object_has_eip1559_and_evm_fields)
     BOOST_CHECK(IsEthQuantity(find_value(blk, "gasUsed").get_str()));
     BOOST_CHECK(IsEthData(find_value(blk, "stateRoot").get_str()));
     BOOST_CHECK(IsEthData(find_value(blk, "receiptsRoot").get_str()));
+    // difficulty / totalDifficulty are QUANTITY-encoded (totalDifficulty is
+    // the cumulative nChainWork, so non-zero past genesis).
+    BOOST_CHECK(IsEthQuantity(find_value(blk, "difficulty").get_str()));
+    BOOST_CHECK(IsEthQuantity(find_value(blk, "totalDifficulty").get_str()));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

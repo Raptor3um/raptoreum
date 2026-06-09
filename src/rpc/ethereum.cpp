@@ -27,6 +27,7 @@
 #include <update/update.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <rpc/blockchain.h>  // GetDifficulty
 #include <rpc/protocol.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
@@ -1116,8 +1117,13 @@ UniValue FormatBlock(CBlockIndex* pindex, const CBlock& block, bool fullTx)
     // the script we'd map to an Ethereum-style address. Until the
     // proper UTXO→EVM-address mapping lands, return zero.
     out.pushKV("miner", kZeroAddress);
-    out.pushKV("difficulty", ToEthQuantity(pindex->nBits));
-    out.pushKV("totalDifficulty", ToEthQuantity(pindex->nBits));
+    // difficulty is the real PoW difficulty (not the compact nBits target);
+    // totalDifficulty is the chain's cumulative work (nChainWork), exposed
+    // as a quantity. Both are what explorers expect.
+    out.pushKV("difficulty",
+               ToEthQuantity(static_cast<uint64_t>(GetDifficulty(pindex))));
+    out.pushKV("totalDifficulty",
+               BalanceAsEthQuantity(ArithToUint256(pindex->nChainWork)));
     out.pushKV("extraData", "0x");
     out.pushKV("size", ToEthQuantity(BlockSerializedSize(block)));
     out.pushKV("gasLimit", ToEthQuantity(30'000'000)); // D2 EVM gas budget
