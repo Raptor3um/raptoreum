@@ -272,4 +272,33 @@ BOOST_AUTO_TEST_CASE(missing_required_params_is_clean_error)
         std::runtime_error);
 }
 
+// eth_estimateGas must return a COMPLETE tx gasLimit — the intrinsic gas
+// (21000 + EIP-2028 calldata cost) plus execution gas — not just the
+// execution slice. A code-less recipient runs no EVM code, so the estimate
+// is exactly the intrinsic: a client that funded a real tx with this value
+// would NOT hit out-of-gas. (0x..ff is a plain EOA, outside the precompile
+// and asset-token address ranges.)
+BOOST_AUTO_TEST_CASE(estimate_gas_includes_intrinsic)
+{
+    const std::string eoa = "0x00000000000000000000000000000000000000ff";
+    auto estimate = [&](const std::string& data) -> uint64_t {
+        UniValue call(UniValue::VOBJ);
+        call.pushKV("to", eoa);
+        call.pushKV("data", data);
+        const UniValue r = CallEth("eth_estimateGas", Arr({call, "latest"}));
+        BOOST_REQUIRE(r.isStr());
+        BOOST_CHECK(IsEthQuantity(r.get_str()));
+        return std::stoull(r.get_str().substr(2), nullptr, 16);
+    };
+
+    // Empty calldata: pure 21000 intrinsic, no execution.
+    BOOST_CHECK_EQUAL(estimate("0x"), 21000u);
+    // One non-zero calldata byte: +16 (EIP-2028).
+    BOOST_CHECK_EQUAL(estimate("0x01"), 21016u);
+    // One zero calldata byte: +4.
+    BOOST_CHECK_EQUAL(estimate("0x00"), 21004u);
+    // Mixed: two non-zero + one zero => 21000 + 16 + 16 + 4.
+    BOOST_CHECK_EQUAL(estimate("0xa1b200"), 21036u);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

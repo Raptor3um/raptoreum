@@ -532,6 +532,20 @@ std::vector<uint8_t> ParseEthDataField(const UniValue& v, const std::string& nam
     return ParseHex(stripped);
 }
 
+// Intrinsic gas for a message call (EIP-2028): the 21000 base plus the
+// per-byte calldata cost (4 for a zero byte, 16 for a non-zero byte) that
+// the process layer charges BEFORE handing the frame to evmone. eth_call /
+// ExecuteEthCall dispatch the inner frame directly and so never charge it,
+// which is correct for "what would this return" but means a gas ESTIMATE
+// must add it back — otherwise a client sizing a real tx's gasLimit from
+// the estimate underfunds it by the intrinsic and hits out-of-gas.
+uint64_t IntrinsicCallGas(const std::vector<uint8_t>& data)
+{
+    uint64_t gas = 21000;
+    for (uint8_t b : data) gas += (b == 0) ? 4 : 16;
+    return gas;
+}
+
 // Bundle of fields parsed out of the eth_call object.
 struct EthCallObject
 {
@@ -723,10 +737,11 @@ UniValue eth_call(const JSONRPCRequest& request)
 UniValue eth_estimateGas(const JSONRPCRequest& request)
 {
     RPCHelpMan{"eth_estimateGas",
-        "\nReturn the gas a single read-only execution of the given call would\n"
-        "consume. Useful for clients sizing the gasLimit of a real transaction.\n"
-        "\nA single-attempt estimate today; binary-search refinement to find the\n"
-        "minimum-gas-that-succeeds is a follow-up (FUP-6 functional-test trail).\n",
+        "\nReturn a gas limit sufficient to execute the given call: the\n"
+        "intrinsic gas (21000 + EIP-2028 calldata cost) plus the smallest\n"
+        "execution-gas limit at which the call still succeeds, found by\n"
+        "binary search (so the 63/64 nested-call forwarding rule is honoured).\n"
+        "Useful for clients sizing the gasLimit of a real transaction.\n",
         {
             {"callObject", RPCArg::Type::OBJ, RPCArg::Optional::NO,
              "Same shape as eth_call's callObject.",
@@ -754,17 +769,47 @@ UniValue eth_estimateGas(const JSONRPCRequest& request)
     const EthCallObject call = ParseEthCallObject(request.params[0]);
     RequireLatestBlockTag(request.params[1], "block");
 
-    const EthCallExecResult r = ExecuteEthCall(call);
-    if (r.statusCode != EVMC_SUCCESS) {
-        // The call failed under the supplied gas (which defaults to
-        // 30M — generous enough that real OOG is the actual cause).
-        // Surface that as a JSON-RPC error so clients don't silently
-        // pick a too-low value.
+    // `cap` is the largest TOTAL transaction gasLimit we will consider —
+    // the client-supplied limit, or the 30M default from
+    // ParseEthCallObject. `intrinsic` is what a real tx pays before
+    // execution; the execution gas available at a total limit T is
+    // T - intrinsic. The oracle below models that split so the returned
+    // estimate is a complete tx gasLimit, not just the execution slice.
+    const uint64_t cap = call.gas;
+    const uint64_t intrinsic = IntrinsicCallGas(call.data);
+
+    auto succeedsAtTotal = [&](uint64_t totalLimit) -> bool {
+        if (totalLimit < intrinsic) return false;  // can't even pay intrinsic
+        EthCallObject probe = call;
+        probe.gas = totalLimit - intrinsic;        // execution gas left
+        return ExecuteEthCall(probe).statusCode == EVMC_SUCCESS;
+    };
+
+    // The call must succeed at the cap, or no estimate exists.
+    if (cap < intrinsic || !succeedsAtTotal(cap)) {
         throw JSONRPCError(RPC_TRANSACTION_REJECTED,
-                          strprintf("gas estimation failed: evm status %d",
-                                    static_cast<int>(r.statusCode)));
+                          "gas estimation failed: call does not succeed even "
+                          "at the gas cap (revert or out-of-gas)");
     }
-    return ToEthQuantity(static_cast<uint64_t>(r.gasUsed));
+
+    // Binary-search the smallest TOTAL gasLimit at which the call still
+    // succeeds. Re-running the whole frame at each midpoint is what makes
+    // the 63/64 forwarding rule on nested calls fall out correctly: a frame
+    // that consumed G at a high limit can still need a limit > G to forward
+    // enough gas to its inner calls. log2(30M) ~ 25 probes.
+    // lo is held at a value that does NOT succeed (intrinsic-1, which can't
+    // pay the intrinsic), hi at one that does (the cap).
+    uint64_t lo = intrinsic - 1;  // intrinsic >= 21000, so this is safe
+    uint64_t hi = cap;
+    while (lo + 1 < hi) {
+        const uint64_t mid = lo + (hi - lo) / 2;
+        if (succeedsAtTotal(mid)) {
+            hi = mid;
+        } else {
+            lo = mid;
+        }
+    }
+    return ToEthQuantity(hi);
 }
 
 // ----------------------------------------------------------------------
