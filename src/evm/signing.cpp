@@ -72,6 +72,30 @@ std::vector<uint8_t> BuildEip1559UnsignedRlp(const Eip1559TxFields& f)
     return RlpEncodeList(inner);
 }
 
+// Build the EIP-155 signing-payload RLP body:
+//   [nonce, gasPrice, gasLimit, to, value, data, chainId, 0, 0].
+std::vector<uint8_t> BuildLegacyUnsignedRlp(const LegacyTxFields& f)
+{
+    std::vector<uint8_t> inner;
+    auto append = [&](const std::vector<uint8_t>& enc) {
+        inner.insert(inner.end(), enc.begin(), enc.end());
+    };
+    append(RlpEncodeUint(f.nonce));
+    append(RlpEncodeUint(f.gasPrice));
+    append(RlpEncodeUint(f.gasLimit));
+    if (f.emptyTo) {
+        append(RlpEncodeBytes(nullptr, 0));
+    } else {
+        append(RlpEncodeBytes(f.to.begin(), 20));
+    }
+    append(RlpEncodeUint(f.value));
+    append(RlpEncodeBytes(f.data));
+    append(RlpEncodeUint(f.chainId));  // EIP-155
+    append(RlpEncodeUint(0));          // empty r placeholder
+    append(RlpEncodeUint(0));          // empty s placeholder
+    return RlpEncodeList(inner);
+}
+
 } // anonymous namespace
 
 uint160 EvmAddressForKey(const CKey& privKey)
@@ -153,6 +177,51 @@ std::vector<uint8_t> SignEip1559Tx(const CKey& privKey,
     wire.push_back(0x02);
     wire.insert(wire.end(), finalRlp.begin(), finalRlp.end());
     return wire;
+}
+
+std::vector<uint8_t> SignLegacyTx(const CKey& privKey,
+                                  const LegacyTxFields& fields)
+{
+    // EIP-155 requires a non-zero chainId for replay protection.
+    if (fields.chainId == 0) return {};
+
+    // 1. msgHash = keccak256(rlp([nonce,gasPrice,gasLimit,to,value,data,
+    //    chainId,0,0])). Unlike type-0x02 there is NO envelope byte.
+    const uint256 msgHash = Keccak256(BuildLegacyUnsignedRlp(fields));
+
+    // 2. secp256k1 compact ECDSA, recid -> y_parity {0,1}.
+    std::vector<unsigned char> compact;
+    if (!privKey.SignCompact(msgHash, compact)) return {};
+    if (compact.size() != 65) return {};
+    const int recid = (compact[0] - 27) & 3;
+    if (recid > 1) return {};
+    uint256 r, s;
+    std::memcpy(r.begin(), compact.data() + 1,  32);
+    std::memcpy(s.begin(), compact.data() + 33, 32);
+
+    // EIP-155: v = chainId*2 + 35 + y_parity.
+    const uint64_t v = fields.chainId * 2 + 35 + static_cast<uint64_t>(recid);
+
+    // 3. Signed body: [nonce, gasPrice, gasLimit, to, value, data, v, r, s].
+    std::vector<uint8_t> signedInner;
+    auto append = [&](const std::vector<uint8_t>& enc) {
+        signedInner.insert(signedInner.end(), enc.begin(), enc.end());
+    };
+    append(RlpEncodeUint(fields.nonce));
+    append(RlpEncodeUint(fields.gasPrice));
+    append(RlpEncodeUint(fields.gasLimit));
+    if (fields.emptyTo) {
+        append(RlpEncodeBytes(nullptr, 0));
+    } else {
+        append(RlpEncodeBytes(fields.to.begin(), 20));
+    }
+    append(RlpEncodeUint(fields.value));
+    append(RlpEncodeBytes(fields.data));
+    append(RlpEncodeUint(v));
+    append(RlpEncodeBytes(Bytes32Stripped(r)));
+    append(RlpEncodeBytes(Bytes32Stripped(s)));
+    // No type-envelope byte for legacy.
+    return RlpEncodeList(signedInner);
 }
 
 } // namespace evm

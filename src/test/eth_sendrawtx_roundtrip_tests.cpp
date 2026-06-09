@@ -8,6 +8,7 @@
 #include <evm/hashing.h>
 #include <evm/rawtx.h>
 #include <evm/rlp.h>
+#include <evm/signing.h>
 
 #include <key.h>
 #include <pubkey.h>
@@ -320,6 +321,63 @@ BOOST_AUTO_TEST_CASE(rpc_rejects_garbage_wire_cleanly)
 {
     BOOST_CHECK_THROW(SendRaw({0xde, 0xad, 0xbe, 0xef}),
                       std::runtime_error);
+}
+
+// The PRODUCTION evm::SignLegacyTx primitive (FUP-5.4) must produce a wire
+// blob the production decoder recovers to the exact signing address and
+// fields — the same guarantee SignEip1559Tx already had, now for legacy
+// (EIP-155, type 0x0) txs that older tooling / hardware wallets emit.
+BOOST_AUTO_TEST_CASE(sign_legacy_primitive_round_trips)
+{
+    uint160 to;
+    for (int i = 0; i < 20; ++i) *(to.begin() + i) = uint8_t(0x33);
+
+    evm::LegacyTxFields f;
+    f.chainId = chainId;
+    f.nonce = 9;
+    f.gasPrice = 1'000'000'000ULL;
+    f.gasLimit = 90000;
+    f.emptyTo = false;
+    f.to = to;
+    f.value = 555;
+    f.data = {0xca, 0xfe};
+
+    const std::vector<uint8_t> wire = evm::SignLegacyTx(key, f);
+    BOOST_REQUIRE(!wire.empty());
+    evm::DecodedRawTx d;
+    BOOST_REQUIRE(evm::DecodeRawEthTx(wire, chainId, d));
+    BOOST_CHECK(d.sender == ethAddr);   // signature recovery -> signer
+    BOOST_CHECK_EQUAL(d.txType, 0);     // legacy
+    BOOST_CHECK_EQUAL(d.nonce, 9U);
+    BOOST_CHECK_EQUAL(d.gasLimit, 90000U);
+    BOOST_CHECK_EQUAL(d.value, 555U);
+    BOOST_CHECK(!d.emptyTo);
+    BOOST_CHECK(d.to == to);
+    BOOST_CHECK(d.data == f.data);
+
+    // Contract creation (emptyTo) round-trips too.
+    evm::LegacyTxFields c = f;
+    c.emptyTo = true;
+    c.data = {0x60, 0x0a, 0x60, 0x00};
+    const std::vector<uint8_t> wireC = evm::SignLegacyTx(key, c);
+    BOOST_REQUIRE(!wireC.empty());
+    evm::DecodedRawTx dc;
+    BOOST_REQUIRE(evm::DecodeRawEthTx(wireC, chainId, dc));
+    BOOST_CHECK(dc.sender == ethAddr);
+    BOOST_CHECK(dc.emptyTo);
+    BOOST_CHECK(dc.data == c.data);
+
+    // EIP-155 replay protection: the tx must NOT decode under another chain.
+    {
+        evm::DecodedRawTx wrong;
+        BOOST_CHECK(!evm::DecodeRawEthTx(wire, chainId + 1, wrong));
+    }
+    // chainId 0 is refused (this build mandates EIP-155 replay protection).
+    {
+        evm::LegacyTxFields z = f;
+        z.chainId = 0;
+        BOOST_CHECK(evm::SignLegacyTx(key, z).empty());
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -64,7 +64,7 @@ The PRE-mainnet items in particular gate Phase 6 (testnet + audits).
 | FUP-5.1 | 🚧 | **Wallet-keystore HD-path integration.** Awaits Q-A2 resolution (Ethereum-standard `m/44'/60'` vs RTM subtree `m/44'/10226'/0'/1/i`). | — |
 | FUP-5.2 | ⚠️ | **Qt UI** — `EvmContractDialog` for deploy/call, transaction-record types `DeployContract` / `CallContract` / `EvmInternalTransfer` / `EvmToUtxo`. | `src/qt/transactionrecord.h` |
 | FUP-5.3 | 💡 | **Wallet RPC `evm_deploycontract` / `evm_sendcall` / `evm_spendtoutxo`** that wraps the Phase 5 signing primitives in a "give me a key from the wallet" flow. | — |
-| FUP-5.4 | 💡 | **Legacy EIP-155 signing** in `evm_signTransaction` (currently EIP-1559 only). | `src/evm/signing.cpp` |
+| FUP-5.4 | ✅ | **SHIPPED — Legacy EIP-155 signing.** `evm::SignLegacyTx` primitive + a `"type":"0x0"` path in evm_signTransaction / evm_sendTransaction (shared SignFromCallObject dispatch). Round-trip locked in `eth_sendrawtx_roundtrip_tests` (production decoder recovers the signer + fields; chainId 0 refused). | `src/evm/signing.cpp::SignLegacyTx` |
 
 ## Cross-cutting follow-ups
 

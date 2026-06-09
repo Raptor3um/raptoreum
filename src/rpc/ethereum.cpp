@@ -2080,6 +2080,64 @@ evm::Eip1559TxFields ParseEvmSignFields(const UniValue& obj)
     return out;
 }
 
+// True if the call object explicitly asks for a legacy (type 0x0) tx.
+// Default (absent / "0x2") is EIP-1559.
+bool WantsLegacyTx(const UniValue& obj)
+{
+    const UniValue& t = obj["type"];
+    if (!t.isStr()) return false;
+    const std::string s = t.get_str();
+    return s == "0x0" || s == "0x00" || s == "0";
+}
+
+// Decode the JSON call object into LegacyTxFields (EIP-155, type 0x0).
+evm::LegacyTxFields ParseEvmLegacyFields(const UniValue& obj)
+{
+    if (!obj.isObject()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+                          "callObject must be a JSON object");
+    }
+    evm::LegacyTxFields out;
+    out.chainId = obj["chainId"].isNull()
+        ? static_cast<uint64_t>(ActiveEvmChainId())
+        : ParseEthQuantity(obj["chainId"], "chainId");
+    if (obj["nonce"].isNull()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "nonce is required");
+    }
+    out.nonce = ParseEthQuantity(obj["nonce"], "nonce");
+    if (obj["gasPrice"].isNull() && obj["maxFeePerGas"].isNull()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+                          "gasPrice is required for a legacy (type 0x0) tx");
+    }
+    out.gasPrice = obj["gasPrice"].isNull()
+        ? ParseEthQuantity(obj["maxFeePerGas"], "maxFeePerGas")
+        : ParseEthQuantity(obj["gasPrice"], "gasPrice");
+    if (obj["gas"].isNull()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "gas is required");
+    }
+    out.gasLimit = ParseEthQuantity(obj["gas"], "gas");
+    if (obj["to"].isNull() || (obj["to"].isStr() && obj["to"].get_str().empty())) {
+        out.emptyTo = true;
+    } else {
+        out.emptyTo = false;
+        out.to = ParseEthAddress(obj["to"], "to");
+    }
+    out.value = ParseEthQuantity(obj["value"], "value");
+    out.data = ParseEthDataField(obj["data"], "data");
+    return out;
+}
+
+// Sign a call object as either a legacy (type 0x0) or EIP-1559 (default)
+// transaction, per its "type" field. Shared by evm_signTransaction and
+// evm_sendTransaction so both surfaces accept both envelopes.
+std::vector<uint8_t> SignFromCallObject(const CKey& key, const UniValue& obj)
+{
+    if (WantsLegacyTx(obj)) {
+        return evm::SignLegacyTx(key, ParseEvmLegacyFields(obj));
+    }
+    return evm::SignEip1559Tx(key, ParseEvmSignFields(obj));
+}
+
 } // anonymous namespace (Phase 5 helpers)
 
 UniValue evm_keyToAddress(const JSONRPCRequest& request)
@@ -2148,10 +2206,10 @@ UniValue evm_signTransaction(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER,
                           "privKey must be a 32-byte 0x-prefixed hex string");
     }
-    const evm::Eip1559TxFields fields = ParseEvmSignFields(request.params[1]);
-    const std::vector<uint8_t> wire = evm::SignEip1559Tx(key, fields);
+    const std::vector<uint8_t> wire = SignFromCallObject(key, request.params[1]);
     if (wire.empty()) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "EIP-1559 signing failed");
+        throw JSONRPCError(RPC_INTERNAL_ERROR,
+                          "transaction signing failed (chainId 0 for legacy?)");
     }
     return std::string("0x") + HexStr(wire);
 }
@@ -2200,10 +2258,10 @@ UniValue evm_sendTransaction(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER,
                           "privKey must be a 32-byte 0x-prefixed hex string");
     }
-    const evm::Eip1559TxFields fields = ParseEvmSignFields(request.params[1]);
-    const std::vector<uint8_t> wire = evm::SignEip1559Tx(key, fields);
+    const std::vector<uint8_t> wire = SignFromCallObject(key, request.params[1]);
     if (wire.empty()) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "EIP-1559 signing failed");
+        throw JSONRPCError(RPC_INTERNAL_ERROR,
+                          "transaction signing failed (chainId 0 for legacy?)");
     }
 
     // Re-dispatch through eth_sendRawTransaction's RPC handler by

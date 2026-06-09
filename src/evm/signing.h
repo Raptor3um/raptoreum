@@ -60,6 +60,20 @@ struct Eip1559TxFields
     std::vector<uint8_t> data; // calldata or init bytecode
 };
 
+/** Fields the caller must supply to sign a legacy (pre-EIP-1559,
+ *  EIP-155-replay-protected, type 0x0) transaction. */
+struct LegacyTxFields
+{
+    uint64_t chainId{0};      // EIP-155 replay protection; must be > 0 here
+    uint64_t nonce{0};
+    uint64_t gasPrice{0};     // single gas price (no base/priority split)
+    uint64_t gasLimit{0};
+    bool emptyTo{false};      // true = contract creation
+    uint160 to;               // valid when !emptyTo
+    uint64_t value{0};        // in weis
+    std::vector<uint8_t> data; // calldata or init bytecode
+};
+
 /** Compute the 20-byte EVM address for a secp256k1 private key. */
 uint160 EvmAddressForKey(const CKey& privKey);
 
@@ -70,6 +84,16 @@ uint160 EvmAddressForKey(const CKey& privKey);
  */
 std::vector<uint8_t> SignEip1559Tx(const CKey& privKey,
                                    const Eip1559TxFields& fields);
+
+/** Build a signed legacy (EIP-155, type-0x0) wire-format transaction.
+ *
+ * Returns rlp([nonce, gasPrice, gasLimit, to, value, data, v, r, s]) with
+ * v = chainId*2 + 35 + y_parity (EIP-155), NO type-envelope byte — the
+ * form older tooling / hardware wallets emit. Directly consumable by
+ * eth_sendRawTransaction (which already decodes legacy). Empty on failure
+ * or chainId == 0 (this build requires EIP-155 replay protection). */
+std::vector<uint8_t> SignLegacyTx(const CKey& privKey,
+                                  const LegacyTxFields& fields);
 
 } // namespace evm
 
