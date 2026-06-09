@@ -8,6 +8,16 @@ The three original `Q-A*` questions from the
 [`PROPOSAL-FOR-CORE-TEAM.md`](PROPOSAL-FOR-CORE-TEAM.md) are
 restated here together with new ones surfaced during Phases 2–5.
 
+> **2026-06-10 update.** Each question now carries a **Proposed
+> answer** so the core team can ratify (👍 on the PR thread is
+> enough) or amend, instead of designing from scratch. Several were
+> effectively answered *by the implementation* since the questions
+> were written — those are marked **answered-by-implementation** and
+> only need ratification. Review process note: per the project
+> decision, security review is performed by the Raptoreum core team
+> (no external audit firm will be engaged); the review entry point is
+> [`REVIEW-GUIDE.md`](REVIEW-GUIDE.md).
+
 ---
 
 ## Q-A1 — "The AI thing"
@@ -21,9 +31,28 @@ take a position.
 a clear answer in writing.
 
 **Want from core team.** What system / feature / external dependency
-are they referring to? Is it a planned RTM-side integration? A
-constraint from a third party? Once we know the actual subject we
-can decide whether it intersects with the EVM work at all.
+are they referring to?
+
+**RESOLVED (out-of-band, 2026-05).** The core team clarified that
+"AI" was a typo — the subject is the **EVM itself**, and the real
+requirement behind the remark is that the EVM integration must stay
+**within the existing dual-consensus model and signature scheme**
+("no weird sigs") and avoid invasive serialization changes. The
+shipped design satisfies all three:
+
+- EVM transactions ride **standard special-tx wrappers** validated by
+  the existing `CheckSpecialTx` machinery — no new consensus lane.
+- The only curve anywhere is **secp256k1** (EVM sender recovery uses
+  the same curve RTM already runs); no new signature schemes touch
+  the protocol layer. If the protocol later migrates its own
+  signatures (e.g. post-quantum), the wrapper design decouples that
+  from the EVM layer entirely.
+- **No existing type's serialization changed**: the new payloads are
+  additive special-tx types, and the coinbase commitment is a
+  versioned, additive `CCbTx` v3.
+
+We consider this closed unless the core team raises a specific
+residual.
 
 ---
 
@@ -38,16 +67,35 @@ revised left two viable paths:
 - **v2 — implicit** wrap-on-touch where balances cross the bridge
   on first use of a Smart Asset inside an EVM contract.
 
-**Currently blocking.**
-
-- Phase 4.1 ERC-20 precompile `balanceOf` / `transfer` / `allowance`
-  semantics (today balanceOf returns 0; transfer not yet exposed).
-- Wallet HD-path decision: if wrap/unwrap goes through tx types
-  17/18 as standard "moves", the EVM key may not need to live in
-  a different BIP44 coin_type from the UTXO key.
+**Currently blocking.** ~~Phase 4.1 ERC-20 precompile semantics; the
+wallet HD-path decision.~~ No longer blocking — see below.
 
 **Want from core team.** Pick v1 or v2 for the initial mainnet.
-v2 is the better UX but its consensus surface is wider.
+
+**Proposed answer (answered-by-implementation — ratify).** **v1
+(strict)** is implemented, tested, and proven e2e: explicit
+`TRANSACTION_WRAP_ASSET`/`UNWRAP_ASSET` with a constrained
+conservation binding, wallet RPCs, and the full EVM-side ERC-20
+surface (`transfer`/`approve`/`transferFrom` live on the wrapped
+ledger). Design-of-record: [`SMART-ASSET-MIRROR.md`](SMART-ASSET-MIRROR.md).
+We recommend ratifying v1 for initial mainnet: its consensus surface
+is small and auditable (one exemption + one constraint), whereas v2's
+wrap-on-touch would put bridge mutations inside EVM execution
+semantics. v2 can be revisited post-launch as UX sugar built ON TOP
+of v1 (a wallet/dApp auto-wrap flow needs no new consensus).
+
+The core team's out-of-band requirement that some assets must be able
+to remain **fully outside the EVM** ("a second asset class…", "leave
+the door open to some not being EVMable") is satisfied by v1's
+default: an asset never touches the EVM unless a holder explicitly
+wraps units. We additionally propose hardening that into a
+consensus-level guarantee for issuers of regulated/sensitive assets:
+a **per-asset EVM opt-out flag** in the asset metadata — when set,
+`CheckWrapAssetTx` rejects any wrap of that asset, so it can never
+acquire Solidity-risk exposure regardless of what holders do. Small
+change inside the already-reviewed wrap surface; needs core-team
+ratification of the metadata-field addition (serialization
+versioning). Tracked as **FUP-4.10**.
 
 ---
 
@@ -61,13 +109,21 @@ a "Smart Asset" for fee purposes (charge the 5-RTM equivalent in
 the deploy gas), or leave EVM tokens fee-equivalent to vanilla
 Ethereum?
 
-**Currently blocking.** Nothing strictly. The default today is
-fee-equivalent to vanilla Ethereum (no surcharge). But the
-asymmetry may matter for incentive alignment of the asset
-ecosystem.
+**Currently blocking.** Nothing strictly.
 
 **Want from core team.** Confirm "no surcharge for EVM-deployed
 ERC-20s" is fine, or specify the surcharge mechanism.
+
+**Proposed answer (ratify the default).** **No surcharge.** A
+vanilla ERC-20 inside the EVM is not a Smart Asset — it gets none of
+the native benefits (no UTXO-side existence, no native precompile
+mirror, no wallet/asset-index integration). Charging extra would
+only push generic-token deployers to other EVM chains while not
+protecting anything: the Smart-Asset value proposition (native +
+mirrored, ~$0.10 issuance vs $50–500 for a bare ERC-20 elsewhere)
+already differentiates on merit. Revisit with usage data if
+EVM-token spam becomes a real resource problem (the gas market
+already prices state growth).
 
 ---
 
@@ -94,9 +150,17 @@ derivation is different. We have two options:
 integration. The signing primitives (Phase 5.1–5.3) work either
 way; only the key-derivation pipeline depends on this.
 
-**Want from core team.** Pick A or B. Recommend A unless there's a
-specific reason against it (cross-chain identity is widely
-considered a feature, not a bug).
+**Want from core team.** Pick A or B.
+
+**Proposed answer.** **Path A (`m/44'/60'/0'/0/i`).** The decisive
+argument is recoverability: a user's seed phrase imported into ANY
+Ethereum wallet (MetaMask, Ledger, Trezor) must find their RTM-EVM
+funds — with Path B it silently wouldn't, which is a foreseeable
+funds-loss support disaster. Cross-chain address reuse is standard
+across the EVM ecosystem and widely treated as a feature. Mitigate
+the confusion risk in the wallet UI (label the EVM account "RTM EVM
+— chainId 7373"). The signing primitives are path-agnostic, so this
+can be ratified independently of the PR review.
 
 ---
 
@@ -108,19 +172,20 @@ testnet have no activation height registered — meaning EVM is
 inert on those networks until a coordinated hard fork.
 
 **Currently blocking.** Phase 6 testnet pública requires a testnet
-activation height, ideally far enough in the future that early
-operators can update before the cutoff. Phase 7 mainnet
-activation needs a 90-day-comm-window cutover plan.
+activation height; mainnet activation needs a comm-window plan.
 
-**Want from core team.**
+**Want from core team.** Target testnet + mainnet activation
+parameters and a signaling rule.
 
-- A target testnet activation block (suggested: testnet block N
-  where N is chosen so all known infrastructure ops can update
-  with 30+ days notice).
-- A target mainnet activation block (suggested: at least 90 days
-  after a v2.0.0-rc1 release that contains the EVM path).
-- A signaling rule (BIP9-style with 80% MN signaling on top of
-  miner signaling is the proposal default; confirm or revise).
+**Proposed answer.** Full concrete proposal (mechanism, bits,
+heights formula, rollout + post-activation smoke checklist, draft
+chainparams patch) now lives in
+[`TESTNET-ACTIVATION.md`](TESTNET-ACTIVATION.md). Summary: testnet
+activates **both** `EVM` and `EVM_COMMIT` at one **forced height**
+(current tip + ~30 days; deterministic, no vote-stall risk on a
+low-participation net), bits 3/4; mainnet activates later via the
+standard RIP miner+smartnode vote after a 90-day comm window, with
+parameters mirrored from the testnet outcome.
 
 ---
 
@@ -128,23 +193,38 @@ activation needs a 90-day-comm-window cutover plan.
 
 **Context.** Decision D2 said: add `stateRoot`, `receiptsRoot`,
 `transactionsRoot`, plus a fourth `chainLocksCommit` field (per
-D3) to the block header. These are concretely 4 × 32-byte words =
-128 extra bytes per header.
+D3) to the block header — 4 × 32-byte words = 128 extra bytes per
+header.
 
-**Currently blocking.** FUP-2.1 (header fields) and therefore
-FUP-2.2 (base-fee dynamics) and FUP-2.3 (coinbase tip
-verification). All three gate mainnet.
+**Currently blocking.** ~~FUP-2.1/2.2/2.3 — all three gate
+mainnet.~~ No longer blocking — see below.
 
-**Want from core team.**
+**Want from core team.** Confirm layout / ordering / activation
+mechanism.
 
-- Confirm the four-field layout.
-- Confirm field ordering (suggested: `prevBlockHash`,
-  `merkleRoot` (existing), `time`, `bits`, `nonce` (existing),
-  THEN `stateRoot`, `receiptsRoot`, `transactionsRoot`,
-  `chainLocksCommit`).
-- Soft-fork bit-position for activation signaling (D2 said
-  coordinated hard fork; confirm the activation mechanism still
-  uses a version-bit gate).
+**Proposed answer (answered-by-implementation — ratify the
+revision).** The commitment was implemented in the **coinbase
+special transaction (`CCbTx` v3)** instead of the 80-byte header:
+`evmStateRoot`, `evmReceiptsRoot`, `evmBaseFee`, `evmGasUsed`,
+`evmExecTime`, gated by `EUpdate::EVM_COMMIT`. Rationale:
+
+- **Same security.** The CbTx is committed by the header's merkle
+  root, so the EVM roots are exactly as immutable as a header field;
+  every validator recomputes and enforces them in `ConnectBlock`.
+- **No header break.** The 80-byte header is untouched — no impact
+  on mining hardware, stratum, SPV parsers, or explorers.
+- **Precedent.** This is the established Dash/Raptoreum pattern for
+  committed roots (the CbTx already commits the MN-list and quorum
+  merkle roots the same way).
+- The originally-proposed `transactionsRoot` is redundant (the
+  header merkle root already commits the txs) and `chainLocksCommit`
+  remains served by the existing ChainLocks system; neither is
+  carried in v3.
+
+We ask the core team to ratify CCbTx-v3-commitment as the fulfilment
+of D2's intent, closing FUP-2.1/2.2/2.3 (all three shipped on this
+mechanism; base-fee dynamics and coinbase-tip verification are live
+and regression-locked).
 
 ---
 
@@ -152,16 +232,26 @@ verification). All three gate mainnet.
 
 **Context.** The Phase 3.5 consensus carve-out exempts EVM-typed
 txs from `minRelayTxFee` because their fee is the EIP-1559 gas
-debit (on the EVM side), not a UTXO miner fee. With base-fee = 0
-today, an EVM tx can theoretically be relayed with effectively
-zero cost — opens a DoS vector via flooding zero-tip txs.
+debit (on the EVM side), not a UTXO miner fee. ~~With base-fee = 0
+today~~ (base-fee dynamics are now live under `EVM_COMMIT`), a
+zero-tip tx is still relayable at near-zero cost when the base fee
+has decayed — a flooding DoS vector.
 
-**Currently blocking.** Mainnet readiness. Today on regtest the
-attack surface is moot; on mainnet a floor is needed.
+**Currently blocking.** Mainnet readiness.
 
-**Want from core team.** Confirm "no UTXO-side minimum, but mempool
-imposes a minimum effective gas price (e.g., 1 gwei equivalent in
-weis) for EVM txs". Or pick an alternative model.
+**Want from core team.** Confirm a mempool-side minimum effective
+gas price for EVM txs.
+
+**Proposed answer.** Confirm: **mempool admission requires
+`effectiveGasPrice ≥ 1 gwei`** (i.e. `min(maxFeePerGas, baseFee +
+maxPriorityFeePerGas)` at the current tip) for EVM-typed txs, as a
+policy (not consensus) rule — symmetric with `minRelayTxFee` on the
+UTXO side and matching what `eth_gasPrice`/`eth_maxPriorityFeePerGas`
+already advertise (next-block base fee + 1-gwei tip). Policy-only
+means miners can still include lower-priced txs they mined
+themselves, and the constant can be tuned without a fork. We'll
+implement it as a follow-up once ratified (small, test-first,
+mempool-only change).
 
 ---
 
@@ -181,13 +271,24 @@ signing session. Two open design points:
   expire. The contract should be able to ask "did this session
   time out?" and refund whatever escrow it staged.
 
-**Currently blocking.** Phase 4.2 full surface; Phase 6 audits
-will catch this if unaddressed.
+**Currently blocking.** Phase 4.2 full surface; the core team's
+security review will catch this if unaddressed.
 
 **Want from core team.** Endorsement of the gas-escrow + timeout
-pattern (or an alternative), plus parameter choices: max-pending
-sessions per contract, timeout duration in blocks, escrow
-fee-per-session.
+pattern (or an alternative), plus parameter choices.
+
+**Proposed answer.** Endorse gas-escrow + timeout with these
+starting parameters (all tunable pre-activation):
+**max 4 pending sessions per calling contract** (cheap to track,
+enough for real oracles, caps the per-contract amplification);
+**timeout 30 blocks (~1 h)** after which the session is queryable as
+`expired` and the escrow refundable to the caller;
+**escrow = 100,000 gas-equivalent at the request's effective gas
+price**, charged at request time, consumed by the callback or
+refunded on expiry. Defer the implementation until after the initial
+mainnet activation — the sync surface is enough for v1 dApps, and
+this is the one precompile feature that touches LLMQ capacity, so it
+deserves its own focused review cycle.
 
 ---
 
@@ -200,31 +301,48 @@ change is breaking for any contract that holds the type.
 **Currently blocking.** Future MN IPv6 deployments. Not blocking
 mainnet activation.
 
-**Want from core team.** Confirm "v6 support is a forward-
-incompatible v2 of the precompile that ships when MN IPv6 is
-non-trivial in the network" — i.e., delay IPv6 in the precompile
-until IPv6 MNs are >5% of the active list.
+**Want from core team.** Confirm the deferral.
+
+**Proposed answer (ratify the default).** Confirm: IPv6 ships as a
+**v2 precompile at a new address** (additive, non-breaking — v1
+keeps serving `uint32` IPv4, returning 0 for IPv6-only MNs) when
+IPv6 masternodes exceed ~5% of the active list. Changing the v1
+struct in place would silently break deployed contracts; a parallel
+v2 address never can.
 
 ---
 
 ## Q-A10 — Bug-bounty pool authority (new — pre-Phase 6)
 
 **Context.** The plan said $1M RTM locked in a multisig as a
-bug-bounty pool. Who controls the multisig? Foundation board?
-A 3-of-5 of core devs + community? Determines who can sign payouts
-after a valid disclosure.
+bug-bounty pool. Who controls the multisig? Determines who can sign
+payouts after a valid disclosure.
 
-**Currently blocking.** Phase 6 launch. Auditors expect the bounty
-program to be live when they're paid.
+**Currently blocking.** Phase 6 launch.
 
 **Want from core team.** Multisig composition + payout authority
-+ release criteria (ImmuneFi-tier severity tiers).
++ release criteria.
+
+**Proposed answer (reframed for internal-review model).** With the
+decision that security review is performed by the core team rather
+than an external firm, the bounty program becomes MORE important —
+it is now the only paid adversarial pressure on the consensus code.
+Proposal: **3-of-5 multisig held entirely by Raptoreum core team +
+community members** (Unknown Gravity deliberately excluded — we
+wrote the code under review, so we must not control payout
+judgments); severity tiers per the ImmuneFi standard (critical =
+consensus failure / supply inflation / theft; high = node crash /
+DoS; etc.); the program goes live **with the public testnet**, scoped
+first to the EVM surface, paying testnet findings at a reduced tier.
+Pool size and tier amounts are the core team's call.
 
 ---
 
 ## How to answer
 
 Reply on the upstream PR thread, or via a dedicated GitHub Issue
-per question for traceability. Each "Want from core team" point
-should map to a single decision; if the answer needs follow-up
-work, the issue becomes the work-tracking ticket.
+per question for traceability. Each "Proposed answer" is written so
+a single 👍 ratifies it; anything amended becomes the work-tracking
+ticket. The ones that gate the next milestone (public testnet) are
+**Q-A5** (activation) and **Q-A7** (mempool floor); the rest can be
+ratified asynchronously.

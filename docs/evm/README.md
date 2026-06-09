@@ -8,18 +8,27 @@ Native EVM integration in Raptoreum. 31 commits on
 
 If you're a maintainer / reviewer landing here for the first time:
 
-1. [`STATUS.md`](STATUS.md) — **What's actually shipped.** Phase-
+1. [`REVIEW-GUIDE.md`](REVIEW-GUIDE.md) — **How to review this
+   branch.** Subsystem-ordered reading path, ranked consensus
+   hot-spots with "try to break this" prompts, and how to reproduce
+   every verification claim. Start here for PR #443.
+2. [`STATUS.md`](STATUS.md) — **What's actually shipped.** Phase-
    by-phase map with commit refs and the test surface. The
    one-screen "is this ready?" view.
-2. [`QUESTIONS.md`](QUESTIONS.md) — Decisions still owed by the
-   core team. Resolving these unblocks Phase 5.4 / 6 / 7.
-3. [`FUP.md`](FUP.md) — Follow-up register, prioritised by what
+3. [`QUESTIONS.md`](QUESTIONS.md) — Decisions owed by the core
+   team — now each carries a **proposed answer** ready to ratify.
+4. [`TESTNET-ACTIVATION.md`](TESTNET-ACTIVATION.md) — Concrete
+   activation proposal (mechanism, bits, height formula, rollout +
+   smoke checklist, draft chainparams patch).
+5. [`FUP.md`](FUP.md) — Follow-up register, prioritised by what
    gates testnet vs. mainnet vs. post-launch.
 
 ## Reference
 
 | File | Purpose |
 |---|---|
+| [`REVIEW-GUIDE.md`](REVIEW-GUIDE.md) | Reviewer's guide: reading order, ranked consensus hot-spots, verification repro |
+| [`TESTNET-ACTIVATION.md`](TESTNET-ACTIVATION.md) | Testnet activation proposal (Q-A5) — pending ratification |
 | [`STATUS.md`](STATUS.md) | Phase-by-phase state with commit refs |
 | [`RPC.md`](RPC.md) | All RPC methods with examples (eth_* + evm_* + evo bridges) |
 | [`PRECOMPILES.md`](PRECOMPILES.md) | 4 RTM-native precompiles + Solidity interfaces + selectors |
@@ -110,6 +119,7 @@ Last updated 2026-05-12.
 - ✅ Post-Phase-5 — D2 commitment hard fork (CCbTx v3) + UTXO↔EVM value
   bridges (FUND/SPEND) + **D4 Smart-Asset bidirectional mirror** (wrap/
   unwrap + ERC-20 ledger), all on-chain end-to-end
-- ☐ Phase 6 — Testnet pública + paid audits
+- ☐ Phase 6 — Testnet pública + core-team security review (internal
+  per the 2026-06 decision) + bug-bounty program
 - ☐ Phase 7 — Mainnet activation
 - ☐ Phase 8 — Ecosystem launch

@@ -12,7 +12,9 @@ where the deferral is marked, and a priority bucket.
 - 💡 **post-launch** — perf/UX optimisation; can ship after mainnet
 - 📐 **calibration** — empirical tuning; needs workload data first
 
-The PRE-mainnet items in particular gate Phase 6 (testnet + audits).
+The PRE-mainnet items in particular gate Phase 6 (public testnet +
+core-team security review — per the 2026-06 decision, review is
+internal; see [`REVIEW-GUIDE.md`](REVIEW-GUIDE.md)).
 
 ---
 
@@ -51,6 +53,7 @@ The PRE-mainnet items in particular gate Phase 6 (testnet + audits).
 | FUP-4.2 | ✅ | **SHIPPED — Bidirectional Smart Asset ↔ EVM mirror** (D4). EVM-side ERC-20 ledger + wrap/unwrap consensus txs + wallet RPCs; `transfer`/`transferFrom`/`approve`/`allowance` live; T-mirror convergence gate + structural/apply tests in CI; proven e2e. See [`SMART-ASSET-MIRROR.md`](SMART-ASSET-MIRROR.md). | `src/evm/asset_ledger.*`, `precompile_asset_erc20.cpp`, `evmtx/apply/process` |
 | FUP-4.8 | ✅ | **SHIPPED — `unwrap_asset` fee.** `FundSpecialTx` gained an optional `extraFeeBytes` (default 0); unwrap measures its mint output's serialized size and reserves it, so the funded tx pays the correct fee for the output it appends after coin selection. Validated e2e on regtest. | `src/rpc/rpcevo.cpp::unwrap_asset` |
 | FUP-4.9 | 💡 | **NFT (unique-asset) mirror.** Wrap/unwrap reject unique assets today; a per-token (uniqueId) mirror is a separate design. | `src/evm/evmtx.cpp::CheckWrapAssetTx` |
+| FUP-4.10 | ⚠️ | **Per-asset EVM opt-out flag.** Issuer-level "not EVMable" bit in the asset metadata; `CheckWrapAssetTx` rejects wraps of opted-out assets — a consensus-level guarantee that a regulated/sensitive asset can never acquire Solidity-risk exposure (direct core-team requirement, out-of-band 2026-05; see Q-A2). Touches asset-metadata serialization (versioning needed) — **propose before implementing**. | `src/evm/evmtx.cpp::CheckWrapAssetTx`, `src/assets/assets.h::CAssetMetaData` |
 | FUP-4.3 | ⚠️ | **Async `requestSignature`** with gas escrow + timeout per A7. State-mutating; needs Phase 5 wallet wiring. | `src/evm/precompile_llmq_oracle.cpp` |
 | FUP-4.4 | 📐 | **Gas-cost calibration** for the precompiles (currently flat 5000–8000 per call). | All four `src/evm/precompile_*.cpp` |
 | FUP-4.5 | 💡 | **IPv6 support** in `Masternode.ip` field. Currently IPv4 only. | `src/evm/precompile_masternodes.cpp::EncodeMasternodeStruct` |
@@ -72,7 +75,7 @@ The PRE-mainnet items in particular gate Phase 6 (testnet + audits).
 |---|---|---|
 | FUP-X.1 | 🚧 | **Vendor evmone/intx/ethash** per Issue 2 from the core-team acceptance — replace the depends/evmone manual build with proper depends/-managed builds for deterministic builds (Guix). |
 | FUP-X.2 | 🚧 | **`#ifdef ENABLE_WALLET` guards** per Issue 3 — currently `--disable-wallet` doesn't compile cleanly with the EVM path. Workaround today: always pass `--enable-wallet`. |
-| FUP-X.3 | 🚧 | **CQ4 Foundation legal entity** (from the original engineering-review register). Phase 6 bug-bounty pool + audit payments need an entity. |
+| FUP-X.3 | 🚧 | **CQ4 Foundation legal entity** (from the original engineering-review register). The Phase 6 bug-bounty pool needs a payout entity (no external-audit payments — review is internal per the 2026-06 decision; see Q-A10). |
 | FUP-X.4 | ✅ | **SHIPPED — T1 Ethereum tests in CI.** Capa B (`evm_official_blockchaintest_tests`, ~99.95% Cancun) is a hard gate in the `evm-consensus-gate` job with a pass floor + classified allow-list. |
 | FUP-X.5 | ⚠️ | **T2 — State-divergence harness.** Two nodes in regtest comparing `stateRoot` after every block; abort CI on divergence. (D2 commitment now live → unblocked.) |
 | FUP-X.6 | ✅ | **SHIPPED — T3 Reorg fuzzing.** `evm_reorg_fuzz_tests` (property-based random reorgs → identical state) is a hard CI gate. |

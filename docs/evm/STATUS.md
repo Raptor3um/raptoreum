@@ -222,8 +222,11 @@ and the asset resolver, each landed with a regression test. See
 
 ## Outstanding work (not yet started)
 
-- **Phase 6** — Testnet pública + paid auditorías (Trail of Bits /
-  ChainSecurity / OpenZeppelin).
+- **Phase 6** — Testnet pública + security review by the Raptoreum
+  core team (per the 2026-06 project decision, no external audit firm
+  is engaged; [`REVIEW-GUIDE.md`](REVIEW-GUIDE.md) is the review entry
+  point and [`TESTNET-ACTIVATION.md`](TESTNET-ACTIVATION.md) the
+  activation proposal), plus the bug-bounty program (Q-A10).
 - **Phase 7** — Mainnet activation height + 90-day comm windows.
 - **Phase 8** — Ecosystem launch (RaptorSwap, lending fork, bridge,
   block explorer).
