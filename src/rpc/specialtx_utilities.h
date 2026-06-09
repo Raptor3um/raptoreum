@@ -32,8 +32,14 @@
 extern UniValue signrawtransaction(const JSONRPCRequest& request);
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
 
+// `extraFeeBytes` reserves additional fee headroom for bytes the caller will
+// append to the transaction AFTER funding (e.g. unwrap_asset appends its
+// asset mint output once coin selection is done, so CreateTransaction never
+// sees it). Folding that size into the fee calc keeps the final tx at the
+// target fee-rate instead of slightly underpaying. Defaults to 0 — existing
+// callers are unaffected.
 template<typename SpecialTxPayload>
-static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const SpecialTxPayload& payload, const CTxDestination& fundDest)
+static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const SpecialTxPayload& payload, const CTxDestination& fundDest, int extraFeeBytes = 0)
 {
     assert(pwallet != nullptr);
     LOCK(pwallet->cs_wallet);
@@ -86,7 +92,7 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
     int nChangePos = -1;
     std::string strFailReason;
 
-    if (!pwallet->CreateTransaction(vecSend, wtx, nFee, nChangePos, strFailReason, coinControl, false, tx.vExtraPayload.size())) {
+    if (!pwallet->CreateTransaction(vecSend, wtx, nFee, nChangePos, strFailReason, coinControl, false, (int)tx.vExtraPayload.size() + extraFeeBytes)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
     }
 

@@ -346,8 +346,12 @@ static UniValue _bls(const JSONRPCRequest &request) {
 
 #ifdef ENABLE_WALLET
 
+// `extraFeeBytes` reserves additional fee headroom for bytes the caller will
+// append to the transaction AFTER funding (e.g. unwrap_asset appends its asset
+// mint output once coin selection is done). Defaults to 0 — other callers are
+// unaffected.
 template<typename SpecialTxPayload>
-static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const SpecialTxPayload& payload, const CTxDestination& fundDest)
+static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const SpecialTxPayload& payload, const CTxDestination& fundDest, int extraFeeBytes = 0)
 {
     assert(pwallet != nullptr);
 
@@ -404,7 +408,7 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
     int nChangePos = -1;
     std::string strFailReason;
 
-    if (!pwallet->CreateTransaction(vecSend, newTx, nFee, nChangePos, strFailReason, coinControl, false, tx.vExtraPayload.size())) {
+    if (!pwallet->CreateTransaction(vecSend, newTx, nFee, nChangePos, strFailReason, coinControl, false, (int)tx.vExtraPayload.size() + extraFeeBytes)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
     }
 
@@ -1854,17 +1858,26 @@ UniValue unwrap_asset(const JSONRPCRequest& request)
     payload.evmSender = evmSender;
     payload.amount = static_cast<uint64_t>(nAmount);
 
-    // Fund the RTM network fee only (no asset output yet, so the wallet's
-    // coin selection stays on the RTM side). FundSpecialTx adds RTM inputs +
-    // change and writes the payload into vExtraPayload.
-    FundSpecialTx(pwallet, tx, payload, fundDest);
-
-    // Append the asset MINT output: `amount` units of assetId to the
+    // Build the asset MINT output up front: `amount` units of assetId to the
     // recipient, with no asset inputs — the unwrap conservation exemption
-    // allows it, and CheckUnwrapAssetTx binds it to exactly `amount`.
+    // allows it, and CheckUnwrapAssetTx binds it to exactly `amount`. We do
+    // NOT add it to the tx before funding (CreateTransaction would try to
+    // conserve the asset, selecting asset inputs we don't have); instead we
+    // measure its serialized size and reserve that many fee bytes, then
+    // append it after funding — so the final tx pays the correct fee.
     CScript assetScript = GetScriptForDestination(toDest);
     CAssetTransfer(assetId, nAmount).BuildAssetTransaction(assetScript);
-    tx.vout.emplace_back(0, assetScript);
+    const CTxOut assetOut(0, assetScript);
+    const int assetOutBytes = static_cast<int>(
+        ::GetSerializeSize(assetOut, PROTOCOL_VERSION));
+
+    // Fund the RTM network fee only (no asset output yet, so the wallet's
+    // coin selection stays on the RTM side). FundSpecialTx adds RTM inputs +
+    // change and writes the payload into vExtraPayload, reserving fee for the
+    // asset output bytes we append next.
+    FundSpecialTx(pwallet, tx, payload, fundDest, assetOutBytes);
+
+    tx.vout.push_back(assetOut);
 
     SetTxPayload(tx, payload);
     return SignAndSendSpecialTx(request, tx, fSubmit);
