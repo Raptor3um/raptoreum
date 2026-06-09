@@ -36,9 +36,12 @@ The PRE-mainnet items in particular gate Phase 6 (testnet + audits).
 | FUP-3.1 | ✅ | **SHIPPED — Receipt pre-funding.** `evm_fund` (UTXO → EVM) lets a fresh EVM account hold RTM and pay gas; funded "send → mine → getReceipt status 0x1" proven e2e. | `src/rpc/rpcevo.cpp::evm_fund` |
 | FUP-3.2 | 💡 | **Non-empty access lists** in `eth_sendRawTransaction`. Currently rejected; needs warm-slot wiring to evmone. | `src/evm/rawtx.cpp::DecodeEip1559` |
 | FUP-3.3 | 💡 | **Historical block-tag** support for state queries (`eth_getBalance @ 0x100` etc.). Needs the receipt indexer + state-snapshot replay. | `src/rpc/ethereum.cpp::RequireLatestBlockTag` |
-| FUP-3.4 | 💡 | **`eth_getTransactionByHash` rich fields** (value, input, gas, gasPrice). Currently sourced from the receipt; need txindex integration. | `src/rpc/ethereum.cpp::eth_getTransactionByHash` |
+| FUP-3.4 | ⚠️ | **`eth_getTransactionByHash`/`receipt` rich fields** (value, input, gas, nonce, maxFeePerGas; correct `type` for legacy vs 1559). ethers/viem dereference these; today only from/to/chainId/type are set (type hardcoded 0x2). Project the wrapper payload like `FormatTransactionForBlock` does. | `src/rpc/ethereum.cpp::eth_getTransactionByHash` |
 | FUP-3.5 | 💡 | **WebSocket / `eth_subscribe`** for `newHeads` and `logs`. Needs a second long-lived transport on the listener. | `src/httpserver.cpp` |
-| FUP-3.6 | 📐 | **`eth_estimateGas` binary search** to find minimum-gas-that-succeeds. Today single-attempt at the supplied limit. | `src/rpc/ethereum.cpp::eth_estimateGas` |
+| FUP-3.6 | ✅ | **SHIPPED — `eth_estimateGas`** returns intrinsic (21000 + EIP-2028 calldata) + binary-searched minimum execution-gas limit (honours the 63/64 nested-call rule). | `src/rpc/ethereum.cpp::eth_estimateGas` |
+| FUP-3.7 | ⚠️ | **Tx-hash byte-order consistency.** `eth_getBlockBy*` emits tx hashes reversed (`Uint256ToEthHex`) while the receipt emits forward (`ToEthData`); and EVM txs that arrived via `eth_sendRawTransaction` carry a keccak `ethTxHash` the block never surfaces. A dApp can't cross-reference block→receipt. Unify on the keccak `ethTxHash` for EVM txs. | `src/rpc/ethereum.cpp::FormatBlock / FormatReceiptForRpc` |
+| FUP-3.8 | 💡 | **`difficulty`/`totalDifficulty`** expose `nBits` (the compact target), not the real difficulty / cumulative `nChainWork`. Informational; some explorers sort by it. Use `GetDifficulty(pindex)` + `nChainWork`. | `src/rpc/ethereum.cpp::FormatBlock` |
+| FUP-3.9 | 📐 | **`value` capped at uint64 weis** (~18.44 RTM/tx) by design (`CEvmCallTx.value` is u64). MetaMask lets a user enter more; the sign/decode then fails. Document in the wallet UX or widen the field. | `src/evm/evmtx.h` |
 
 ## Phase 4 (precompiles) follow-ups
 
