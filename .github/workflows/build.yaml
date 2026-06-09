@@ -261,7 +261,7 @@ jobs:
           # full-suite run.
           EVM_OFFICIAL_TESTS_PATH="$PWD/ethereum-tests/BlockchainTests/GeneralStateTests" \
             ./test_raptoreum \
-              --run_test=evm_official_blockchaintest_tests,evm_reorg_fuzz_tests,evm_wrap_consensus_tests,evm_asset_wrap_tests,evm_asset_mirror_convergence_tests,evm_asset_erc20_tests,evm_evmtx_validation_tests,evm_fund_tests,evm_spend_credit_tests,evm_d2_consensus_tests,cbtx_evm_commit_tests \
+              --run_test=evm_official_blockchaintest_tests,evm_reorg_fuzz_tests,evm_wrap_consensus_tests,evm_asset_wrap_tests,evm_asset_mirror_convergence_tests,evm_asset_erc20_tests,evm_asset_resolver_tests,evm_evmtx_validation_tests,evm_fund_tests,evm_spend_credit_tests,evm_d2_consensus_tests,cbtx_evm_commit_tests \
               --log_level=message 2>&1 | tee evm_consensus_gate.log
           # test_raptoreum's exit code already reflects the baseline
           # gate (non-zero on any unexpected failure); `set -o pipefail`

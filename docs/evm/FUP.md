@@ -47,7 +47,7 @@ The PRE-mainnet items in particular gate Phase 6 (testnet + audits).
 
 | ID | Priority | Item | Reference |
 |---|---|---|---|
-| FUP-4.1 | ⚠️ | **Hash160 → assetId index** in `CAssetsCache`. Replaces the linear scan in the Asset ERC-20 resolver. | `src/evm/precompile_asset_erc20.cpp::ResolveAssetIdFromAddress` |
+| FUP-4.1 | ✅ | **SHIPPED — Hash160 → assetId index.** `CAssetsCache::ResolveAssetIdByTag` with a SELF-CORRECTING hint (O(log N) warm), every hit re-verified against mapAsset with a scan fallback — consensus-safe by construction (result is a pure function of mapAsset, never the hint). Property + stale-hint tests in `evm_asset_resolver_tests`. | `src/assets/assets.cpp::ResolveAssetIdByTag` |
 | FUP-4.2 | ✅ | **SHIPPED — Bidirectional Smart Asset ↔ EVM mirror** (D4). EVM-side ERC-20 ledger + wrap/unwrap consensus txs + wallet RPCs; `transfer`/`transferFrom`/`approve`/`allowance` live; T-mirror convergence gate + structural/apply tests in CI; proven e2e. See [`SMART-ASSET-MIRROR.md`](SMART-ASSET-MIRROR.md). | `src/evm/asset_ledger.*`, `precompile_asset_erc20.cpp`, `evmtx/apply/process` |
 | FUP-4.8 | 💡 | **Tighten `unwrap_asset` wallet fee.** The RPC sizes the fee before appending the mint output — a negligible underestimate; recompute after the append for an exact fee. | `src/rpc/rpcevo.cpp::unwrap_asset` |
 | FUP-4.9 | 💡 | **NFT (unique-asset) mirror.** Wrap/unwrap reject unique assets today; a per-token (uniqueId) mirror is a separate design. | `src/evm/evmtx.cpp::CheckWrapAssetTx` |
