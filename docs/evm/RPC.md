@@ -329,6 +329,60 @@ consensus-relevant; useful for opcode-level debugging.
 
 ---
 
+## Value & asset bridges (`evo` namespace, wallet)
+
+These build and submit the consensus special transactions that move value
+across the UTXO ↔ EVM boundary. All require an unlocked wallet.
+
+### `evm_fund(evmaddress, amount, fundaddress[, submit])`
+
+Move RTM from the UTXO side into an EVM account (the AAL funding bridge).
+Spends wallet UTXOs at `fundaddress` and credits `evmaddress` by `amount`
+RTM. The amount leaves the UTXO money supply and reappears as EVM balance
+(supply-conserving). `submit` defaults to `true`; pass `false` to get the
+signed hex back instead of broadcasting.
+
+```
+$ raptoreum-cli evm_fund 0x000000000000000000000000000000000000000a 1.5 "RtmFundAddr.."
+```
+
+### `wrap_asset(assetid, amount, evmrecipient[, changeaddress][, submit])`
+
+Wrap Smart Asset units into the EVM-side ERC-20 ledger (D4 mirror, UTXO →
+EVM). Spends the wallet's UTXOs holding `assetid`, burns `amount` units from
+the UTXO side, and credits them to the EVM account `evmrecipient` as the
+asset's wrapped ERC-20 token. `changeaddress` (optional) receives the RTM
+and asset change. See [`SMART-ASSET-MIRROR.md`](SMART-ASSET-MIRROR.md).
+
+```
+$ raptoreum-cli wrap_asset "GOLD" 10 0x000000000000000000000000000000000000aaaa
+```
+
+### `unwrap_asset(assetid, amount, evmsender, rtmrecipient, fundaddress[, submit])`
+
+Unwrap from the EVM-side ledger back to the UTXO side (EVM → UTXO). Debits
+`amount` wrapped units from `evmsender` and mints them back as ordinary
+asset units to `rtmrecipient`; `fundaddress` supplies the RTM network fee.
+The EVM-side debit is enforced at block connection — a shortfall rejects the
+whole block, so the minted UTXO output can never stand without its EVM burn.
+
+```
+$ raptoreum-cli unwrap_asset "GOLD" 5 0x..aaaa "RtmRecipient.." "RtmFeeAddr.."
+```
+
+### `get_asset_evm_address(assetid)`
+
+Return the deterministic EVM precompile address at which a Smart Asset is
+callable as an ERC-20 (`0xA55E70…||hash160(assetId)[8:20]`). Add it to
+MetaMask / a Solidity contract as the token's contract address. Read-only.
+
+```
+$ raptoreum-cli get_asset_evm_address "GOLD"
+0xa55e700000000000d3e7a239ba904ee463beb255
+```
+
+---
+
 ## Notes
 
 - **Authentication.** Both ports inherit the same `-rpcuser` /

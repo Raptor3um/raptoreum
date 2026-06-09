@@ -176,6 +176,34 @@ test key `0x4646…4646`:
 
 ---
 
+## Post-Phase-5 — on-chain end-to-end (D2 + value bridges + D4 mirror) ✅
+
+Shipped after the 2026-05-12 snapshot; makes the EVM fully usable on-chain.
+
+| Area | Scope |
+|---|---|
+| **D2 header-commitment hard fork** | `CCbTx` v3 commits `evmStateRoot` / `evmReceiptsRoot` / `evmBaseFee` / `evmGasUsed` / `evmExecTime` in the coinbase special tx, RIP-vote-gated (`EUpdate::EVM_COMMIT`, force-active@0 on regtest). Miner==validator parity; EIP-1559 burn/tip live. |
+| **UTXO → EVM funding** | `TRANSACTION_EVM_FUND = 19` + `evm_fund` RPC: supply-conserving (the funded amount leaves the UTXO miner-claimable fee and reappears as EVM balance). |
+| **EVM → UTXO spend** | `TRANSACTION_EVM_SPEND` credits realized as coinbase outputs (`CheckCoinbaseRealisesSpendCredits`); funded e2e proven (`eth_sendRawTransaction` → mine → receipt status `0x1`). |
+| **D4 Smart-Asset mirror** | Bidirectional wrap/unwrap bridge + EVM-side ERC-20 ledger. See [`SMART-ASSET-MIRROR.md`](SMART-ASSET-MIRROR.md). |
+
+**D4 mirror** (`TRANSACTION_WRAP_ASSET = 17` / `TRANSACTION_UNWRAP_ASSET =
+18`): every Smart Asset is callable as an ERC-20 at its per-asset precompile
+address, and units move both ways across the UTXO ↔ EVM boundary,
+supply-conserving (`UTXO balances + wrappedSupply == circulatingSupply`) and
+reorg-safe. Wallet RPCs `wrap_asset` / `unwrap_asset` /
+`get_asset_evm_address`. Proven end-to-end on a live regtest daemon
+(create+mint → wrap → `eth_call balanceOf` → unwrap → verify). Consensus
+suites (`evm_wrap_consensus_tests`, `evm_asset_wrap_tests`,
+`evm_asset_mirror_convergence_tests`, `evm_asset_erc20_tests`) are hard CI
+gates.
+
+**Capa B (official Ethereum tests):** ~99.95% of applicable Cancun
+(`evm_official_blockchaintest_tests`), CI-locked at a pass floor with a
+classified non-fixable allow-list. See [`OFFICIAL-TESTS.md`](OFFICIAL-TESTS.md).
+
+---
+
 ## Outstanding work (not yet started)
 
 - **Phase 6** — Testnet pública + paid auditorías (Trail of Bits /

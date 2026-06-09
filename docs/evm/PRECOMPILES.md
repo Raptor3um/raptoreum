@@ -184,6 +184,12 @@ interface IRtmAsset {
     function decimals()               external view returns (uint8);
     function totalSupply()            external view returns (uint256);
     function balanceOf(address owner) external view returns (uint256);
+    function allowance(address owner, address spender) external view returns (uint256);
+    function transfer(address to, uint256 amount) external returns (bool);
+    function approve(address spender, uint256 amount) external returns (bool);
+    function transferFrom(address from, address to, uint256 amount) external returns (bool);
+    // event Transfer(address indexed from, address indexed to, uint256 value);
+    // event Approval(address indexed owner, address indexed spender, uint256 value);
 }
 ```
 
@@ -196,19 +202,31 @@ Selectors:
 | `decimals()` | `0x313ce567` |
 | `totalSupply()` | `0x18160ddd` |
 | `balanceOf(address)` | `0x70a08231` |
+| `allowance(address,address)` | `0xdd62ed3e` |
+| `transfer(address,uint256)` | `0xa9059cbb` |
+| `approve(address,uint256)` | `0x095ea7b3` |
+| `transferFrom(address,address,uint256)` | `0x23b872dd` |
 
-Backed by `passetsCache->GetAssetMetaData()`. Resolution from the
-precompile address to the `assetId` is a linear scan over the
-current asset list — fine for the small asset populations of
-regtest/testnet/early-mainnet. The hash160 → assetId index lives
-in a follow-up.
+Metadata (`name`/`symbol`/`decimals`) is backed by
+`passetsCache->GetAssetMetaData()`. Resolution from the precompile address
+to the `assetId` is a linear scan over the current asset list — fine for the
+small asset populations of regtest/testnet/early-mainnet; the hash160 →
+assetId index lives in a follow-up.
 
-**MVP scope: read-only.** `transfer`, `transferFrom`, `approve`,
-`allowance` arrive together with the D4-revised bidirectional
-Smart Asset ↔ EVM balance mirror (the "T-mirror" test gate). The
-metadata reads are enough for MetaMask "Add Token" to work and
-for ERC-20-aware dApps to display the asset before any transfers
-cross the bridge.
+`balanceOf` / `totalSupply` and the full write surface
+(`transfer`/`transferFrom`/`approve`/`allowance`) operate on the asset's
+**EVM-side ERC-20 ledger** (slots 0/1/2 in this precompile's storage trie),
+which is credited by `wrap_asset` and debited by `unwrap_asset`. Writes are
+rejected under `EVMC_STATIC` and emit canonical `Transfer`/`Approval` logs.
+`totalSupply` is the **wrapped** supply (`sum(balanceOf)`), 0 until units are
+wrapped in — the UTXO-side `circulatingSupply` is a separate quantity. See
+[`SMART-ASSET-MIRROR.md`](SMART-ASSET-MIRROR.md) for the full bidirectional
+bridge.
+
+**`decimals()` is always 8** (the COIN scale the ledger uses), NOT the
+asset's `decimalPoint`: the ledger mirrors `nAmount`, which is COIN-scaled
+(1e8) for every asset, so reporting 8 makes `balanceOf / 10**8` display the
+correct whole-unit value in any ERC-20 client.
 
 **Use case.** Tokenisation of RWA / real-world assets. Smart Assets
 on RTM cost ~$0.10 per creation (vs. $50–500 on Ethereum to deploy

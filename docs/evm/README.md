@@ -21,8 +21,10 @@ If you're a maintainer / reviewer landing here for the first time:
 | File | Purpose |
 |---|---|
 | [`STATUS.md`](STATUS.md) | Phase-by-phase state with commit refs |
-| [`RPC.md`](RPC.md) | All 25 RPC methods with examples |
+| [`RPC.md`](RPC.md) | All RPC methods with examples (eth_* + evm_* + evo bridges) |
 | [`PRECOMPILES.md`](PRECOMPILES.md) | 4 RTM-native precompiles + Solidity interfaces + selectors |
+| [`SMART-ASSET-MIRROR.md`](SMART-ASSET-MIRROR.md) | **D4** — bidirectional UTXO ↔ EVM Smart-Asset bridge (wrap/unwrap + ERC-20 ledger) |
+| [`OFFICIAL-TESTS.md`](OFFICIAL-TESTS.md) | Running the official Ethereum test suite (Capa A/B) |
 | [`FUP.md`](FUP.md) | Deferred follow-ups, prioritised |
 | [`QUESTIONS.md`](QUESTIONS.md) | Open questions for the core team |
 | [`BUILD.md`](BUILD.md) | Build / run / test guide |
@@ -52,25 +54,36 @@ If you're a maintainer / reviewer landing here for the first time:
   to Python `eth-account` on the canonical
   `0x4646…4646` test key.
 
+**Also shipped since (on-chain end-to-end):**
+
+- **D2 commitment hard fork** — the EVM roots (`evmStateRoot`,
+  `evmReceiptsRoot`, `evmBaseFee`, `evmGasUsed`, `evmExecTime`) are
+  committed in the coinbase special tx (`CCbTx` v3), RIP-vote-gated
+  (`EUpdate::EVM_COMMIT`). EIP-1559 base-fee dynamics + burn/tip are live;
+  miner==validator parity enforced. (Committed in the coinbase, not the
+  80-byte header — see [`STATUS.md`](STATUS.md).)
+- **Value bridges both ways** — `TRANSACTION_EVM_FUND` (UTXO → EVM,
+  supply-conserving) + `evm_fund` RPC; `TRANSACTION_EVM_SPEND` realized as
+  coinbase outputs. Funded e2e proven.
+- **D4 Smart-Asset mirror** — the bidirectional UTXO ↔ EVM bridge is
+  **shipped**: wrap/unwrap consensus txs + the EVM-side ERC-20 ledger
+  (`transfer`/`approve`/`transferFrom`/`allowance` live). Supply-conserving,
+  reorg-safe, proven e2e on a live regtest daemon. See
+  [`SMART-ASSET-MIRROR.md`](SMART-ASSET-MIRROR.md).
+
 **What's deliberately deferred**:
 
-- The D2 header fields (`stateRoot`, `receiptsRoot`,
-  `transactionsRoot`, `chainLocksCommit`) are not yet in
-  `CBlockHeader`. Without them, base-fee dynamics stay at 0 and
-  the coinbase-tip output verification is unenforced. **Mainnet
-  activation depends on this** (FUP-2.1 → FUP-2.3).
+- Testnet/mainnet RIP activation heights for `EVM` + `EVM_COMMIT`
+  (force-active only on regtest today).
 - Wallet-keystore HD integration awaits Q-A2 (and the new Q-A4) —
   whether EVM keys live at `m/44'/60'` or under the RTM coin type.
 - Qt UI for deploy/call is a separate session (no shared
   technical risk, just Qt + MOC overhead).
-- The Smart Asset ↔ EVM bidirectional balance mirror (D4-revised
-  "T-mirror") is the highest-risk integration piece still ahead.
-  Without it the ERC-20 precompile's `transfer`/`approve` paths
-  stay unimplemented (read surface is live).
 
-**Test surface**: 11 EVM unit-test suites, all green, every commit.
-End-to-end live-validated against a regtest daemon for each RPC
-method.
+**Test surface**: EVM unit-test suites all green every commit, with the
+consensus-critical ones (Capa B, reorg fuzz, D4 mirror, value bridges, D2
+commitment) as hard CI gates. End-to-end live-validated against a regtest
+daemon for each RPC method and the full wrap/unwrap mirror.
 
 ## Operating model
 
@@ -94,6 +107,9 @@ Last updated 2026-05-12.
 - ✅ Phase 4 — All four RTM-native precompiles
 - ✅ Phase 5 — C++ EIP-1559 signing primitives + 3 RPC (HD wallet +
   Qt UI deferred)
+- ✅ Post-Phase-5 — D2 commitment hard fork (CCbTx v3) + UTXO↔EVM value
+  bridges (FUND/SPEND) + **D4 Smart-Asset bidirectional mirror** (wrap/
+  unwrap + ERC-20 ledger), all on-chain end-to-end
 - ☐ Phase 6 — Testnet pública + paid audits
 - ☐ Phase 7 — Mainnet activation
 - ☐ Phase 8 — Ecosystem launch
