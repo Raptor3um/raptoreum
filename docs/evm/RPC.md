@@ -22,7 +22,7 @@ respond but underlying state lookups return empty/zero values.
 |---|---|
 | [`eth_chainId`](#eth_chainid) | Active chain id |
 | [`eth_blockNumber`](#eth_blocknumber) | Active chain tip height |
-| [`eth_gasPrice`](#eth_gasprice) | Suggested gas price (0x0 until D2 base-fee dynamics) |
+| [`eth_gasPrice`](#eth_gasprice) | Suggested gas price (next-block base fee + 1-gwei tip) |
 | [`eth_getBalance`](#eth_getbalance) | EVM account balance in weis |
 | [`eth_getTransactionCount`](#eth_gettransactioncount) | EVM account nonce |
 | [`eth_getCode`](#eth_getcode) | Runtime bytecode |
@@ -33,7 +33,7 @@ respond but underlying state lookups return empty/zero values.
 | Method | Purpose |
 |---|---|
 | [`eth_call`](#eth_call) | Read-only EVM execution against a state snapshot |
-| [`eth_estimateGas`](#eth_estimategas) | Gas consumed by a single execution |
+| [`eth_estimateGas`](#eth_estimategas) | Complete tx gas limit (intrinsic + binary-searched execution) |
 
 ### Block exploration
 
@@ -54,7 +54,7 @@ respond but underlying state lookups return empty/zero values.
 | [`eth_coinbase`](#eth_coinbase) | 0x000…000 |
 | [`eth_mining`](#eth_mining) | false |
 | [`eth_hashrate`](#eth_hashrate) | "0x0" |
-| [`eth_maxPriorityFeePerGas`](#eth_maxpriorityfeepergas) | "0x0" until D2 dynamics |
+| [`eth_maxPriorityFeePerGas`](#eth_maxpriorityfeepergas) | Suggested priority tip (1 gwei) |
 | [`net_version`](#net_version) | Decimal-string chain id |
 | [`net_listening`](#net_listening) | P2P listening flag |
 | [`net_peerCount`](#net_peercount) | Peer count |
@@ -74,7 +74,7 @@ respond but underlying state lookups return empty/zero values.
 | Method | Purpose |
 |---|---|
 | [`evm_keyToAddress`](#evm_keytoaddress) | Derive EVM address from a private key |
-| [`evm_signTransaction`](#evm_signtransaction) | Sign EIP-1559 tx, return wire bytes |
+| [`evm_signTransaction`](#evm_signtransaction) | Sign EIP-1559 or legacy (type 0x0) tx, return wire bytes |
 | [`evm_sendTransaction`](#evm_sendtransaction) | Sign + submit in one call |
 | [`evm_executeReadOnly`](#evm_executereadonly) | Phase 0 bytecode smoke probe (developer tool) |
 
@@ -97,9 +97,10 @@ Returns the active chain tip height as a `0x` quantity.
 
 ### `eth_gasPrice`
 
-Returns the suggested gas price in weis. Currently always `0x0`
-because EIP-1559 base-fee dynamics are gated on the D2 header
-fields landing.
+Returns the suggested gas price in weis: the next block's EIP-1559 base
+fee (the committed D2 base-fee recurrence applied to the tip's
+`evmBaseFee`/`evmGasUsed`) plus a suggested 1-gwei priority tip. Returns
+`0x0` on networks where `EVM_COMMIT` is not yet active.
 
 ### `eth_getBalance(address, block)`
 
@@ -148,8 +149,11 @@ wallets parse those into `Error(string)` messages.
 
 ### `eth_estimateGas(callObject, block)`
 
-Single-attempt gas estimate. Binary-search-to-minimum is a
-follow-up.
+Returns a complete transaction gas limit: the intrinsic gas (21000 +
+EIP-2028 calldata cost) plus the smallest execution-gas limit at which
+the call still succeeds, found by binary search (so the 63/64 nested-call
+gas-forwarding rule is honoured). Suitable for sizing a real tx's
+`gasLimit` directly — it will not under-fund.
 
 ---
 
@@ -201,7 +205,8 @@ reported on the UTXO side, not via the EVM RPC.
 
 ### `eth_maxPriorityFeePerGas`
 
-`0x0` until base-fee dynamics activate.
+Returns the suggested EIP-1559 priority fee (tip) in weis — a non-zero
+default of 1 gwei so wallets don't build a zero-tip tx the mempool drops.
 
 ### `net_version`
 
@@ -262,9 +267,13 @@ Accepts the rtm-hash directly as a fallback for internal tooling.
 
 ### `eth_getTransactionByHash(txHash)`
 
-Minimum-viable transaction object sourced from the receipt. Richer
-fields (`value`, `input`, `gas`) need txindex integration —
-follow-up.
+Full Ethereum transaction object: loads the wrapper tx from its block
+(`blockHash`+`txIndex`) and projects `from`/`to`/`value`/`input`/`gas`/
+`nonce`/`maxFeePerGas`/`chainId` (degrades to a receipt-only object if the
+block is unreadable). The returned `hash` uses the same identity as the
+block listing and the receipt — every EVM tx is keyed by its keccak
+`ethTxHash` (or, absent a cross-index entry, the forward rtm hash) — so
+block ↔ receipt ↔ getTransactionByHash all cross-reference.
 
 ### `eth_getLogs(filter)`
 
@@ -302,10 +311,13 @@ $ raptoreum-cli evm_keyToAddress 0x464646464646464646464646464646464646464646464
 
 ### `evm_signTransaction(privKey, callObject)`
 
-Signs an EIP-1559 tx with the supplied private key and returns the
-wire bytes (0x-prefixed). Byte-for-byte identical to
-`Account.sign_transaction(...)` from Python `eth-account` for the
-same fields.
+Signs a transaction with the supplied private key and returns the wire
+bytes (0x-prefixed). Defaults to EIP-1559 (type 0x2), byte-for-byte
+identical to `Account.sign_transaction(...)` from Python `eth-account`.
+Pass `"type":"0x0"` in the call object to sign a **legacy EIP-155** tx
+instead (for older tooling / hardware wallets); the chain id must be
+non-zero (EIP-155 replay protection is mandatory). `evm_sendTransaction`
+accepts the same `type` switch.
 
 ```
 $ raptoreum-cli evm_signTransaction 0x4646… \

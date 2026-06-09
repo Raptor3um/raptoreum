@@ -202,6 +202,22 @@ gates.
 (`evm_official_blockchaintest_tests`), CI-locked at a pass floor with a
 classified non-fixable allow-list. See [`OFFICIAL-TESTS.md`](OFFICIAL-TESTS.md).
 
+### Post-mirror hardening (correctness + completeness)
+
+A wallet-compatibility + correctness pass over the `eth_*`/`evm_*` surface
+and the asset resolver, each landed with a regression test. See
+[`FUP.md`](FUP.md) for the full ✅-shipped register.
+
+| Area | What changed |
+|---|---|
+| `eth_estimateGas` (FUP-3.6) | Returns a complete tx gas limit — intrinsic (21000 + EIP-2028 calldata) + binary-searched min execution gas (63/64 rule). Was execution-only, under-funding real txs. |
+| EIP-1559 RPC surface | `eth_gasPrice` = next-block base fee + tip; `eth_maxPriorityFeePerGas` = 1 gwei; block object now carries `baseFeePerGas`/`gasUsed`/`stateRoot`/`receiptsRoot` from the CCbTx v3 commitment (were zero/missing); real `difficulty`/`totalDifficulty` (FUP-3.8). |
+| Tx-hash identity (FUP-3.7) | EVM txs use one Ethereum identity across block listing / receipt / `eth_getTransactionByHash` — dApps can cross-reference. |
+| `eth_getTransactionByHash` (FUP-3.4) | Full tx shape (value/input/gas/nonce/...) loaded from the block. |
+| Legacy signing (FUP-5.4) | `evm::SignLegacyTx` + a `"type":"0x0"` path in `evm_signTransaction`/`evm_sendTransaction`. |
+| Asset resolver (FUP-4.1) | `CAssetsCache::ResolveAssetIdByTag` — O(log N) **self-correcting** verified hint index (consensus-safe by construction) replacing the O(N) precompile scan. |
+| `unwrap_asset` fee (FUP-4.8) | Reserves the appended mint output's size in the fee. |
+
 ---
 
 ## Outstanding work (not yet started)
