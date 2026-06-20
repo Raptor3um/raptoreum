@@ -1219,8 +1219,8 @@ UniValue setgenerate(const JSONRPCRequest &request) {
     }
 
 
-    gArgs.ForceSetArg("-gen", (fGenerate ? "1" : "0"));
-    gArgs.ForceSetArg("-genproclimit", itostr(nGenProcLimit));
+    gArgs.SoftSetArg("-gen", (fGenerate ? "1" : "0"));
+    gArgs.SoftSetArg("-genproclimit", itostr(nGenProcLimit));
 
     NodeContext &node = EnsureNodeContext(request.context);
     if (!node.connman)
