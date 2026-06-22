@@ -66,6 +66,12 @@ double nHashesPerSec = 0;
 uint64_t nHashesDone = 0;
 std::string alsoHashString;
 
+// Name of the wallet selected for mining rewards (issue #450). Set by
+// GenerateRaptoreums() before the miner threads start; empty means "use the
+// first loaded wallet" (previous behaviour). It is only written while the
+// miner is stopped, so the worker threads read a stable value.
+static std::string g_miningWalletName;
+
 int64_t UpdateTime(CBlockHeader *pblock, const Consensus::Params &consensusParams, const CBlockIndex *pindexPrev) {
     int64_t nOldTime = pblock->nTime;
     int64_t nNewTime = std::max(pindexPrev->GetMedianTimePast() + 1, GetAdjustedTime());
@@ -560,7 +566,15 @@ void static RaptoreumMiner(const CChainParams& chainparams, NodeContext& node) {
         CWallet * pWallet = NULL;
 
     #ifdef ENABLE_WALLET
-        pWallet = GetFirstWallet();
+        // Route rewards to the wallet selected on the setgenerate endpoint when
+        // one was given (issue #450); otherwise fall back to the first loaded
+        // wallet so existing single-wallet/CLI usage is unchanged.
+        if (!g_miningWalletName.empty()) {
+            if (std::shared_ptr<CWallet> selected = GetWallet(g_miningWalletName))
+                pWallet = selected.get();
+        }
+        if (pWallet == NULL)
+            pWallet = GetFirstWallet();
 
   		  // TODO: either add this function back in, or update this for more appropriate wallet functionality
         // if (!EnsureWalletIsAvailable(pWallet, false)) {
@@ -704,7 +718,8 @@ void static RaptoreumMiner(const CChainParams& chainparams, NodeContext& node) {
 }
 
 // TODO: add reference node, get the conn man from there
-int GenerateRaptoreums(bool fGenerate, int nThreads, const CChainParams &chainparams, NodeContext &node) {
+int GenerateRaptoreums(bool fGenerate, int nThreads, const CChainParams &chainparams, NodeContext &node,
+                       const std::string &walletName) {
     static boost::thread_group *minerThreads = NULL;
 
     int numCores = GetNumCores();
@@ -720,6 +735,9 @@ int GenerateRaptoreums(bool fGenerate, int nThreads, const CChainParams &chainpa
     if (nThreads == 0 || !fGenerate) {
         return numCores;
     }
+
+    // Record the target wallet before the worker threads start reading it (#450).
+    g_miningWalletName = walletName;
 
     minerThreads = new boost::thread_group();
 
