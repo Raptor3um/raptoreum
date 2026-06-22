@@ -383,6 +383,12 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const 
             return tr("Future Send");
         case TransactionRecord::FutureReceive:
             return tr("Future Receive");
+        case TransactionRecord::AssetCreate:
+            return tr("Create Asset");
+        case TransactionRecord::AssetMint:
+            return tr("Mint Asset");
+        case TransactionRecord::AssetUpdate:
+            return tr("Update Asset");
         case TransactionRecord::CoinJoinMixing:
             return tr("%1 Mixing").arg(QString::fromStdString(gCoinJoinName));
         case TransactionRecord::CoinJoinCollateralPayment:
@@ -488,6 +494,9 @@ QVariant TransactionTableModel::amountColor(const TransactionRecord *rec) const 
         case TransactionRecord::CoinJoinCollateralPayment:
         case TransactionRecord::CoinJoinMakeCollaterals:
         case TransactionRecord::CoinJoinCreateDenominations:
+        case TransactionRecord::AssetCreate:
+        case TransactionRecord::AssetMint:
+        case TransactionRecord::AssetUpdate:
             return GUIUtil::getThemedQColor(GUIUtil::ThemedColor::ORANGE);
     }
     return GUIUtil::getThemedQColor(GUIUtil::ThemedColor::DEFAULT);

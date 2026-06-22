@@ -334,6 +334,23 @@ TransactionRecord::decomposeTransaction(interfaces::Wallet &wallet, const interf
 
         // LogPrintf("TransactionRecord::%s TxId: %s, vOutIdx: %d, Unhandled\n", __func__, hash.ToString(), vOutIdx);
     }
+
+    // Tag asset special transactions with their operation so they show up as
+    // "Create/Mint/Update Asset" instead of a generic send/receive or
+    // "Payment to yourself" entry when they touch the user's own wallet (issue #382).
+    TransactionRecord::Type assetType = TransactionRecord::Other;
+    switch (wtx.tx->nType) {
+        case TRANSACTION_NEW_ASSET:    assetType = TransactionRecord::AssetCreate; break;
+        case TRANSACTION_MINT_ASSET:   assetType = TransactionRecord::AssetMint;   break;
+        case TRANSACTION_UPDATE_ASSET: assetType = TransactionRecord::AssetUpdate; break;
+        default: break;
+    }
+    if (assetType != TransactionRecord::Other) {
+        for (TransactionRecord &rec : parts) {
+            rec.type = assetType;
+        }
+    }
+
     return parts;
 }
 
