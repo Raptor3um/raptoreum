@@ -858,12 +858,19 @@ void CreateAssetsDialog::onAssetNameChanged(QString name)
     ui->assetNameValidation->setText(tr("Asset name is valid and available"));
 }
 
-void CreateAssetsDialog::onAssetTypeSelected(QString name) {
-    if (name == "Root") {
+void CreateAssetsDialog::onAssetTypeSelected(QString) {
+    // The combobox display text is translated in non-English locales, so comparing
+    // it against the English literals "Root"/"Sub" never matches. That left the
+    // root-asset selector permanently hidden and made sub-asset creation impossible
+    // in any non-English language (issue #440). Use the locale-independent item
+    // index instead: index 0 is "Root", any other index is "Sub" (consistent with
+    // the rest of this dialog, see issue #418).
+    bool isRoot = ui->AssetTypeBox->currentIndex() == 0;
+    if (isRoot) {
         ui->RootAssetLabel->setVisible(false);
         ui->RootAssetBox->setVisible(false);
         ui->assetnameText->setToolTip(tr("A-Z 0-9, no spaces"));
-    } else if (name == "Sub") {
+    } else {
         ui->RootAssetLabel->setVisible(true);
         ui->RootAssetBox->setVisible(true);
         ui->assetnameText->setToolTip(tr("a-z A-Z 0-9 and space"));
