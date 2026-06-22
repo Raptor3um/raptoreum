@@ -1219,8 +1219,13 @@ UniValue setgenerate(const JSONRPCRequest &request) {
     }
 
 
-    gArgs.SoftSetArg("-gen", (fGenerate ? "1" : "0"));
-    gArgs.SoftSetArg("-genproclimit", itostr(nGenProcLimit));
+    // setgenerate is an explicit runtime command, so it must overwrite any
+    // previously stored values. SoftSetArg() only sets an arg when it is unset,
+    // which meant the very first invocation "stuck": later calls could not update
+    // -gen or -genproclimit, so the node kept reporting/using the original thread
+    // count (issue #448). Force the values to reflect this call.
+    gArgs.ForceSetArg("-gen", (fGenerate ? "1" : "0"));
+    gArgs.ForceSetArg("-genproclimit", itostr(nGenProcLimit));
 
     NodeContext &node = EnsureNodeContext(request.context);
     if (!node.connman)
