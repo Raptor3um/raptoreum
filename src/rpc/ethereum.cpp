@@ -1907,18 +1907,45 @@ UniValue FormatLogForRpc(const evm::CEvmLog& log,
 
 } // anonymous namespace (Phase 3.6d helpers)
 
+// If `tag` is an explicit numeric block tag ("0x10"), parse it into
+// `heightOut` and return true. Named tags / null return false.
+bool TryParseNumericBlockTag(const UniValue& tag, uint64_t& heightOut)
+{
+    if (!tag.isStr()) return false;
+    const std::string s = tag.get_str();
+    if (s == "latest" || s == "pending" || s == "earliest") return false;
+    const std::string stripped = StripHexPrefix(s);
+    const std::string padded = (stripped.size() % 2 == 0)
+        ? stripped : ("0" + stripped);
+    if (stripped.empty() || stripped.size() > 16 || !IsHex(padded)) return false;
+    heightOut = 0;
+    for (char c : stripped) {
+        heightOut <<= 4;
+        if (c >= '0' && c <= '9') heightOut |= static_cast<uint64_t>(c - '0');
+        else if (c >= 'a' && c <= 'f') heightOut |= static_cast<uint64_t>(c - 'a' + 10);
+        else if (c >= 'A' && c <= 'F') heightOut |= static_cast<uint64_t>(c - 'A' + 10);
+    }
+    return true;
+}
+
 UniValue eth_getLogs(const JSONRPCRequest& request)
 {
     RPCHelpMan{"eth_getLogs",
-        "\nReturn the logs matching the given filter. Walks block range,\n"
-        "reads receipts for the EVM-typed txs in each block, and applies\n"
-        "the address + topic filters.\n",
+        "\nReturn the logs matching the given filter. Walks the block range\n"
+        "(or the single block given by blockHash), reads receipts for the\n"
+        "EVM-typed txs in each block, and applies the address + topic\n"
+        "filters. Results are ordered by (blockNumber, transactionIndex,\n"
+        "logIndex); logIndex is the log's position within its BLOCK, per the\n"
+        "Ethereum spec.\n",
         {
             {"filter", RPCArg::Type::OBJ, RPCArg::Optional::NO,
              "Standard Ethereum getLogs filter object.",
              {
                  {"fromBlock", RPCArg::Type::STR, /* default */ "\"latest\"", "Range start"},
                  {"toBlock",   RPCArg::Type::STR, /* default */ "\"latest\"", "Range end"},
+                 {"blockHash", RPCArg::Type::STR, RPCArg::Optional::OMITTED,
+                  "Restrict to one block by hash (EIP-234). Mutually exclusive "
+                  "with fromBlock/toBlock; the block must be in the canonical chain."},
                  {"address",   RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Address or array of addresses"},
                  {"topics",    RPCArg::Type::ARR, RPCArg::Optional::OMITTED,
                   "Per-position topic filter; null entries match anything",
@@ -1940,27 +1967,74 @@ UniValue eth_getLogs(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "filter must be an object");
     }
 
-    // Resolve block range.
+    // Resolve the scan range: either a single block by hash (EIP-234) or
+    // a [fromBlock, toBlock] height range.
     int fromHeight = 0;
     int toHeight = 0;
-    {
+    uint256 requiredBlockHash;  // non-null => single-block-by-hash mode
+    const UniValue& blockHashV = filter["blockHash"];
+    if (!blockHashV.isNull()) {
+        // EIP-234: blockHash is mutually exclusive with fromBlock/toBlock.
+        // Rejecting the combination (rather than ignoring one side) is what
+        // indexers rely on to catch their own bugs.
+        if (!filter["fromBlock"].isNull() || !filter["toBlock"].isNull()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER,
+                              "cannot specify both blockHash and fromBlock/toBlock");
+        }
+        requiredBlockHash = ParseEthBlockHash(blockHashV, "blockHash");
+        LOCK(cs_main);
+        const auto it = ::BlockIndex().find(requiredBlockHash);
+        if (it == ::BlockIndex().end() || it->second == nullptr) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "unknown block");
+        }
+        // A reorged-out block is deliberately an ERROR, not a stale result:
+        // an indexer that saw logs at this hash and asks again after a
+        // reorg gets an explicit signal to roll back, never logs that are
+        // no longer part of the chain's history.
+        if (!::ChainActive().Contains(it->second)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER,
+                              "block is not in the canonical chain");
+        }
+        fromHeight = toHeight = it->second->nHeight;
+    } else {
+        // Fail fast on an oversized REQUESTED range (both bounds numeric)
+        // before touching the chain — an explicit error, never a scan that
+        // grinds toward a client timeout.
+        uint64_t reqFrom = 0, reqTo = 0;
+        if (TryParseNumericBlockTag(filter["fromBlock"], reqFrom) &&
+            TryParseNumericBlockTag(filter["toBlock"], reqTo) &&
+            reqTo >= reqFrom &&
+            reqTo - reqFrom > static_cast<uint64_t>(kMaxLogBlockSpan)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER,
+                              strprintf("log range exceeds the maximum of %d blocks "
+                                        "(narrow fromBlock/toBlock)",
+                                        kMaxLogBlockSpan));
+        }
         LOCK(cs_main);
         CBlockIndex* fromIdx = ResolveBlockTagToIndex(filter["fromBlock"], "fromBlock");
         CBlockIndex* toIdx = ResolveBlockTagToIndex(filter["toBlock"], "toBlock");
-        if (fromIdx == nullptr || toIdx == nullptr) {
+        if (fromIdx == nullptr) {
+            // fromBlock beyond the tip: nothing can match.
             return UniValue(UniValue::VARR);
+        }
+        if (toIdx == nullptr) {
+            // Numeric toBlock beyond the tip clamps to the tip (matches
+            // geth's range filter, which scans up to the head) instead of
+            // silently returning nothing.
+            toIdx = ::ChainActive().Tip();
+            if (toIdx == nullptr) return UniValue(UniValue::VARR);
         }
         fromHeight = fromIdx->nHeight;
         toHeight = toIdx->nHeight;
-    }
-    if (fromHeight > toHeight) {
-        return UniValue(UniValue::VARR);
-    }
-    if (toHeight - fromHeight > kMaxLogBlockSpan) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER,
-                          strprintf("log range exceeds the maximum of %d blocks "
-                                    "(narrow fromBlock/toBlock)",
-                                    kMaxLogBlockSpan));
+        if (fromHeight > toHeight) {
+            return UniValue(UniValue::VARR);
+        }
+        if (toHeight - fromHeight > kMaxLogBlockSpan) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER,
+                              strprintf("log range exceeds the maximum of %d blocks "
+                                        "(narrow fromBlock/toBlock)",
+                                        kMaxLogBlockSpan));
+        }
     }
 
     const std::vector<uint160> addressFilter = ParseLogAddressFilter(filter["address"]);
@@ -1968,6 +2042,9 @@ UniValue eth_getLogs(const JSONRPCRequest& request)
 
     if (!pevmstatedb) return UniValue(UniValue::VARR);
 
+    // Iteration is height-ascending, then vtx-index-ascending, then
+    // log-position-ascending — the (blockNumber, transactionIndex,
+    // logIndex) ordering indexers assume.
     UniValue results(UniValue::VARR);
     for (int h = fromHeight; h <= toHeight; ++h) {
         CBlockIndex* pindex = nullptr;
@@ -1981,7 +2058,13 @@ UniValue eth_getLogs(const JSONRPCRequest& request)
         if (!ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
             continue;
         }
+        const uint256 blockHash = block.GetHash();
 
+        // Per the Ethereum spec logIndex is the log's position within the
+        // BLOCK (cumulative across its transactions), not within its
+        // receipt. Count every log we walk past — matched or not — so the
+        // indices of the matched subset are the true block positions.
+        uint64_t blockLogIndex = 0;
         for (size_t i = 0; i < block.vtx.size(); ++i) {
             const CTransaction& tx = *block.vtx[i];
             const int t = tx.nType;
@@ -1991,11 +2074,17 @@ UniValue eth_getLogs(const JSONRPCRequest& request)
                 continue;
             evm::CEvmReceipt receipt;
             if (!LoadReceiptByRtmHash(tx.GetHash(), receipt)) continue;
+            // Receipts are keyed by tx hash; if this tx was re-mined in a
+            // different block after a reorg, its receipt now describes THAT
+            // block. Skip stale pairings so a block scan never emits a log
+            // with coordinates from a different block.
+            if (receipt.blockHash != blockHash) continue;
             for (size_t li = 0; li < receipt.logs.size(); ++li) {
                 const auto& log = receipt.logs[li];
+                const uint64_t idxInBlock = blockLogIndex++;
                 if (!LogAddressMatches(log, addressFilter)) continue;
                 if (!LogTopicsMatch(log, topicFilter)) continue;
-                results.push_back(FormatLogForRpc(log, receipt, static_cast<uint64_t>(li)));
+                results.push_back(FormatLogForRpc(log, receipt, idxInBlock));
             }
         }
     }

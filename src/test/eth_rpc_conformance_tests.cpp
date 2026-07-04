@@ -323,6 +323,70 @@ BOOST_AUTO_TEST_CASE(eip1559_fee_surface_is_nonzero)
     BOOST_CHECK(gasPrice >= tipWei);
 }
 
+// eth_getLogs structural contract (PR-review regression set): blockHash
+// (EIP-234) is mutually exclusive with fromBlock/toBlock, unknown hashes
+// are clean errors, {"blockHash":..,"topics":[]} is a valid shape, and an
+// oversized REQUESTED range fails fast with an explicit error instead of
+// scanning toward a client timeout.
+BOOST_AUTO_TEST_CASE(getlogs_blockhash_and_range_contract)
+{
+    // Genesis hash in eth-hex form, from the block object itself.
+    const UniValue genesisBlk =
+        CallEth("eth_getBlockByNumber", Arr({"0x0", false}));
+    BOOST_REQUIRE(genesisBlk.isObject());
+    const std::string genesisHash = find_value(genesisBlk, "hash").get_str();
+
+    // blockHash + fromBlock / toBlock -> clean error.
+    {
+        UniValue f(UniValue::VOBJ);
+        f.pushKV("blockHash", genesisHash);
+        f.pushKV("fromBlock", "0x0");
+        BOOST_CHECK_THROW(CallEth("eth_getLogs", Arr({f})), std::runtime_error);
+        UniValue g(UniValue::VOBJ);
+        g.pushKV("blockHash", genesisHash);
+        g.pushKV("toBlock", "latest");
+        BOOST_CHECK_THROW(CallEth("eth_getLogs", Arr({g})), std::runtime_error);
+    }
+
+    // Unknown (but well-formed) blockHash -> clean error, never [].
+    {
+        UniValue f(UniValue::VOBJ);
+        f.pushKV("blockHash", "0x" + std::string(64, 'e'));
+        BOOST_CHECK_THROW(CallEth("eth_getLogs", Arr({f})), std::runtime_error);
+    }
+
+    // {"blockHash": <genesis>, "topics": []} — the canonical single-block
+    // shape; genesis has no EVM txs, so an empty array (not an error).
+    {
+        UniValue f(UniValue::VOBJ);
+        f.pushKV("blockHash", genesisHash);
+        f.pushKV("topics", UniValue(UniValue::VARR));
+        const UniValue r = CallEth("eth_getLogs", Arr({f}));
+        BOOST_REQUIRE(r.isArray());
+        BOOST_CHECK_EQUAL(r.size(), 0U);
+    }
+
+    // Requested numeric range wider than the scan cap -> explicit error
+    // BEFORE any chain access (0x0..0x2711 = 10,002 blocks > 10,000).
+    {
+        UniValue f(UniValue::VOBJ);
+        f.pushKV("fromBlock", "0x0");
+        f.pushKV("toBlock", "0x2711");
+        BOOST_CHECK_THROW(CallEth("eth_getLogs", Arr({f})), std::runtime_error);
+    }
+
+    // A sane numeric toBlock beyond the tip clamps to the tip (geth-style)
+    // and returns an empty array rather than erroring.
+    {
+        UniValue f(UniValue::VOBJ);
+        f.pushKV("fromBlock", "0x0");
+        f.pushKV("toBlock", "0x64");
+        const UniValue r = CallEth("eth_getLogs", Arr({f}));
+        BOOST_REQUIRE(r.isArray());
+        BOOST_CHECK_EQUAL(r.size(), 0U);
+    }
+}
+
 // The block object must carry the post-London fields ethers/viem require:
 // baseFeePerGas (sourced from the D2 commitment) and a real gasUsed.
 BOOST_AUTO_TEST_CASE(block_object_has_eip1559_and_evm_fields)

@@ -30,6 +30,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <algorithm>
 #include <cstring>
 #include <vector>
 
@@ -134,6 +135,60 @@ struct EthFundedE2ESetup : public TestChain100Setup {
             Str(StripLeadingZeros(r.data(), r.size())),
             Str(StripLeadingZeros(s.data(), s.size()))}));
         return "0x" + HexStr(wire);
+    }
+
+    // FUND the eth key's EVM account with `fundSat` satoshis via a
+    // coinbase spend + a mined block (same flow as the first test case).
+    void FundEthAccount(const CScript& cbScript, CAmount fundSat)
+    {
+        const uint64_t kSatToWeis = 10'000'000'000ULL;
+        const CAmount cbValue = m_coinbase_txns[0]->vout[0].nValue;
+        CMutableTransaction ftx;
+        ftx.nVersion = 3;
+        ftx.nType = TRANSACTION_EVM_FUND;
+        ftx.vin.resize(1);
+        ftx.vin[0].prevout.hash = m_coinbase_txns[0]->GetHash();
+        ftx.vin[0].prevout.n = 0;
+        ftx.vout.resize(1);
+        ftx.vout[0].nValue = cbValue - fundSat - 1000;
+        ftx.vout[0].scriptPubKey = cbScript;
+        evm::CEvmFundTx p;
+        p.nVersion = evm::EVM_TX_PAYLOAD_VERSION;
+        p.toAddress.SetNull();
+        std::memcpy(p.toAddress.begin() + 12, ethAddr.begin(), 20);
+        p.amount = static_cast<uint64_t>(fundSat) * kSatToWeis;
+        SetTxPayload(ftx, p);
+        std::vector<unsigned char> sig;
+        const uint256 h = SignatureHash(cbScript, ftx, 0, SIGHASH_ALL, 0,
+                                        SigVersion::BASE);
+        BOOST_REQUIRE(coinbaseKey.Sign(h, sig));
+        sig.push_back(static_cast<unsigned char>(SIGHASH_ALL));
+        ftx.vin[0].scriptSig = CScript() << sig;
+        CreateAndProcessBlock({ftx}, cbScript);
+    }
+
+    // Drain the mempool into a block, ordering EVM wrapper txs by their
+    // payload nonce (the EVM process layer requires sequential nonces
+    // within a block, and queryHashes gives no ordering guarantee).
+    void MineMempoolNonceOrdered(const CScript& cbScript)
+    {
+        std::vector<uint256> mh;
+        m_node.mempool->queryHashes(mh);
+        BOOST_REQUIRE(!mh.empty());
+        std::vector<CMutableTransaction> txns;
+        for (const uint256& hh : mh) {
+            CTransactionRef t = m_node.mempool->get(hh);
+            if (t) txns.push_back(CMutableTransaction(*t));
+        }
+        std::sort(txns.begin(), txns.end(),
+                  [](const CMutableTransaction& a, const CMutableTransaction& b) {
+                      evm::CEvmDeployTx pa, pb;
+                      const bool oka = GetTxPayload(a.vExtraPayload, pa);
+                      const bool okb = GetTxPayload(b.vExtraPayload, pb);
+                      if (!oka || !okb) return oka && !okb;
+                      return pa.nonce < pb.nonce;
+                  });
+        CreateAndProcessBlock(txns, cbScript);
     }
 };
 
@@ -280,6 +335,184 @@ BOOST_AUTO_TEST_CASE(fund_then_deploy_then_receipt_by_eth_hash)
         }
         BOOST_CHECK_MESSAGE(foundHash,
             "block hash-list must contain the eth tx hash (cross-ref)");
+    }
+}
+
+// eth_getLogs regression set requested in PR review before testnet:
+// the two canonical filter shapes, blockHash/range mutual exclusion,
+// spec ordering (blockNumber, transactionIndex, block-cumulative
+// logIndex), and reorg consistency (disconnect + reconnect).
+BOOST_AUTO_TEST_CASE(getlogs_filters_ordering_and_reorg)
+{
+    const CScript cbScript =
+        CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
+    FundEthAccount(cbScript, /*fundSat=*/1'000'000);
+
+    // Two log-emitting contract creations mined in ONE block:
+    //   tx A (nonce 0): LOG2(topics 0x..aa, 0x..bb) then LOG0  -> 2 logs
+    //   tx B (nonce 1): LOG0                                    -> 1 log
+    // Spec logIndex is the position within the BLOCK, so the three logs
+    // must report 0x0, 0x1, 0x2 — a per-receipt counter would emit
+    // 0x0, 0x1, 0x0 and break indexers.
+    const std::vector<uint8_t> codeA = {
+        0x60, 0xbb, 0x60, 0xaa, 0x60, 0x00, 0x60, 0x00, 0xa2,  // LOG2
+        0x60, 0x00, 0x60, 0x00, 0xa0,                          // LOG0
+        0x00};                                                 // STOP
+    const std::vector<uint8_t> codeB = {
+        0x60, 0x00, 0x60, 0x00, 0xa0,                          // LOG0
+        0x00};                                                 // STOP
+    UniValue sp(UniValue::VARR);
+    sp.push_back(SignedLegacyCreate(0, 1'000'000'000ULL, 150000, codeA));
+    const std::string hashA = CallRpc("eth_sendRawTransaction", sp).get_str();
+    sp.setArray();
+    sp.push_back(SignedLegacyCreate(1, 1'000'000'000ULL, 150000, codeB));
+    CallRpc("eth_sendRawTransaction", sp);
+    MineMempoolNonceOrdered(cbScript);
+
+    // Coordinates + contract address from tx A's receipt.
+    UniValue rp(UniValue::VARR);
+    rp.push_back(hashA);
+    const UniValue receiptA = CallRpc("eth_getTransactionReceipt", rp);
+    BOOST_REQUIRE(receiptA.isObject());
+    BOOST_REQUIRE_EQUAL(find_value(receiptA, "status").get_str(), "0x1");
+    const std::string blockHashStr = find_value(receiptA, "blockHash").get_str();
+    const std::string contractA = find_value(receiptA, "contractAddress").get_str();
+    const uint64_t bn = std::stoull(
+        find_value(receiptA, "blockNumber").get_str().substr(2), nullptr, 16);
+
+    const std::string topicAA = "0x" + std::string(62, '0') + "aa";
+    const std::string topicBB = "0x" + std::string(62, '0') + "bb";
+    const std::string topicCC = "0x" + std::string(62, '0') + "cc";
+
+    auto getLogs = [&](const UniValue& f) {
+        UniValue p(UniValue::VARR);
+        p.push_back(f);
+        return CallRpc("eth_getLogs", p);
+    };
+    auto getLogsThrows = [&](const UniValue& f) -> bool {
+        try { getLogs(f); return false; }
+        catch (const UniValue&) { return true; }
+        catch (const std::exception&) { return true; }
+    };
+
+    // --- Regression shape 1: range + address array + [null, [or-set]] ---
+    // {"fromBlock":..,"toBlock":..,"address":["0x.."],"topics":[null,["0x..","0x.."]]}
+    {
+        UniValue f(UniValue::VOBJ);
+        f.pushKV("fromBlock", strprintf("0x%x", bn - 1));
+        f.pushKV("toBlock", strprintf("0x%x", bn));
+        UniValue addrs(UniValue::VARR);
+        addrs.push_back(contractA);
+        f.pushKV("address", addrs);
+        UniValue topics(UniValue::VARR);
+        topics.push_back(UniValue());          // position 0: wildcard
+        UniValue orSet(UniValue::VARR);        // position 1: BB or CC
+        orSet.push_back(topicBB);
+        orSet.push_back(topicCC);
+        topics.push_back(orSet);
+        f.pushKV("topics", topics);
+
+        const UniValue r = getLogs(f);
+        BOOST_REQUIRE(r.isArray());
+        // Only tx A's LOG2 matches: position 1 == 0x..bb; the LOG0s have
+        // no topics and tx B is a different address anyway.
+        BOOST_REQUIRE_EQUAL(r.size(), 1U);
+        BOOST_CHECK_EQUAL(find_value(r[0], "address").get_str(), contractA);
+        BOOST_CHECK_EQUAL(find_value(r[0], "logIndex").get_str(), "0x0");
+        const UniValue& ts = find_value(r[0], "topics");
+        BOOST_REQUIRE_EQUAL(ts.size(), 2U);
+        BOOST_CHECK_EQUAL(ts[0].get_str(), topicAA);
+        BOOST_CHECK_EQUAL(ts[1].get_str(), topicBB);
+    }
+
+    // --- Regression shape 2: {"blockHash":"0x..","topics":[]} ------------
+    // Empty topics array = no constraint; all three logs of the block, in
+    // (blockNumber, transactionIndex, logIndex) order with BLOCK-cumulative
+    // logIndex 0x0, 0x1, 0x2.
+    {
+        UniValue f(UniValue::VOBJ);
+        f.pushKV("blockHash", blockHashStr);
+        f.pushKV("topics", UniValue(UniValue::VARR));
+
+        const UniValue r = getLogs(f);
+        BOOST_REQUIRE(r.isArray());
+        BOOST_REQUIRE_EQUAL(r.size(), 3U);
+        uint64_t prevTx = 0, prevLi = 0;
+        for (size_t i = 0; i < 3; ++i) {
+            BOOST_CHECK_EQUAL(find_value(r[i], "blockHash").get_str(),
+                              blockHashStr);
+            BOOST_CHECK_EQUAL(find_value(r[i], "logIndex").get_str(),
+                              strprintf("0x%x", i));
+            const uint64_t txi = std::stoull(
+                find_value(r[i], "transactionIndex").get_str().substr(2),
+                nullptr, 16);
+            const uint64_t li = std::stoull(
+                find_value(r[i], "logIndex").get_str().substr(2), nullptr, 16);
+            if (i > 0) {
+                BOOST_CHECK_MESSAGE(
+                    txi > prevTx || (txi == prevTx && li > prevLi),
+                    "logs must be ordered by (transactionIndex, logIndex)");
+            }
+            prevTx = txi; prevLi = li;
+        }
+        // tx A carries logs 0,1; tx B carries log 2 — different txIndex.
+        BOOST_CHECK(find_value(r[0], "transactionIndex").get_str() ==
+                    find_value(r[1], "transactionIndex").get_str());
+        BOOST_CHECK(find_value(r[1], "transactionIndex").get_str() !=
+                    find_value(r[2], "transactionIndex").get_str());
+    }
+
+    // --- blockHash is mutually exclusive with fromBlock/toBlock ----------
+    {
+        UniValue f(UniValue::VOBJ);
+        f.pushKV("blockHash", blockHashStr);
+        f.pushKV("fromBlock", "0x0");
+        BOOST_CHECK(getLogsThrows(f));
+        UniValue g(UniValue::VOBJ);
+        g.pushKV("blockHash", blockHashStr);
+        g.pushKV("toBlock", "latest");
+        BOOST_CHECK(getLogsThrows(g));
+    }
+
+    // --- Reorg consistency: disconnect, then reconnect -------------------
+    CBlockIndex* logTip = nullptr;
+    {
+        LOCK(cs_main);
+        logTip = ::ChainActive().Tip();
+    }
+    BOOST_REQUIRE(logTip != nullptr);
+    {
+        CValidationState st;
+        BOOST_REQUIRE(InvalidateBlock(st, Params(), logTip));
+    }
+    // The orphaned block's logs must be an explicit error by hash (the
+    // indexer's roll-back signal), and absent from range queries.
+    {
+        UniValue f(UniValue::VOBJ);
+        f.pushKV("blockHash", blockHashStr);
+        BOOST_CHECK(getLogsThrows(f));
+        UniValue g(UniValue::VOBJ);
+        g.pushKV("fromBlock", strprintf("0x%x", bn - 1));
+        g.pushKV("toBlock", "latest");
+        const UniValue r = getLogs(g);
+        BOOST_REQUIRE(r.isArray());
+        BOOST_CHECK_EQUAL(r.size(), 0U);
+    }
+    // Reconnect: the same block returns to the canonical chain and the
+    // exact same three logs are served again.
+    {
+        {
+            LOCK(cs_main);
+            ResetBlockFailureFlags(logTip);
+        }
+        CValidationState st;
+        BOOST_REQUIRE(ActivateBestChain(st, Params()));
+        UniValue f(UniValue::VOBJ);
+        f.pushKV("blockHash", blockHashStr);
+        const UniValue r = getLogs(f);
+        BOOST_REQUIRE(r.isArray());
+        BOOST_CHECK_EQUAL(r.size(), 3U);
+        BOOST_CHECK_EQUAL(find_value(r[2], "logIndex").get_str(), "0x2");
     }
 }
 

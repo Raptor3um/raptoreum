@@ -277,8 +277,8 @@ block ↔ receipt ↔ getTransactionByHash all cross-reference.
 
 ### `eth_getLogs(filter)`
 
-Filters logs by block range + address + topics (per-position OR
-of arrays per Ethereum spec).
+Filters logs by block range (or a single block via `blockHash`) +
+address + topics (per-position OR of arrays per Ethereum spec).
 
 ```
 $ raptoreum-cli eth_getLogs '{
@@ -293,7 +293,23 @@ $ raptoreum-cli eth_getLogs '{
   }'
 ```
 
-Block range is capped at 10000 blocks per call.
+Contract behaviour (indexer-facing):
+
+- **`blockHash`** (EIP-234) restricts the query to one block and is
+  **mutually exclusive** with `fromBlock`/`toBlock` — passing both is a
+  clean error, not a silently-ignored field. The block must be in the
+  canonical chain; a reorged-out hash returns an explicit error (the
+  indexer's roll-back signal), never stale logs.
+- **Ordering** is `(blockNumber, transactionIndex, logIndex)`, and
+  `logIndex` is the log's position **within its block** (cumulative
+  across the block's transactions), per the spec — not per-receipt.
+- **Range cap:** 10000 blocks per call. An oversized *requested* numeric
+  range fails fast with an explicit error **before** scanning, rather
+  than letting the call grind toward a client timeout. A numeric
+  `toBlock` past the tip clamps to the tip (geth-style).
+- After a reorg, `DisconnectTip` + reconnect update results
+  consistently: an orphaned block's logs disappear from range queries
+  and error by hash; on reconnect the same logs are served again.
 
 ---
 
