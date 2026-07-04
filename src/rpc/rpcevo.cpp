@@ -1521,6 +1521,14 @@ UniValue protx_diff(const JSONRPCRequest &request) {
     return ret;
 }
 
+// evm_fund/wrap_asset/unwrap_asset assemble their help text unconditionally,
+// but HELP_REQUIRING_PASSPHRASE (wallet/rpcwallet.h) only exists under
+// ENABLE_WALLET. Keep a wallet-independent copy so these help blocks still
+// compile for a wallet-less node (mining/relay); the wallet-gated function
+// body below still enforces the passphrase at runtime.
+static const std::string EVM_HELP_REQUIRING_PASSPHRASE{
+    "\nRequires wallet passphrase to be set with walletpassphrase call if wallet is encrypted.\n"};
+
 UniValue evm_fund(const JSONRPCRequest& request)
 {
     RPCHelpMan{"evm_fund",
@@ -1530,7 +1538,7 @@ UniValue evm_fund(const JSONRPCRequest& request)
         "leaves the UTXO money supply and reappears as EVM balance "
         "(supply-conserving). This is the bootstrap that lets a fresh "
         "EVM account hold RTM and pay gas.\n"
-        + HELP_REQUIRING_PASSPHRASE,
+        + EVM_HELP_REQUIRING_PASSPHRASE,
         {
             {"evmaddress", RPCArg::Type::STR, RPCArg::Optional::NO,
              "0x-prefixed 20-byte EVM account to credit"},
@@ -1656,7 +1664,7 @@ UniValue wrap_asset(const JSONRPCRequest& request)
         "EVM account <evmrecipient> as the asset's wrapped ERC-20 token "
         "(callable at its per-asset precompile address). Supply-conserving: "
         "the units leave the UTXO side and reappear as wrappedSupply.\n"
-        + HELP_REQUIRING_PASSPHRASE,
+        + EVM_HELP_REQUIRING_PASSPHRASE,
         {
             {"assetid", RPCArg::Type::STR, RPCArg::Optional::NO,
              "Asset id or name to wrap"},
@@ -1786,7 +1794,7 @@ UniValue unwrap_asset(const JSONRPCRequest& request)
         "connection: if it is short the whole block is rejected, so the "
         "minted UTXO output can never stand without its EVM burn. "
         "Supply-conserving.\n"
-        + HELP_REQUIRING_PASSPHRASE,
+        + EVM_HELP_REQUIRING_PASSPHRASE,
         {
             {"assetid", RPCArg::Type::STR, RPCArg::Optional::NO,
              "Asset id or name to unwrap"},
