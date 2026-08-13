@@ -812,6 +812,7 @@ UniValue getassetdetailsbyid(const JSONRPCRequest &request) {
     return result;
 }
 
+#ifdef ENABLE_WALLET
 UniValue listassetsbalance(const JSONRPCRequest &request) {
     if (request.fHelp || !Updates().IsAssetsActive(::ChainActive().Tip()) || request.params.size() > 0)
         throw std::runtime_error(
@@ -1062,6 +1063,7 @@ UniValue listunspentassets(const JSONRPCRequest& request)
 
     return results;
 }
+#endif // ENABLE_WALLET
 
 UniValue listassets(const JSONRPCRequest &request) {
     RPCHelpMan{"listassets",
@@ -1158,6 +1160,7 @@ UniValue listassets(const JSONRPCRequest &request) {
     UniValue result(UniValue::VOBJ);
 
     if (mine) {
+#ifdef ENABLE_WALLET
         // Get only assets owned by this wallet
         std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
         if (!wallet) {
@@ -1201,6 +1204,10 @@ UniValue listassets(const JSONRPCRequest &request) {
                 loaded++;
             }
         }
+#else
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND,
+                           "The 'mine' option requires wallet support, which was disabled at compile time.");
+#endif // ENABLE_WALLET
     } else {
         // Get all assets (original behavior)
         std::vector<CDatabaseAssetData> assets;
