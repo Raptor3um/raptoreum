@@ -404,6 +404,14 @@ UniValue smartnode_payments(const JSONRPCRequest &request) {
 
     while (vecPayments.size() < uint64_t(std::abs(nCount)) && pindex != nullptr) {
 
+        if (pindex->pprev == nullptr) {
+            // The genesis block has no previous block to derive the block reward
+            // from and pays no smartnode. Bail out with a clear error instead of
+            // dereferencing a null pprev below, which crashes the node.
+            throw JSONRPCError(RPC_INVALID_PARAMETER,
+                               "Smartnode payment information is not available for the genesis block");
+        }
+
         CBlock block;
         if (!ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't read block from disk");
