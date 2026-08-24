@@ -517,17 +517,22 @@ void AddAssets(const CTransaction &tx, int nHeight, CAssetsCache *assetCache,
                 if (!assetCache->GetAssetMetaData(assetTx.assetId, asset))
                     return;
                 assetCache->UpdateAsset(assetTx);
-                undoAssetData->first = assetTx.assetId; // Asset Name
-                undoAssetData->second = CBlockAssetUndo{false, asset.circulatingSupply,
-                                                        asset.mintCount,
-                                                        asset.updatable,
-                                                        asset.referenceHash,
-                                                        asset.type,
-                                                        asset.targetAddress,
-                                                        asset.issueFrequency,
-                                                        asset.amount,
-                                                        asset.ownerAddress,
-                                                        asset.collateralAddress};
+                // undoAssetData is null when called without an undo sink, e.g. from
+                // RollforwardBlock() during ReplayBlocks() on startup. Only record undo
+                // data when a sink was provided, otherwise this would dereference null.
+                if (undoAssetData != nullptr) {
+                    undoAssetData->first = assetTx.assetId; // Asset Name
+                    undoAssetData->second = CBlockAssetUndo{false, asset.circulatingSupply,
+                                                            asset.mintCount,
+                                                            asset.updatable,
+                                                            asset.referenceHash,
+                                                            asset.type,
+                                                            asset.targetAddress,
+                                                            asset.issueFrequency,
+                                                            asset.amount,
+                                                            asset.ownerAddress,
+                                                            asset.collateralAddress};
+                }
             }
         } else if (tx.nType == TRANSACTION_MINT_ASSET) {
             CMintAssetTx assetTx;
@@ -544,17 +549,20 @@ void AddAssets(const CTransaction &tx, int nHeight, CAssetsCache *assetCache,
                 if (!assetCache->GetAssetMetaData(assetTx.assetId, asset))
                     return;
                 assetCache->UpdateAsset(assetTx.assetId, amount); // Update circulating supply
-                undoAssetData->first = assetTx.assetId;           // Asset Name
-                undoAssetData->second = CBlockAssetUndo{true, asset.circulatingSupply,
-                                                        asset.mintCount,
-                                                        asset.updatable,
-                                                        asset.referenceHash,
-                                                        asset.type,
-                                                        asset.targetAddress,
-                                                        asset.issueFrequency,
-                                                        asset.amount,
-                                                        asset.ownerAddress,
-                                                        asset.collateralAddress};
+                // See the note above: undoAssetData is null on the replay path.
+                if (undoAssetData != nullptr) {
+                    undoAssetData->first = assetTx.assetId;           // Asset Name
+                    undoAssetData->second = CBlockAssetUndo{true, asset.circulatingSupply,
+                                                            asset.mintCount,
+                                                            asset.updatable,
+                                                            asset.referenceHash,
+                                                            asset.type,
+                                                            asset.targetAddress,
+                                                            asset.issueFrequency,
+                                                            asset.amount,
+                                                            asset.ownerAddress,
+                                                            asset.collateralAddress};
+                }
             }
         } 
         //process asset transaction in order to track address balances
