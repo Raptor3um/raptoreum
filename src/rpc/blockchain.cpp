@@ -1489,6 +1489,9 @@ static UniValue gettxout(const JSONRPCRequest &request) {
     }
 
     const CBlockIndex *pindex = LookupBlockIndex(coins_view->GetBestBlock());
+    if (pindex == nullptr) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Best block not found in block index");
+    }
     ret.pushKV("bestblock", pindex->GetBlockHash().GetHex());
     if (coin.nHeight == MEMPOOL_HEIGHT) {
         ret.pushKV("confirmations", 0);

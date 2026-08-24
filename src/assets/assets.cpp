@@ -586,7 +586,15 @@ bool GetAssetData(const CScript &script, CAssetOutputEntry &data) {
 }
 
 bool validateAmount(const CAmount nAmount, const uint16_t decimalPoint) {
-    if (nAmount % int64_t(pow(10, (8 - decimalPoint))) != 0) {
+    // Assets carry at most 8 decimals. A larger decimalPoint would make the divisor
+    // below (10^(8-decimalPoint)) underflow to 0 and divide by zero (SIGFPE). Using an
+    // integer lookup table also keeps this off floating-point math in a consensus path.
+    if (decimalPoint > 8) {
+        return false;
+    }
+    static const int64_t divisors[9] = {
+            100000000, 10000000, 1000000, 100000, 10000, 1000, 100, 10, 1};
+    if (nAmount % divisors[decimalPoint] != 0) {
         return false;
     }
     return true;
