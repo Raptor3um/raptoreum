@@ -15,6 +15,7 @@
 #include <rpc/util.h>
 #include <smartnode/activesmartnode.h>
 #include <smartnode/smartnode-payments.h>
+#include <undo.h>
 #include <univalue.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
@@ -419,20 +420,27 @@ UniValue smartnode_payments(const JSONRPCRequest &request) {
 
         // Note: we have to actually calculate block reward from scratch instead of simply querying coinbase vout
         // because miners might collect less coins than they potentially could and this would break our calculations.
+        //
+        // The value of each spent input is taken from the block's undo data (a single
+        // sequential read) rather than fetching every previous transaction individually.
+        // Besides being much faster, this also works on nodes without -txindex: the old
+        // GetTransaction() lookup returned null for confirmed prevouts on such nodes and
+        // the daemon crashed dereferencing it.
         CAmount nBlockFees{0};
-        NodeContext &node = EnsureNodeContext(request.context);
-        for (const auto &tx: block.vtx) {
-            if (tx->IsCoinBase()) {
-                continue;
-            }
+        if (IsBlockPruned(pindex)) {
+            throw JSONRPCError(RPC_MISC_ERROR, "Undo data not available (pruned data)");
+        }
+        CBlockUndo blockUndo;
+        if (!UndoReadFromDisk(blockUndo, pindex)) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't read undo data from disk");
+        }
+        // vtx[0] is the coinbase (no inputs); blockUndo.vtxundo is indexed for all but the coinbase.
+        for (size_t i = 1; i < block.vtx.size(); ++i) {
             CAmount nValueIn{0};
-            for (const auto &txin: tx->vin) {
-                uint256 blockHashTmp;
-                CTransactionRef txPrev = GetTransaction(/* block_index */ nullptr, node.mempool, txin.prevout.hash,
-                                                                          Params().GetConsensus(), blockHashTmp);
-                nValueIn += txPrev->vout[txin.prevout.n].nValue;
+            for (const Coin &coin: blockUndo.vtxundo.at(i - 1).vprevout) {
+                nValueIn += coin.out.nValue;
             }
-            nBlockFees += nValueIn - tx->GetValueOut();
+            nBlockFees += nValueIn - block.vtx[i]->GetValueOut();
         }
 
         std::vector <CTxOut> voutSmartnodePayments, voutDummy;
