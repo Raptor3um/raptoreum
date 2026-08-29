@@ -181,6 +181,13 @@ namespace llmq {
         // Peek into the message and see which LLMQType it is. First byte of all messages is always the LLMQType
         Consensus::LLMQType llmqType = (Consensus::LLMQType) * vRecv.begin();
         if (llmqType == Consensus::LLMQType::LLMQ_INVALID && (strCommand == NetMsgType::QCONTRIB || strCommand == NetMsgType::QPCOMMITMENT)) {
+            // These messages carry the real LLMQType in the second byte. Reject a
+            // 1-byte message instead of reading past the end of the buffer.
+            if (vRecv.size() < 2) {
+                LOCK(cs_main);
+                Misbehaving(pfrom->GetId(), 100);
+                return;
+            }
             llmqType = (Consensus::LLMQType) * (vRecv.begin() + 1);
         }
 

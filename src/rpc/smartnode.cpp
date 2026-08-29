@@ -574,6 +574,9 @@ static UniValue smartnodelist(const JSONRPCRequest &request) {
 
         LOCK(cs_main);
         const CBlockIndex *pindex = ::ChainActive()[dmn->pdmnState->nLastPaidHeight];
+        if (pindex == nullptr) {
+            return (int) 0;
+        }
         return (int) pindex->nTime;
     };
 
