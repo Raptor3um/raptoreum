@@ -5,6 +5,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#if defined(HAVE_CONFIG_H)
+#include <config/raptoreum-config.h>
+#endif
+
 #include <amount.h>
 #include <chain.h>
 #include <chainparams.h>
@@ -34,6 +38,10 @@
 #include <validation.h>
 #include <validationinterface.h>
 #include <warnings.h>
+
+#ifdef ENABLE_WALLET
+#include <wallet/rpcwallet.h>
+#endif
 
 #include <governance/governance-classes.h>
 #include <smartnode/smartnode-payments.h>
@@ -1226,7 +1234,16 @@ UniValue setgenerate(const JSONRPCRequest &request) {
     if (!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
-    int numCores = GenerateRaptoreums(fGenerate, nGenProcLimit, Params(), node);
+    // If the call came in through a /wallet/<name> endpoint (e.g. a wallet picked
+    // in the GUI console), mine to that wallet instead of the first loaded one
+    // (issue #450). Left empty for non-wallet endpoints, which keeps the previous
+    // default-wallet behaviour and never throws in multi-wallet setups.
+    std::string walletName;
+#ifdef ENABLE_WALLET
+    GetWalletNameFromJSONRPCRequest(request, walletName);
+#endif
+
+    int numCores = GenerateRaptoreums(fGenerate, nGenProcLimit, Params(), node, walletName);
 
     nGenProcLimit = nGenProcLimit >= 0 ? nGenProcLimit : numCores;
     std::string msg = std::to_string(nGenProcLimit) + " of " + std::to_string(numCores);
