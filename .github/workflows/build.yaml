@@ -219,6 +219,84 @@ jobs:
           coin-name: ${{ env.COIN_NAME }}
 
   # ============================================================================
+  # macOS Build
+  # ============================================================================
+  # Built natively on a macOS runner rather than cross-compiled from Linux. The
+  # depends darwin host needs an extracted Apple SDK (see doc/README_osx.md),
+  # which cannot be redistributed, whereas a macOS runner already has one. Both
+  # jobs are experimental for now: this is the first time the tree is built for
+  # darwin in CI, so a failure here must not fail the workflow for everyone.
+  build-macos:
+    name: ${{ matrix.platform.name }} Build
+    needs: get-version
+    runs-on: ${{ matrix.platform.runner }}
+    continue-on-error: ${{ matrix.platform.experimental || false }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - name: macOS arm64
+            runner: macos-14
+            host: arm64-apple-darwin
+            platform-id: macos-arm64
+            experimental: true
+
+          - name: macOS x86_64
+            runner: macos-13
+            host: x86_64-apple-darwin
+            platform-id: macos-x86_64
+            experimental: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Required Packages
+        run: |
+          brew install automake libtool pkg-config ccache
+          # coreutils supplies the GNU tools some of the build scripts expect
+          brew install coreutils
+
+      - name: Setup Dependencies
+        uses: ./.github/actions/setup-depends
+        with:
+          host: ${{ matrix.platform.host }}
+          fallback-download-path: ${{ env.FALLBACK_DOWNLOAD_PATH }}
+
+      - name: Build Release Binaries
+        uses: ./.github/actions/build-binaries
+        with:
+          host: ${{ matrix.platform.host }}
+          build-type: release
+
+      - name: Collect Release Binaries
+        run: |
+          mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
+          cp src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}/
+          mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_not_strip/
+          strip ${BUILD_DIR}/*
+          mv src/test/test_raptoreum ${TEST_DIR}
+
+      - name: Package Artifacts
+        uses: ./.github/actions/package-artifacts
+        with:
+          platform: ${{ matrix.platform.platform-id }}
+          version: ${{ needs.get-version.outputs.version }}
+          coin-name: ${{ env.COIN_NAME }}
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.COIN_NAME }}-${{ matrix.platform.platform-id }}-${{ needs.get-version.outputs.version }}
+          path: ${{ env.COMPRESS_DIR }}
+
+      - name: Upload Test Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.COIN_NAME }}-${{ matrix.platform.platform-id }}-test-${{ needs.get-version.outputs.version }}
+          path: ${{ env.TEST_DIR }}
+
+  # ============================================================================
   # Windows Build
   # ============================================================================
   
