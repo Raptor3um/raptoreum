@@ -485,7 +485,11 @@ UniValue smartnode_payments(const JSONRPCRequest &request) {
             payeesArr.push_back(obj);
         }
 
-        const auto dmnPayee = deterministicMNManager->GetListForBlock(pindex).GetMNPayee();
+        // The smartnode paid by a block is the payee of the list as it stood at the
+        // previous block, which is what GetBlockTxOuts() used to fill in the payees
+        // above. Using the list at this block instead would name the smartnode due
+        // to be paid by the *next* one.
+        const auto dmnPayee = deterministicMNManager->GetListForBlock(pindex->pprev).GetMNPayee();
         protxObj.pushKV("proTxHash", dmnPayee == nullptr ? "" : dmnPayee->proTxHash.ToString());
         protxObj.pushKV("amount", payedPerSmartnode);
         protxObj.pushKV("payees", payeesArr);
