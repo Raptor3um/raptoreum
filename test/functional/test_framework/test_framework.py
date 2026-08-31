@@ -63,7 +63,11 @@ TEST_EXIT_PASSED = 0
 TEST_EXIT_FAILED = 1
 TEST_EXIT_SKIPPED = 77
 
-GENESISTIME = 1417713337
+# Timestamp of the regtest genesis block (see CreateGenesisBlock for regtest in
+# chainparams.cpp). Mocktime is anchored to it, so an inherited upstream value
+# leaves the clock behind the chain and block creation fails with
+# "time-too-new, block timestamp too far in the future".
+GENESISTIME = 1614369600
 
 class BitcoinTestFramework():
     """Base class for a bitcoin test script.
@@ -508,7 +512,10 @@ class BitcoinTestFramework():
         for i in range(self.num_nodes):
             initialize_datadir(self.options.tmpdir, i, self.chain)
 
-SMARTNODE_COLLATERAL = 1000
+# Smartnode collateral required by regtest (see consensus.nCollaterals for
+# regtest in chainparams.cpp). The upstream value of 1000 is not a valid
+# collateral here, so registration was rejected.
+SMARTNODE_COLLATERAL = 10
 
 
 class SmartnodeInfo:
@@ -535,11 +542,17 @@ class RaptoreumTestFramework(BitcoinTestFramework):
             extra_args = [[]] * num_nodes
         assert_equal(len(extra_args), num_nodes)
         self.extra_args = [copy.deepcopy(a) for a in extra_args]
-        self.extra_args[0] += ["-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"]
+        # Key for the regtest spork address in chainparams.cpp. The Dash key that
+        # used to be here signs for a different address, so the node aborted with
+        # "Unable to sign spork message, wrong key?" before any test could run.
+        self.extra_args[0] += ["-sporkkey=cVpnZj4dZvRXmBf7Jze1GjpLQb25iKP92GDXUsKdUJTXhXRo2RFA"]
+        # DIP3 is enabled unconditionally on every network (see DIP0003Enabled in
+        # chainparams.cpp) and there is no enforcement height to bring forward, so
+        # there is no -dip3params argument to pass. Passing one aborts startup with
+        # "Error parsing command line arguments: Invalid parameter -dip3params",
+        # which is why every test using fast_dip3_enforcement=True failed to start
+        # its nodes.
         self.fast_dip3_enforcement = fast_dip3_enforcement
-        if fast_dip3_enforcement:
-            for i in range(0, num_nodes):
-                self.extra_args[i].append("-dip3params=30:50")
 
         # LLMQ default test params (no need to pass -llmqtestparams)
         self.llmq_size = 3
@@ -613,7 +626,8 @@ class RaptoreumTestFramework(BitcoinTestFramework):
 
         if (idx % 2) == 0 :
             self.nodes[0].lockunspent(True, [{'txid': txid, 'vout': collateral_vout}])
-            protx_result = self.nodes[0].protx('register_fund', address, ipAndPort, ownerAddr, bls['public'], votingAddr, operatorReward, rewardsAddr, address, submit)
+            # register_fund takes the collateral amount right after the address
+            protx_result = self.nodes[0].protx('register_fund', address, SMARTNODE_COLLATERAL, ipAndPort, ownerAddr, bls['public'], votingAddr, operatorReward, rewardsAddr, address, submit)
         else:
             self.nodes[0].generate(1)
             protx_result = self.nodes[0].protx('register', txid, collateral_vout, ipAndPort, ownerAddr, bls['public'], votingAddr, operatorReward, rewardsAddr, address, submit)
@@ -628,7 +642,7 @@ class RaptoreumTestFramework(BitcoinTestFramework):
         if operatorReward > 0:
             self.nodes[0].protx('update_service', proTxHash, ipAndPort, bls['secret'], operatorPayoutAddress, address)
 
-        self.mninfo.append(MasternodeInfo(proTxHash, ownerAddr, votingAddr, bls['public'], bls['secret'], address, txid, collateral_vout))
+        self.mninfo.append(SmartnodeInfo(proTxHash, ownerAddr, votingAddr, bls['public'], bls['secret'], address, txid, collateral_vout))
         self.sync_all()
 
         self.log.info("Prepared smartnode %d: collateral_txid=%s, collateral_vout=%d, protxHash=%s" % (idx, txid, collateral_vout, proTxHash))
