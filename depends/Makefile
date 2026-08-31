@@ -40,6 +40,13 @@ NO_UPNP ?=
 NO_NATPMP ?=
 FALLBACK_DOWNLOAD_PATH ?= https://bitcoincore.org/depends-sources
 
+# Language standards used by the host flags. hosts/darwin.mk passes these to
+# clang as -std=; left undefined they expand to an empty -std=, which clang
+# rejects, so every configure test fails with "C compiler cannot create
+# executables". C++17 is what configure.ac requires.
+C_STANDARD ?= c11
+CXX_STANDARD ?= c++17
+
 BUILD = $(shell ./config.guess)
 HOST ?= $(BUILD)
 PATCHES_PATH = $(BASEDIR)/patches
