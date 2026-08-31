@@ -398,7 +398,9 @@ UniValue smartnode_payments(const JSONRPCRequest &request) {
         }
     }
 
-    int64_t nCount = request.params.size() > 2 ? ParseInt64V(request.params[1], "count") : 1;
+    // params[0] is the block hash and params[1] the count, so a call that supplies
+    // a count has two parameters, not more than two.
+    int64_t nCount = request.params.size() > 1 ? ParseInt64V(request.params[1], "count") : 1;
 
     // A temporary vector which is used to sort results properly (there is no "reverse" in/for UniValue)
     std::vector <UniValue> vecPayments;

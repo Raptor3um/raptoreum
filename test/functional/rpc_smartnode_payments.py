@@ -42,6 +42,21 @@ class RpcSmartnodePaymentsTest(BitcoinTestFramework):
         assert_equal(payments[0]["height"], 5)
         assert_equal(payments[0]["blockhash"], tip_hash)
 
+        self.log.info("The `count` argument selects how many blocks are returned")
+        # Before the fix the count was read only when more than two parameters were
+        # supplied, which never happens for a two-parameter call, so it silently
+        # stayed at 1 and every one of these returned a single block.
+        assert_equal(len(node.smartnode("payments", tip_hash, -1)), 1)
+        assert_equal(len(node.smartnode("payments", tip_hash, 1)), 1)
+        # counting backwards from the tip returns the tip last
+        back3 = node.smartnode("payments", tip_hash, -3)
+        assert_equal([entry["height"] for entry in back3], [3, 4, 5])
+        # counting forwards from an earlier block returns that block first
+        fwd3 = node.smartnode("payments", node.getblockhash(2), 3)
+        assert_equal([entry["height"] for entry in fwd3], [2, 3, 4])
+        # the tip cannot be extended forwards, so a large count still stops there
+        assert_equal([entry["height"] for entry in node.smartnode("payments", tip_hash, 10)], [5])
+
         self.log.info("`smartnode payments` on the genesis block returns an error instead of crashing the node")
         # Before the fix this call dereferenced a null `pprev` and took the node down.
         assert_raises_rpc_error(-8, "genesis block", node.smartnode, "payments", genesis_hash)
