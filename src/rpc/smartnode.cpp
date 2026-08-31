@@ -427,20 +427,34 @@ UniValue smartnode_payments(const JSONRPCRequest &request) {
         // GetTransaction() lookup returned null for confirmed prevouts on such nodes and
         // the daemon crashed dereferencing it.
         CAmount nBlockFees{0};
-        if (IsBlockPruned(pindex)) {
-            throw JSONRPCError(RPC_MISC_ERROR, "Undo data not available (pruned data)");
-        }
         CBlockUndo blockUndo;
         if (!UndoReadFromDisk(blockUndo, pindex)) {
+            // The read itself is the source of truth for undo availability;
+            // IsBlockPruned() only refines the error message after a failure.
+            if (IsBlockPruned(pindex)) {
+                throw JSONRPCError(RPC_MISC_ERROR, "Undo data not available (pruned data)");
+            }
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't read undo data from disk");
         }
         // vtx[0] is the coinbase (no inputs); blockUndo.vtxundo is indexed for all but the coinbase.
+        if (blockUndo.vtxundo.size() != block.vtx.size() - 1) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR,
+                               strprintf("Undo data for block %s is inconsistent: %d transaction undo records for %d transactions",
+                                         pindex->GetBlockHash().ToString(), blockUndo.vtxundo.size(), block.vtx.size()));
+        }
         for (size_t i = 1; i < block.vtx.size(); ++i) {
+            const CTransaction &tx = *block.vtx[i];
+            const CTxUndo &txUndo = blockUndo.vtxundo[i - 1];
+            if (txUndo.vprevout.size() != tx.vin.size()) {
+                throw JSONRPCError(RPC_INTERNAL_ERROR,
+                                   strprintf("Undo data for transaction %s is inconsistent: %d spent outputs for %d inputs",
+                                             tx.GetHash().ToString(), txUndo.vprevout.size(), tx.vin.size()));
+            }
             CAmount nValueIn{0};
-            for (const Coin &coin: blockUndo.vtxundo.at(i - 1).vprevout) {
+            for (const Coin &coin: txUndo.vprevout) {
                 nValueIn += coin.out.nValue;
             }
-            nBlockFees += nValueIn - block.vtx[i]->GetValueOut();
+            nBlockFees += nValueIn - tx.GetValueOut();
         }
 
         std::vector <CTxOut> voutSmartnodePayments, voutDummy;
