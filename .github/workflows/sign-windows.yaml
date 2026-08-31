@@ -1,0 +1,155 @@
+name: Sign Windows Release
+
+# Signs the Windows binaries produced by the "Raptoreum Build" workflow and
+# republishes them as a separate, signed artifact. It is run by hand for a
+# release rather than on every push: signing quotas are finite and there is no
+# reason to sign a pull request build.
+#
+# Pick a back end with the repository variable SIGNING_METHOD
+# (Settings -> Secrets and variables -> Actions -> Variables):
+#
+#   azure       Azure Artifact Signing, formerly Trusted Signing. Runs on a
+#               GitHub-hosted runner and authenticates over OIDC, so no
+#               certificate or password is stored in the repository.
+#
+#   selfhosted  A self-hosted Windows runner with the Comodo/Sectigo USB token
+#               attached, driving scripts/sign-raptoreum.ps1 the same way the
+#               manual process does today.
+#
+# With SIGNING_METHOD unset, nothing is signed and the run says so instead of
+# passing silently, so this is safe to merge before a back end exists.
+#
+# Setup for each back end: .github/workflows/WINDOWS_SIGNING_CI.md
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Run ID of the Raptoreum Build run whose artifacts to sign"
+        required: true
+        type: string
+      version:
+        description: "Version used in the artifact names, e.g. 1.3.17.05"
+        required: true
+        type: string
+
+env:
+  COIN_NAME: raptoreum
+
+jobs:
+  sign-azure:
+    name: Sign with Azure Artifact Signing
+    if: vars.SIGNING_METHOD == 'azure'
+    runs-on: windows-latest
+    permissions:
+      id-token: write     # required for the OIDC login
+      contents: read
+      actions: read       # required to read another run's artifacts
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download unsigned Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.COIN_NAME }}-win64-${{ inputs.version }}
+          path: unsigned
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Unpack the archives
+        shell: pwsh
+        run: ./.github/scripts/unpack-for-signing.ps1 -InputDir unsigned -StagingDir staging
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Sign
+        uses: azure/trusted-signing-action@v0
+        with:
+          endpoint: ${{ secrets.AZURE_SIGNING_ENDPOINT }}
+          trusted-signing-account-name: ${{ secrets.AZURE_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ secrets.AZURE_CERT_PROFILE }}
+          files-folder: staging
+          files-folder-filter: exe
+          files-folder-recurse: true
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      - name: Verify signatures
+        shell: pwsh
+        run: ./.github/scripts/verify-signatures.ps1 -StagingDir staging
+
+      - name: Repack and checksum
+        shell: pwsh
+        run: ./.github/scripts/repack-signed.ps1 -StagingDir staging -OutputDir signed
+
+      - name: Upload signed artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.COIN_NAME }}-win64-signed-${{ inputs.version }}
+          path: signed
+
+  sign-selfhosted:
+    name: Sign on the self-hosted signing runner
+    if: vars.SIGNING_METHOD == 'selfhosted'
+    runs-on: [self-hosted, windows, signing]
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download unsigned Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.COIN_NAME }}-win64-${{ inputs.version }}
+          path: unsigned
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Unpack the archives
+        shell: pwsh
+        run: ./.github/scripts/unpack-for-signing.ps1 -InputDir unsigned -StagingDir staging
+
+      - name: Sign with the token certificate
+        shell: pwsh
+        env:
+          CERT_THUMBPRINT: ${{ secrets.SIGNING_CERT_THUMBPRINT }}
+        run: |
+          if (-not $env:CERT_THUMBPRINT) { throw "SIGNING_CERT_THUMBPRINT is not set" }
+          Get-ChildItem staging -Directory | ForEach-Object {
+              ./scripts/sign-raptoreum.ps1 -InputPath $_.FullName -CertThumbprint $env:CERT_THUMBPRINT -AutoFindSignTool
+              if ($LASTEXITCODE -ne 0) { throw "signing failed for $($_.Name)" }
+          }
+
+      - name: Verify signatures
+        shell: pwsh
+        run: ./.github/scripts/verify-signatures.ps1 -StagingDir staging
+
+      - name: Repack and checksum
+        shell: pwsh
+        run: ./.github/scripts/repack-signed.ps1 -StagingDir staging -OutputDir signed
+
+      - name: Upload signed artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.COIN_NAME }}-win64-signed-${{ inputs.version }}
+          path: signed
+
+  not-configured:
+    name: Signing not configured
+    if: vars.SIGNING_METHOD == ''
+    runs-on: ubuntu-latest
+    steps:
+      - name: Explain
+        run: |
+          echo "::warning title=No signing back end::SIGNING_METHOD is not set, so nothing was signed."
+          echo "Set the repository variable SIGNING_METHOD to 'azure' or 'selfhosted'."
+          echo "See .github/workflows/WINDOWS_SIGNING_CI.md for what each one needs."
