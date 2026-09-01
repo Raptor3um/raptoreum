@@ -241,12 +241,16 @@ jobs:
             platform-id: macos-arm64
             experimental: true
 
-          # macos-13 was retired on 2025-12-04, so a job asking for it queues
-          # forever. macos-15-intel is the migration label and is the last x86_64
-          # macOS image Actions will offer: it goes away in August 2027, after
-          # which only Apple Silicon runners remain.
+          # Cross-built for Intel on the Apple Silicon runner rather than on an
+          # Intel one. macos-13 was retired in December 2025, and its replacement
+          # macos-15-intel only ships Xcode 16, which Qt 5.15.5 cannot build
+          # against: its bundled libpng reaches for <fp.h>, a Classic Mac OS
+          # header that no longer exists in the current SDK. macos-14 has Xcode
+          # 15.4, and Apple's toolchain targets either architecture, so building
+          # x86_64 here avoids that and does not depend on Intel runners, which
+          # GitHub retires entirely in August 2027.
           - name: macOS x86_64
-            runner: macos-15-intel
+            runner: macos-14
             host: x86_64-apple-darwin
             platform-id: macos-x86_64
             experimental: true
