@@ -241,8 +241,12 @@ jobs:
             platform-id: macos-arm64
             experimental: true
 
+          # macos-13 was retired on 2025-12-04, so a job asking for it queues
+          # forever. macos-15-intel is the migration label and is the last x86_64
+          # macOS image Actions will offer: it goes away in August 2027, after
+          # which only Apple Silicon runners remain.
           - name: macOS x86_64
-            runner: macos-13
+            runner: macos-15-intel
             host: x86_64-apple-darwin
             platform-id: macos-x86_64
             experimental: true
