@@ -223,9 +223,15 @@ jobs:
   # ============================================================================
   # Built natively on a macOS runner rather than cross-compiled from Linux. The
   # depends darwin host needs an extracted Apple SDK (see doc/README_osx.md),
-  # which cannot be redistributed, whereas a macOS runner already has one. Both
-  # jobs are experimental for now: this is the first time the tree is built for
-  # darwin in CI, so a failure here must not fail the workflow for everyone.
+  # which cannot be redistributed, whereas a macOS runner already has one.
+  #
+  # Apple Silicon only. An x86_64 target does not link: relic, inside dashbls,
+  # selects its GMP-backed arithmetic for that architecture and the resulting
+  # link is missing every __gmpn_* symbol. Intel is also on its way out anyway,
+  # since GitHub drops x86_64 macOS runners in August 2027.
+  #
+  # Kept experimental while darwin settles, so a failure cannot fail the
+  # workflow for the other platforms.
   build-macos:
     name: ${{ matrix.platform.name }} Build
     needs: get-version
@@ -241,19 +247,6 @@ jobs:
             platform-id: macos-arm64
             experimental: true
 
-          # Cross-built for Intel on the Apple Silicon runner rather than on an
-          # Intel one. macos-13 was retired in December 2025, and its replacement
-          # macos-15-intel only ships Xcode 16, which Qt 5.15.5 cannot build
-          # against: its bundled libpng reaches for <fp.h>, a Classic Mac OS
-          # header that no longer exists in the current SDK. macos-14 has Xcode
-          # 15.4, and Apple's toolchain targets either architecture, so building
-          # x86_64 here avoids that and does not depend on Intel runners, which
-          # GitHub retires entirely in August 2027.
-          - name: macOS x86_64
-            runner: macos-14
-            host: x86_64-apple-darwin
-            platform-id: macos-x86_64
-            experimental: true
 
     steps:
       - name: Checkout
