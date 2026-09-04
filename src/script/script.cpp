@@ -259,6 +259,14 @@ const char *GetOpName(opcodetype opcode) {
         case OP_ASSET_ID               :
             return "OP_ASSET_ID";
 
+        //evm (Phase 1 scaffolding)
+        case OP_EVMCREATE              :
+            return "OP_EVMCREATE";
+        case OP_EVMCALL                :
+            return "OP_EVMCALL";
+        case OP_EVMSPEND               :
+            return "OP_EVMSPEND";
+
         case OP_INVALIDOPCODE          :
             return "OP_INVALIDOPCODE";
 

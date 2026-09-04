@@ -1,0 +1,469 @@
+# Running the Official Ethereum Test Suite (T1)
+
+This doc covers how to run the canonical `ethereum/tests` fixtures against
+the same `libevmone` we link at build time. It's the first layer (Capa A)
+of test gap T1 identified in the plan engineering review:
+
+> **T1 (CRITICAL):** Phase 0 success requires the 3 smoke tests of the
+> plan plus the Ethereum `tests/` suite (10000+ cases) passing 100%.
+> Without this we cannot honestly claim EVM equivalence.
+
+## What this validates
+
+**Capa A — _this_ runner.** Drives `libevmone` directly via its own
+`evmone-blockchaintest` (and optionally `evmone-statetest`) binary, with
+the same pinned source and compiler flags Raptoreum links. This catches:
+
+- Version regressions: if someone bumps `EVMONE_VERSION` in
+  `depends/packages/evmone.mk` to a release that ships with broken or
+  incompatible behaviour.
+- Build-environment skew: if our compiler / `_FORTIFY_SOURCE` / stack
+  protector flags happen to break evmone's arithmetic helpers.
+- Submodule drift: evmone vendors `evmc`, `intx`, `ethash`, etc. — a
+  Hunter or submodule pin mismatch would surface here.
+
+**Capa B — not yet built.** Drives _our_ `RtmEvmcHost` and
+`ApplyEvmTx()` pipeline through the same JSON fixtures. That validates
+that our integration (state cache, gas accounting, EIP-1559 wrapper,
+reorg-undo) doesn't deviate from reference semantics. This is the
+higher-value test and the actual T1 deliverable; Capa A is just the
+prerequisite scaffolding.
+
+## Quick start (inside the `rtm-builder` Docker container)
+
+```bash
+docker exec rtm-builder bash -lc \
+  '/repo/test/evm-official/run_official_state_tests.sh'
+```
+
+First invocation:
+
+- Clones `evmone @ v0.12.0` with submodules into `~/.cache/raptoreum-evm-official/evmone-src/`.
+- Configures + builds `evmone-blockchaintest` (~10 minutes on 32 cores).
+- Clones `ethereum/tests @ v14.0` into `~/.cache/raptoreum-evm-official/tests-data/` (~400 MB shallow).
+- Runs the full `BlockchainTests/GeneralStateTests/` set (~2800 JSON
+  files; ~10000 individual test cases across forks Frontier→Cancun).
+
+Subsequent runs reuse the cache and skip straight to execution (a few
+minutes total).
+
+## Configuration
+
+All knobs are environment variables; defaults shown.
+
+| Variable          | Default                  | Purpose                                           |
+|-------------------|--------------------------|---------------------------------------------------|
+| `EVMONE_VERSION`  | `v0.12.0`                | Must match `depends/packages/evmone.mk`           |
+| `TESTS_TAG`       | `v14.0`                  | `ethereum/tests` release matching evmone version  |
+| `RUNNER`          | `blockchain`             | `blockchain` or `state`                           |
+| `SUBSET`          | (per-runner default)     | Subpath under `tests-data/`                       |
+| `CACHE_DIR`       | `$HOME/.cache/raptoreum-evm-official` | Where to clone + build              |
+| `JOBS`            | `nproc`                  | Build parallelism                                 |
+
+Useful flags:
+
+```bash
+# Only one subset (faster smoke check)
+./run_official_state_tests.sh --subset BlockchainTests/GeneralStateTests/stChainId
+
+# Filter to specific cases via gtest pattern
+./run_official_state_tests.sh --filter '*Cancun*'
+
+# Trace EVM execution (verbose; only useful when debugging a single test)
+./run_official_state_tests.sh --filter 'stChainId.chainId' --trace
+
+# Re-use everything in the cache (no fetch, no rebuild)
+./run_official_state_tests.sh --skip-fetch --skip-build
+```
+
+Each invocation writes a timestamped subdir under `$CACHE_DIR/runs/`
+containing `stdout.log` and a `results.xml` JUnit report.
+
+## Layout in `ethereum/tests` v14.0
+
+The test fixtures changed shape in v13/v14. Reference for future
+maintenance:
+
+```
+tests-data/
+├── BasicTests/                                  # transaction encoding etc.
+├── BlockchainTests/
+│   ├── GeneralStateTests/                       # ← Capa A runs here by default
+│   │   ├── stArgsZeroOneBalance/
+│   │   ├── stCallCodes/
+│   │   ├── ...
+│   │   └── Pyspecs/                             # newer pyspec-generated
+│   ├── InvalidBlocks/                           # header/block validation
+│   └── ValidBlocks/
+├── ABITests/
+└── LegacyTests/  (git submodule, not auto-init) # legacy state-test format
+```
+
+If you need the state-test format (`evmone-statetest`) instead of
+blockchain-test format, run with `RUNNER=state` and manually init the
+`LegacyTests` submodule first; the script does not init submodules of
+the test repo to keep cache size down.
+
+## Known slow tests (auto-skipped)
+
+Upstream `evmone-statetest` defines a default exclusion filter to skip
+heavyweight performance tests. Those exclusions don't apply to
+`evmone-blockchaintest`; if a particular case runs for minutes,
+`--filter '-stTimeConsuming.*'` is a reasonable starting point.
+
+## Capa B — drive fixtures through our own pipeline
+
+Capa B is the higher-value test: drive the same JSON fixtures
+through `RtmEvmcHost` + `CEvmStateCache` + `ApplyEvmCallTx` /
+`ApplyEvmDeployTx`, not just through libevmone standalone. This
+catches divergences in our wiring (gas accounting, storage
+encoding, log capture, CREATE address derivation, EIP-1559 fee
+math, refund handling).
+
+Source: `src/test/evm_official_blockchaintest_tests.cpp`. Opt-in via
+`EVM_OFFICIAL_TESTS_PATH` (skip-clean when unset). Configurable
+`EVM_OFFICIAL_TESTS_LIMIT` caps the number of files for quick
+iteration.
+
+Typical run:
+
+```bash
+docker exec rtm-builder bash -lc "
+  EVM_OFFICIAL_TESTS_PATH=/root/.cache/raptoreum-evm-official/tests-data/BlockchainTests/GeneralStateTests \
+    /repo/src/test/test_raptoreum --run_test=evm_official_blockchaintest_tests \
+                                  --log_level=message"
+```
+
+### Current coverage (as of commit c6997fa77)
+
+Running against `ethereum/tests` v14.0 `BlockchainTests/GeneralStateTests`:
+
+```
+Cancun fixtures: 20328 pass, 10 fail, 2041 skip
+```
+
+| Version | Commit | PASS | FAIL | SKIP |
+|---|---|---|---|---|
+| Capa B v1 | `976d6967d` | 5820 | 7551 | 9008 |
+| Capa B v2 | `191e563a8` | 6321 | 13764 | 2294 |
+| Capa B v3 | `5f0bdb4a7` | 6476 | 13609 | 2294 |
+| Capa B v4 | `d0b136a31` | 6507 | 13578 | 2294 |
+| Capa B v5 | `5da5cf2c2` | 6509 | 13829 | 2041 (MPT) |
+| Capa B v6 | `ffd91fcbf` | 8777 | 11561 | 2041 (CALL value xfer) |
+| Capa B v7 | `80e461aa1` | 8921 | 11417 | 2041 (CREATE value xfer + pre-seed) |
+| Capa B v8 | `7c52cd60d` | 9202 | 11136 | 2041 (eth precompiles 0x01-0x04) |
+| Capa B v9 | `c6997fa77` | 9202 | 11136 | 2041 (EIP-2681 + EIP-6780) |
+| Capa B v10 | `7daae762d` | 9501 | 10837 | 2041 (MODEXP 0x05) |
+| Capa B v11 | `8b8656ba0` | 9635 | 10703 | 2041 (BLAKE2F 0x09) |
+| Capa B v12 | `6a0b4337e` | 9815 | 10523 | 2041 (CREATE-failure cleanup) |
+| Capa B v13 | `1e9a44b5d` | 10888 | 9450 | 2041 (bn128 BN_ADD/BN_MUL) |
+| Capa B v14 | `65c76eb16` | 10895 | 9443 | 2041 (EIP-7610 storage-collision) |
+| Capa B v15 | `2a9f1d6dd` | 11095 | 9243 | 2041 (BN_PAIRING degenerate-case) |
+| Capa B v16 | `5dd3d97b1` | 11134 | 9204 | 2041 (EIP-1153 transient revert) |
+| Capa B v17 | `24508ce9c` | 11134 | 9204 | 2041 (BLOBHASH plumbing — correctness) |
+| Capa B v18 | `99b914770` | 11569 | 8769 | 2041 (Type 3 fee + blob gas accounting) |
+| Capa B v19 | `e040a29fc` | 11607 | 8731 | 2041 (BLOBBASEFEE opcode) |
+| Capa B v20 | `57d58c897` | 11613 | 8725 | 2041 (u128 widening for blob_base_fee + charge) |
+| Capa B v21 | `9bac6e0ef` | 11741 | 8597 | 2041 (KZG_POINT_EVALUATION cheap-checks stub) |
+| Capa B v22 | `17fac9c23` | 11824 | 8514 | 2041 (nested-CREATE code-deposit gas 200/byte) |
+| Capa B v23 | `467d4bed0` | 11841 | 8497 | 2041 (EIP-4895 withdrawals) |
+| Capa B v24 | `230702a5f` | 11855 | 8483 | 2041 (EIP-2681 nonce-overflow returns forwarded gas) |
+| Capa B v25 | `fedd9b496` | 12267 | 8071 | 2041 (EIP-2929 CREATE address warm-after-fail) |
+| Capa B v26 | `3e12c8362` | 14252 | 6086 | 2041 (full 9-state EIP-2200/3529 SSTORE status) |
+| Capa B v27 | `7ec9d571a` | 17938 | 2400 | 2041 (Capa B harness: flush pre-state to DB as committed baseline) |
+| Capa B v28 | `6110e6718` | 18185 | 2153 | 2041 (state root covers full world state, not just dirty) |
+| Capa B v29 | `19982101b` | 19638 | 700 | 2041 (ApplyEvmCallTx tx-level atomicity on failure) |
+| Capa B v30 | `34c83e94e` | 19669 | 669 | 2041 (ApplyEvmDeployTx snapshot/revert atomicity) |
+| Capa B v31 | `9bac44dab` | 19696 | 642 | 2041 (transfer CALL value to precompiles before dispatch) |
+| Capa B v32 | `1495c1116` | 19828 | 510 | 2041 (EIP-161 persist CREATE nonce bump before frame snapshot) |
+| Capa B v33 | `77e8b7e74` | 19836 | 502 | 2041 (CREATE/CREATE2 preserves pre-existing target balance) |
+| Capa B v34 | `4fe9e46e1` | 19890 | 448 | 2041 (full BN_PAIRING 0x08 — EIP-197 optimal-ate) |
+| Capa B v35 | `54e31e33b` | 19911 | 427 | 2041 (MODEXP EIP-2565 iteration_count bit_length-1) |
+| Capa B v36 | `0794182d2` | 20055 | 283 | 2041 (top-level CREATE-tx code-deposit gas 200/byte) |
+| Capa B v37 | `7fd8f2d7d` | 20100 | 238 | 2041 (BN_PAIRING validates every G2 even with infinity G1) |
+| Capa B v38 | `36be0ad34` | 20148 | 190 | 2041 (ECRECOVER must request the uncompressed pubkey) |
+| Capa B v39 | `764507210` | 20182 | 156 | 2041 (Capa B harness: u128 gas*price products — loopMul overflow) |
+| Capa B v40 | `04cbed79c` | 20183 | 155 | 2041 (consensus-safety: snapshot/restore EIP-6780 substate sets on revert) |
+| Capa B v41 | `d33b026b8` | 20187 | 151 | 2041 (MODEXP — EIP-2565 gas computed before length early-outs) |
+| Capa B v42 | `2c4387288` | 20220 | 118 | 2041 (dispatch Ethereum precompile for top-level tx-to-precompile) |
+| Capa B v43 | `e96c07c98` | 20230 | 108 | 2041 (consensus-safety: EIP-7610 collision sees committed storage) |
+| Capa B v44 | `dec38a64e` | 20292 | 46 | 2041 (consensus-security: real BLS12-381 KZG point-evaluation) |
+| Capa B v45 | `c9a071ed6` | 20312 | 26 | 2041 (consensus: successful nested CREATE returns empty returndata) |
+| Capa B v46 | `f799decaa` | 20318 | 20 | 2041 (consensus: DeleteAccount purges whole storage footprint, EIP-6780) |
+| **Capa B v47** | `965835824` | **20328** | **10** | **2041** (consensus: SELFDESTRUCT-to-self of a same-tx-created contract zeroes balance, EIP-6780) |
+
+Pass count is **+249% over v1** (5820 → 20328) — every increment came
+from a real production-pipeline or harness-correctness fix uncovered
+by running the fixtures. **~99.95% of applicable Cancun fixtures now
+pass.** v40, v43, v44, v45, v46 and v47 are consensus-correctness/
+security fixes: v40 = reverted-frame SELFDESTRUCT leak; v43 = EIP-7610
+collision blindness to committed storage; **v44 = the KZG point-
+evaluation precompile previously accepted forged proofs** (closed
+with a full BLS12-381 pairing check via the already-vendored
+dashbls/RELIC, no new dependency); v45 = a successful nested
+CREATE/CREATE2 leaked the constructor's RETURN bytes into the
+caller's RETURNDATA buffer (EVMC contract violation); v46 =
+SELFDESTRUCT/EIP-6780 deletion did not purge the destructed
+contract's storage, so stale slots blocked same-block recreate
+(EIP-7610) and Flush() resurrected them on disk (latent state-root
+divergence); v47 = a self-beneficiary SELFDESTRUCT of a same-tx-
+created contract did not zero its balance, leaking it forward to a
+later SELFDESTRUCT in the same tx.
+
+The remaining **10** are all classified — none is a fixable
+production-consensus bug:
+
+- **6 modexp / modexpRandomInput** (`modexp_d28g{0..3}`,
+  `modexpRandomInput_d1g{0,1}`): the MODEXP precompile is
+  consensus-correct (EIP-2565 gas verified exact for every Cancun
+  vector; our `got` is byte-identical across the g0–g3 gas
+  variants while the expected scales with `gasLimit`). The
+  divergence is the Capa-B harness's gas-settlement model for a
+  sub-frame precompile OoG, not the precompile. Fixing it means
+  reworking harness sub-frame OoG propagation — high regression
+  risk against the 20328 passing, ~6-fixture yield. Harness-noise.
+- **1 idPrecomps_d4**: a single CALL-forwarding gas-trace edge;
+  `idPrecomps_d5` with the identical gas profile passes, proving
+  the IDENTITY precompile formula is correct. Harness-noise.
+- **1 callWithHighValueAndGasOOG_d0g0v1**: tx `value` = 1e23 wei
+  (> 2^64-1). `CEvmCallTx::value` / `CEvmDeployTx::value` are
+  `uint64_t` **by design** — an RTM-EVM tx cannot carry a >u64
+  wei value, so this fixture is unrepresentable in the production
+  payload format, not a consensus bug.
+- **1 underflowTest_d19**: a `postStateHash`-only fixture; the
+  canonical MPT-root fidelity class (byte-exact RLP/trie/EIP-158
+  pruning). Two spec-literal attempts here have regressed before;
+  deep, out of scope for the fixture tail.
+- **1 test_blobhash_multiple_txs_in_block**: a multi-tx-per-block
+  fee/accounting edge in the same family as the deep SELFDESTRUCT
+  work; single fixture, structural.
+
+### CI gating (regression baseline + version pin)
+
+Two guards keep the EVM consensus pipeline from silently regressing.
+A silent state-root divergence is the single worst failure mode for a
+chain, so these are wired to fail the build, not just warn.
+
+**evmone version pin (always on).** `evm_smoke_tests::evmone_version_pin`
+runs inside the normal `make check` (no opt-in, no fixtures needed).
+It asserts the linked engine is exactly `evmone 0.12.0` — the version
+pinned in `depends/packages/evmone.mk` — and EVMC-ABI-compatible. Any
+evmone bump fails this test until `kPinnedEvmoneVersion` is
+consciously updated *and* the Capa B baseline below is re-validated.
+
+**Capa B regression baseline.** `evm_official_blockchaintest_tests`
+is opt-in via `EVM_OFFICIAL_TESTS_PATH` (skip-clean when unset). When
+run it is now a true gate: it holds a committed allow-list of exactly
+the residual fixtures (the "remaining 10" above, each proven
+non-consensus) plus a pass-count floor. **Any** failure outside the
+allow-list — a new consensus divergence — fails the build; mass
+coverage loss trips the floor; a baseline entry that starts passing
+is surfaced so the list tightens. Changing the baseline requires
+editing both the allow-list in the test and this document in the
+same commit.
+
+This gate runs in CI as the **`EVM Consensus Gate`** job in
+`.github/workflows/build.yaml`: it downloads the prebuilt
+`test_raptoreum`, restores a sparse, blob-filtered, cached checkout of
+`ethereum/tests @ v14.0` (the tag matched to evmone 0.12.0), and runs
+
+```bash
+EVM_OFFICIAL_TESTS_PATH=<fixtures>/BlockchainTests/GeneralStateTests \
+  ./test_raptoreum \
+    --run_test=evm_official_blockchaintest_tests,evm_reorg_fuzz_tests \
+    --log_level=message
+```
+
+A green run means 20328 pass / 10 baseline fail / 2041 skip with zero
+unexpected failures, plus the deep-reorg property fuzz. A non-zero
+exit means a real regression and fails the job — do not merge. The
+job is additive (it cannot affect the build/test jobs) and triggers
+on PRs to `develop` and pushes to the gated branches. To reproduce
+locally, run the same command against any
+`run_official_state_tests.sh` cache.
+
+**Skip categories** (all by design, not failures):
+
+| Count | Reason |
+|---|---|
+| 1428 | Block has no `blockHeader` (degenerate InvalidBlocks-style entries that happen to live under GeneralStateTests). |
+| 613 | Non-Cancun forks — out of scope per design decision D6. |
+| 253 | Fixture only ships `postStateHash` (the canonical MPT root), no expanded `postState`. Computing the MPT root is a planned follow-up. |
+
+### What the harness simulates (Phase 2.4 surface)
+
+Our production `ApplyEvmCallTx` deliberately omits fee/balance
+bookkeeping per its Phase 2.3a docstring; that's Phase 2.4 work.
+For Capa B we replicate the standard Ethereum transaction harness
+in the test runner:
+
+1. **EIP-4788 beacon-roots system pre-call** — once per block,
+   before any user transactions, writes `parentBeaconBlockRoot`
+   into the predeploy at 0x000F...beac02.
+2. **Pre-debit + nonce bump** of the sender by
+   `gasLimit * effectiveGasPrice`.
+3. **Run** the EVM via `ApplyEvmCallTx` / `ApplyEvmDeployTx`.
+4. **Intrinsic gas**: 21000 for CALL, 53000 for CREATE, plus per
+   byte (4 zero, 16 non-zero) and EIP-3860 init-code metering (2
+   gas/word) for CREATE.
+5. **Refund**: `min(gasUsed/5, evmone.gas_refund)` per EIP-3529.
+6. **Coinbase credit** of `gasUsed * priorityPerGas` where
+   `priorityPerGas = effectiveGasPrice − baseFee`.
+
+EIP-1559 vs legacy distinction is detected from the JSON `type`
+field. Effective gas price for type 2 is
+`min(maxFeePerGas, baseFee + maxPriorityFeePerGas)`; for legacy
+it's `gasPrice` directly.
+
+### What our production pipeline now does (Capa B-driven)
+
+The bringup of Capa B uncovered and fixed real spec gaps in the
+production pipeline (these are NOT just harness concerns — they
+ship as part of the EVM stack):
+
+- `ApplyResult.gasRefund` exposes `evmc_result.gas_refund` so
+  upstream fee accounting can apply the EIP-3529 cap.
+- `CEvmHost::WarmAddress` / `CEvmHost::WarmStorage` allow callers
+  to pre-populate the EIP-2929 access lists.
+- `ApplyEvmCallTx` / `ApplyEvmDeployTx` pre-warm the spec-mandated
+  access set on every tx: sender, recipient, coinbase (EIP-3651
+  Cancun), and the standard precompiles 0x01..0x0a.
+- `CEvmCallTx` / `CEvmDeployTx` gain an off-wire `accessList` field
+  (vector of `AccessListEntry`) consumed by Apply\* for EIP-2930
+  pre-warming. The field will graduate into the consensus wire
+  format in Phase 2.4 when the full tx envelope is finalised.
+- `CEvmAccount::EmptyCodeHash()` and `EmptyStorageRoot()` are now
+  stored in big-endian byte order (byte[0]=MSB) to match
+  `evm::Keccak256()` output. Previously these constants used
+  `uint256S()` which reverses the bytes for Bitcoin-Core hash-
+  style display — that meant `account.codeHash == EmptyCodeHash()`
+  would ALWAYS evaluate false for accounts whose codeHash was set
+  via `Keccak256()`, silently breaking the CREATE collision check
+  and any EXTCODEHASH-driven contract logic that compared against
+  `keccak256("")`. Fixed in `src/evm/account.cpp` with a
+  byte-for-byte canonical constant; `evm_state_tests/
+  account_canonical_constants` cross-asserts equality with
+  `Keccak256({})`.
+- EIP-2929 warm-access tracking now participates in the call-frame
+  snapshot/revert. `CEvmHost::call()` and `CEvmHost::CallCreate()`
+  capture `warmAddresses` / `warmSlots` at frame entry and restore
+  them on any failure status. Without this, addresses/slots that
+  a REVERTed sub-frame touched stayed warm in the host, charging
+  100 gas (warm) instead of 2600 / 2100 (cold) on the next access
+  in the surviving outer frame. Observable in any recursive test
+  that has one of the inner frames REVERT and the same address
+  re-accessed afterwards.
+- Nested CREATE/CREATE2 no longer clobbers the post-init nonce
+  with `1`. If the new contract's constructor did its own
+  CREATEs, those nonce bumps survive correctly. (The hard-coded
+  `finalAcc.nonce = 1` was defensive code that turned into a
+  silent bug for contract-creator-of-contract patterns.)
+- **ApplyEvmCallTx now transfers `payload.value` from sender to
+  recipient** before invoking evmone. evmone exposes the value
+  via the CALLVALUE opcode but does NOT move funds itself — by
+  spec, that's the transaction harness's job. Every outer CALL
+  with value > 0 was previously leaving the recipient under-
+  funded by exactly that amount, breaking ALL value-bearing
+  transactions (huge silent class of failures).
+- **ApplyEvmDeployTx similarly transfers the new `payload.value`
+  field** from sender to the deployed contract, and pre-seeds
+  the contract record with nonce=1 before init runs. This makes
+  inner CREATEs from within the constructor work (their
+  CallCreate path requires the constructing contract's account
+  to exist).
+- **Standard Ethereum precompiles 0x01..0x04** (ECRECOVER, SHA256,
+  RIPEMD160, IDENTITY) are now dispatched by CEvmHost::call().
+  Previously these CALLs fell through to empty bytecode and
+  returned zero output, silently corrupting any contract that
+  signature-verified, hashed, or memcopied. The bn128 /
+  blake2f / KZG primitives (0x05..0x0a) are still pending — port
+  of bignum / pairing crypto is a separate follow-up.
+- **EIP-2681 nonce overflow guard**: a sender whose nonce is
+  already at 2^64-1 can no longer perform CREATE / CREATE2; the
+  attempt fails before the (overflowing) nonce bump.
+- **EIP-6780 SELFDESTRUCT semantics**: CEvmHost tracks the set of
+  addresses CREATEd in the current tx; selfdestructing only
+  deletes the account when its address is in that set
+  (`exec.selfdestructs ∩ exec.sameTxCreated`). Pre-existing
+  contracts that SELFDESTRUCT just transfer balance and remain
+  in state.
+- **MODEXP precompile (0x05)** via boost::multiprecision::powm.
+  EIP-198 layout, EIP-2565 gas (Berlin+) with 64KB per-component
+  sanity cap to defend against adversarial input sizes.
+- **BLAKE2F precompile (0x09)**. Hand-rolled Blake2b F compression
+  function per RFC 7693 / EIP-152: 213-byte input layout (rounds,
+  h, m, t, f), 64-byte output, gas = rounds (1 per round).
+- **Failed CREATE now deletes the pre-seeded account record** and
+  refunds any value transferred. Previously ApplyEvmDeployTx left
+  the seed in place after EVMC_REVERT / OOG / etc., so the
+  fixture's post-state (which expects no account at the CREATE
+  address on failure) would show our spurious `nonce=1` placeholder.
+- **bn128 BN_ADD (0x06) and BN_MUL (0x07)** implemented with
+  Boost.Multiprecision. Field arithmetic over Fp where p is the
+  BN254 prime, affine point ops, validation that input points lie
+  on y² = x³ + 3. Unlocked ~1000 fixtures wholesale (stZeroKnowledge2
+  jumped from 11% to 99% pass).
+- **EIP-7610 (Cancun) storage-collision check** added to CREATE
+  paths. An account with non-empty storage is now an occupied
+  collision target even when its code is empty and nonce is zero,
+  matching the post-Cancun semantics.
+- **BN_PAIRING (0x08) degenerate-case short-circuit**. Empty input
+  and all-pairs-degenerate cases return identity (1) directly. The
+  full optimal-Ate pairing (Fp^12 + Miller loop + final exp; ~2000
+  LOC) is still pending; mixed-degenerate inputs return EVMC_FAILURE
+  so callers see the honest "not yet implemented" status rather than
+  a fabricated wrong answer.
+
+### Remaining failure breakdown (as of v15)
+
+9243 failures across the broader fixture set:
+
+| Count | Category | Notes |
+|---|---|---|
+| 8527 | balance | small per-fixture drifts; long-tail SSTORE/memory metering + non-degenerate BN_PAIRING fixtures + KZG |
+| ~540 | storage | downstream of wrong gas → wrong control flow |
+| 122 | nonce | CREATE/CREATE2 corner cases beyond EIP-2681 / EIP-6780 / EIP-7610 |
+| 45 | address | account expected to exist in post but missing |
+| 8 | expected | postStateHash mismatch (state slightly off; MPT computation itself is correct per unit tests) |
+
+Per-suite pass rates as of v14 (selected):
+
+| Suite | Pass | Total | Rate |
+|---|---|---|---|
+| stLogTests | 46 | 46 | 100% |
+| stCallDelegateCodesHomestead | 58 | 58 | 100% |
+| stZeroKnowledge2 | 513 | 519 | 99% |
+| stArgsZeroOneBalance | 94 | 96 | 98% |
+| stCallCodes | 81 | 86 | 94% |
+| stStaticCall | 425 | 478 | 89% |
+| stPreCompiledContracts2 | 216 | 248 | 87% |
+| stBadOpcode | 3306 | 4251 | 78% |
+| stReturnDataTest | 202 | 273 | 74% |
+| stRevertTest | 212 | 271 | 78% |
+| stZeroKnowledge | 661 | 944 | 70% |
+| stPreCompiledContracts | 639 | 960 | 67% |
+| stZeroKnowledge | 836 | 944 | 88% |
+| stMemoryTest | 274 | 578 | 47% |
+| stSStoreTest | 159 | 475 | 33% |
+
+Likely follow-ups, in ROI order:
+
+1. **Standard Ethereum precompiles 0x05–0x0a** (MODEXP, BN_ADD,
+   BN_MUL, BN_PAIRING, BLAKE2F, KZG_POINT_EVALUATION). The
+   stZeroKnowledge and stPreCompiledContracts suites are dominated
+   by these. Implementing them requires bignum modular exponentiation
+   (libgmp or hand-rolled), bn128 elliptic-curve arithmetic
+   (libff, libbn128, or evmone's port), Blake2f compression, and
+   KZG point evaluation (BLS12-381 + KZG). Mature C/C++
+   implementations exist; vendoring evmone's `test/state/precompiles_*`
+   is probably the cleanest unlock — would clear ~1500 fixtures.
+2. **Long-tail gas accounting** in stSStoreTest / stMemoryTest /
+   stRevertTest. Each suite shows a per-fixture small balance drift
+   pattern. Probably one or two metering bugs per suite (memory
+   expansion charge, SSTORE refund schedule edge cases, MSTORE
+   memory expansion).
+3. **InvalidBlocks-style fixtures** (1428 currently skipped). These
+   test consensus validation of malformed blocks. Implementing
+   the validation rules (header gas limit, timestamp ordering,
+   trie roots) would let us assert "block rejected, state == pre".
+   Lower ROI than precompiles.

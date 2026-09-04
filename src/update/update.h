@@ -17,6 +17,24 @@ enum class EUpdate {
     DEPLOYMENT_V17 = 0,
     ROUND_VOTING = 1,
     QUORUMS_200_8 = 2,
+    // EVM activation gate. Per design decision D2 this is a hard-fork
+    // activation (fixed heightActivated in chainparams), NOT BIP9 version-bit
+    // voting — the Update infrastructure supports both modes via the
+    // heightActivated field. Currently UNREGISTERED in chainparams.cpp for
+    // any network: IsEvmActive() returns false on all chains until specific
+    // activation heights are committed.
+    EVM = 3,
+    // D2 hard-fork gate for the coinbase-committed EVM consensus
+    // roots (CCbTx v3: evmStateRoot / evmReceiptsRoot / evmBaseFee).
+    // Deliberately SEPARATE from EVM: EVM execution can run with
+    // baseFee=0 before this, and regtest force-activates EVM at
+    // height 0 yet must still reach the pre-commitment state — so the
+    // committed-roots requirement is scheduled on its own via the
+    // standard RIP miner+smartnode vote. UNREGISTERED in chainparams
+    // for every network → IsEvmCommitActive() is false everywhere
+    // until a vote (or forced height) is committed, exactly as EVM
+    // was before its regtest registration.
+    EVM_COMMIT = 4,
 
     MAX_VERSION_BITS_DEPLOYMENTS
 };
@@ -347,6 +365,20 @@ public:
     bool IsActive(enum EUpdate eUpdate, const CBlockIndex *blockIndex);
 
     bool IsAssetsActive(const CBlockIndex *blockIndex);
+
+    /** Convenience wrapper: returns true once UPDATE_EVM is active.
+     *  Until an Update(EUpdate::EVM, ..., heightActivated=X) is registered in
+     *  chainparams.cpp for a given network, this returns false (the safe
+     *  default — EVM transactions are rejected with "evm-not-activated"). */
+    bool IsEvmActive(const CBlockIndex *blockIndex);
+
+    /** D2: true once the coinbase EVM-commitment hard-fork
+     *  (EUpdate::EVM_COMMIT) is active — i.e. blocks must carry a
+     *  CCbTx v3 with valid evmStateRoot/evmReceiptsRoot/evmBaseFee.
+     *  Unregistered everywhere for now, so this is false on all
+     *  networks (including regtest) — the safe, fully-inert default
+     *  until the RIP vote / forced height is committed. */
+    bool IsEvmCommitActive(const CBlockIndex *blockIndex);
 
     StateInfo State(enum EUpdate eUpdate, const CBlockIndex *blockIndex);
 

@@ -1339,12 +1339,19 @@ if test "$use_upnp" != "no"; then
   CPPFLAGS="$TEMP_CPPFLAGS"
 fi
 
-dnl Check fot libnatpmp
+dnl Check for libnatpmp
+dnl NOTE: previously `have_natpmp` was never set to "yes" on success here, which
+dnl together with the inverted finalization check below left NATPMP_LIBS empty
+dnl on systems where libnatpmp WAS present. Phase 0 of the EVM integration hit
+dnl this as a hard build failure ("undefined reference to initnatpmp").
 if test "$use_natpmp" != "no"; then
   TEMP_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="$CPPFLAGS $NATPMP_CPPFLAGS"
   AC_CHECK_HEADERS([natpmp.h],
-                   [AC_CHECK_LIB([natpmp], [initnatpmp], [NATPMP_LIBS="$NATPMP_LIBS -lnatpmp"], [have_natpmp=no], [$NATPMP_LIBS])],
+                   [AC_CHECK_LIB([natpmp], [initnatpmp],
+                                 [NATPMP_LIBS="$NATPMP_LIBS -lnatpmp"; have_natpmp=yes],
+                                 [have_natpmp=no],
+                                 [$NATPMP_LIBS])],
                    [have_natpmp=no])
   CPPFLAGS="$TEMP_CPPFLAGS"
 fi
@@ -1567,15 +1574,21 @@ else
 fi
 
 dnl Enable NAT-PMP support
+dnl NOTE: the previous version of this block had the conditional inverted
+dnl (`have_natpmp = "yes"` where it should have been `"no"`) and a typo
+dnl (`"no"l`). It only "worked" because have_natpmp was never set to "yes",
+dnl so the broken else-branch always ran. The fix here aligns the natpmp
+dnl logic with the upnp block above. See Phase 0 Issue 3/4 discovery in
+dnl docs/evm/PHASE-0-HANDOFF.md.
 AC_MSG_CHECKING([whether to build with support for NAT-PMP])
-if test "$have_natpmp" = "yes"; then
+if test "$have_natpmp" = "no"; then
   if test "$use_natpmp" = "yes"; then
-    AC_MSG_ERROR([NAT-PMP requested but can not be built. Use --without-natpmp])
+    AC_MSG_ERROR([NAT-PMP requested but cannot be built. Use --without-natpmp])
   fi
   AC_MSG_RESULT([no])
   use_natpmp=no
 else
-  if test "$use_natpmp" != "no"l; then
+  if test "$use_natpmp" != "no"; then
     AC_MSG_RESULT([yes])
     AC_MSG_CHECKING([whether to build with NAT-PMP enabled by default])
     use_natpmp=yes

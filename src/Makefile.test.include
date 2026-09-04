@@ -60,6 +60,36 @@ BITCOIN_TESTS =\
   test/denialofservice_tests.cpp \
   test/dip0020opcodes_tests.cpp \
   test/descriptor_tests.cpp \
+  test/evm_smoke_tests.cpp \
+  test/evm_evmtx_tests.cpp \
+  test/evm_evmtx_validation_tests.cpp \
+  test/evm_state_tests.cpp \
+  test/evm_host_tests.cpp \
+  test/evm_apply_tests.cpp \
+  test/evm_connectblock_tests.cpp \
+  test/evm_parallel_tests.cpp \
+  test/evm_process_tests.cpp \
+  test/evm_rlp_tests.cpp \
+  test/evm_undo_tests.cpp \
+  test/evm_reorg_fuzz_tests.cpp \
+  test/evm_spend_credit_tests.cpp \
+  test/evm_fund_tests.cpp \
+  test/eth_funded_e2e_tests.cpp \
+  test/evm_precompile_abi_tests.cpp \
+  test/evm_asset_erc20_tests.cpp \
+  test/evm_asset_wrap_tests.cpp \
+  test/evm_asset_mirror_convergence_tests.cpp \
+  test/evm_asset_resolver_tests.cpp \
+  test/evm_wrap_consensus_tests.cpp \
+  test/evm_phase4_precompiles_tests.cpp \
+  test/evm_mn_precompile_tests.cpp \
+  test/cbtx_evm_commit_tests.cpp \
+  test/evm_d2_consensus_tests.cpp \
+  test/eth_rpc_conformance_tests.cpp \
+  test/eth_sendrawtx_roundtrip_tests.cpp \
+  test/evm_hashing_tests.cpp \
+  test/evm_mpt_tests.cpp \
+  test/evm_official_blockchaintest_tests.cpp \
   test/evo_deterministicmns_tests.cpp \
   test/evo_simplifiedmns_tests.cpp \
   test/flatfile_tests.cpp \
@@ -138,7 +168,7 @@ test_test_raptoreum_LDADD += $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN
                              $(LIBSECP256K1) $(EVENT_LIBS) $(EVENT_PTHREADS_LIBS)
 test_test_raptoreum_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
-test_test_raptoreum_LDADD += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(BLS_LIBS) $(GMP_LIBS)
+test_test_raptoreum_LDADD += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(BLS_LIBS) $(GMP_LIBS) $(EVMONE_LIBS)
 test_test_raptoreum_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS) -static
 
 if ENABLE_ZMQ

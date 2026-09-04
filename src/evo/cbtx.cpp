@@ -33,7 +33,19 @@ bool CheckCbTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidatio
         return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-payload");
     }
 
-    if (cbTx.nVersion == 0 || cbTx.nVersion > CCbTx::CURRENT_VERSION) {
+    // D2: once the EVM-commitment hard-fork is active for this block,
+    // CCbTx v3 (the EVM-roots-carrying form) is permitted AND required
+    // — exactly mirroring how DIP0008 raised the floor to v2 below.
+    // EUpdate::EVM_COMMIT is unregistered on every network, so
+    // evmCommitActive is false everywhere and the allowed version
+    // stays capped at CURRENT_VERSION (v3 still rejected) — fully
+    // inert until the RIP vote / forced height is committed.
+    const bool evmCommitActive =
+        pindexPrev && Updates().IsEvmCommitActive(pindexPrev);
+    const uint16_t maxCbVersion =
+        evmCommitActive ? CCbTx::EVM_COMMIT_VERSION : CCbTx::CURRENT_VERSION;
+
+    if (cbTx.nVersion == 0 || cbTx.nVersion > maxCbVersion) {
         LogPrintf("CheckCbTx: cbTx.nVersion=%d\n", cbTx.nVersion);
         return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-version");
     }
@@ -46,6 +58,12 @@ bool CheckCbTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidatio
     if (pindexPrev) {
         if (Params().GetConsensus().DIP0008Enabled && cbTx.nVersion < 2) {
             LogPrintf("CheckCbTx DIP0008Enabled: cbTx.nVersion=%d\n", cbTx.nVersion);
+            return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-version");
+        }
+        // D2 version floor: post-activation a coinbase MUST commit the
+        // EVM roots (v3+). Inert until EVM_COMMIT is scheduled.
+        if (evmCommitActive && cbTx.nVersion < CCbTx::EVM_COMMIT_VERSION) {
+            LogPrintf("CheckCbTx EVM_COMMIT: cbTx.nVersion=%d\n", cbTx.nVersion);
             return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-version");
         }
     }
@@ -284,6 +302,14 @@ bool CalcCbTxMerkleRootQuorums(const CBlock &block, const CBlockIndex *pindexPre
 }
 
 std::string CCbTx::ToString() const {
-    return strprintf("CCbTx(nVersion=%d, nHeight=%d, merkleRootMNList=%s, merkleRootQuorums=%s)",
-                     nVersion, nHeight, merkleRootMNList.ToString(), merkleRootQuorums.ToString());
+    std::string s = strprintf(
+        "CCbTx(nVersion=%d, nHeight=%d, merkleRootMNList=%s, merkleRootQuorums=%s",
+        nVersion, nHeight, merkleRootMNList.ToString(), merkleRootQuorums.ToString());
+    if (nVersion >= EVM_COMMIT_VERSION) {
+        s += strprintf(", evmStateRoot=%s, evmReceiptsRoot=%s, "
+                       "evmBaseFee=%d, evmGasUsed=%d, evmExecTime=%d",
+                       evmStateRoot.ToString(), evmReceiptsRoot.ToString(),
+                       evmBaseFee, evmGasUsed, evmExecTime);
+    }
+    return s + ")";
 }

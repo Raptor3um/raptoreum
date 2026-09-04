@@ -32,6 +32,15 @@ BACKTRACE_LIB = -lbacktrace
 endif
 endif #ENABLE_STACKTRACES
 
+# evmone (Phase 0 EVM integration smoke test).
+# Provided by depends/packages/evmone.mk (manually built — see docs/evm/PHASE-0-HANDOFF.md).
+# Uses the "standalone" variant of evmone which bundles ethash_keccak256 and other
+# transitive Hunter-managed dependencies, avoiding the need to ship libkeccak/libethash
+# separately. Phase 1 cleanup (CQ3) will split this into explicit -levmone -lkeccak -lethash
+# after vendoring those packages individually.
+# TODO(phase-1): formalize with PKG_CHECK_MODULES / AC_CHECK_LIB in configure.ac.
+EVMONE_LIBS = -levmone-standalone
+
 BITCOIN_INCLUDES=-I$(builddir) -I$(srcdir)/secp256k1/include -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS)
 BITCOIN_INCLUDES+=-I$(srcdir)/dashbls/include -I$(srcdir)/dashbls/depends/relic/include -I$(srcdir)/dashbls/depends/minialloc/include
 
@@ -163,6 +172,27 @@ BITCOIN_CORE_H = \
   cuckoocache.h \
   ctpl_stl.h \
   cxxtimer.hpp \
+  evm/account.h \
+  evm/apply.h \
+  evm/asset_ledger.h \
+  evm/balance.h \
+  evm/connectblock.h \
+  evm/evmtx.h \
+  evm/hashing.h \
+  evm/host.h \
+  evm/mpt.h \
+  evm/parallel.h \
+  evm/precompiles_eth.h \
+  evm/precompiles.h \
+  evm/process.h \
+  evm/rawtx.h \
+  evm/receipt.h \
+  evm/rlp.h \
+  evm/signing.h \
+  evm/smoke.h \
+  evm/state_cache.h \
+  evm/state_db.h \
+  evm/undo.h \
   evo/cbtx.h \
   evo/deterministicmns.h \
   evo/evodb.h \
@@ -364,6 +394,31 @@ libraptoreum_server_a_SOURCES = \
   consensus/tx_verify.cpp \
   dbwrapper.cpp \
   dsnotificationinterface.cpp \
+  evm/account.cpp \
+  evm/apply.cpp \
+  evm/asset_ledger.cpp \
+  evm/balance.cpp \
+  evm/connectblock.cpp \
+  evm/evmtx.cpp \
+  evm/hashing.cpp \
+  evm/host.cpp \
+  evm/mpt.cpp \
+  evm/parallel.cpp \
+  evm/precompiles_eth.cpp \
+  evm/precompile_asset_erc20.cpp \
+  evm/precompile_chainlocks.cpp \
+  evm/precompile_llmq_oracle.cpp \
+  evm/precompile_masternodes.cpp \
+  evm/precompiles.cpp \
+  evm/process.cpp \
+  evm/rawtx.cpp \
+  evm/receipt.cpp \
+  evm/rlp.cpp \
+  evm/signing.cpp \
+  evm/smoke.cpp \
+  evm/state_cache.cpp \
+  evm/state_db.cpp \
+  evm/undo.cpp \
   evo/cbtx.cpp \
   evo/deterministicmns.cpp \
   evo/evodb.cpp \
@@ -422,6 +477,7 @@ libraptoreum_server_a_SOURCES = \
   pow.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
+  rpc/ethereum.cpp \
   rpc/smartnode.cpp \
   rpc/governance.cpp \
   rpc/mining.cpp \
@@ -779,7 +835,7 @@ raptoreumd_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-raptoreumd_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(LIBDASHBLS) $(GMP_LIBS)
+raptoreumd_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(LIBDASHBLS) $(GMP_LIBS) $(EVMONE_LIBS)
 
 # raptoreum-cli binary #
 raptoreum_cli_SOURCES = raptoreum-cli.cpp

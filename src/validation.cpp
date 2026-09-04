@@ -18,6 +18,15 @@
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <cuckoocache.h>
+#include <evm/balance.h>
+#include <evm/connectblock.h>
+#include <evm/host.h>
+#include <evm/mpt.h>
+#include <evm/receipt.h>
+#include <evm/state_cache.h>
+#include <evo/cbtx.h>
+#include <evm/state_db.h>
+#include <evm/undo.h>
 #include <flatfile.h>
 #include <hash.h>
 #include <index/txindex.h>
@@ -185,6 +194,7 @@ CBlockIndex *FindForkInGlobalIndex(const CChain &chain, const CBlockLocator &loc
 std::unique_ptr <CBlockTreeDB> pblocktree;
 std::unique_ptr <CAssetsDB> passetsdb;
 std::unique_ptr <CAssetsCache> passetsCache;
+std::unique_ptr<evm::CEvmStateDB> pevmstatedb;
 
 // See definition for documentation
 static void FindFilesToPruneManual(ChainstateManager &chainman, std::set<int> &setFilesToPrune, int nManualPruneHeight);
@@ -390,7 +400,21 @@ ContextualCheckTransaction(const CTransaction &tx, CValidationState &state, cons
                 tx.nType != TRANSACTION_FUTURE &&
                 tx.nType != TRANSACTION_NEW_ASSET &&
                 tx.nType != TRANSACTION_UPDATE_ASSET &&
-                tx.nType != TRANSACTION_MINT_ASSET) {
+                tx.nType != TRANSACTION_MINT_ASSET &&
+                // Phase 3.5: EVM-typed special txs are valid at the
+                // wrapper level. The EVM-side validation (sender
+                // recovery, gas accounting, nonce match) happens in
+                // ProcessEvm*Tx during ConnectBlock.
+                tx.nType != TRANSACTION_EVM_DEPLOY &&
+                tx.nType != TRANSACTION_EVM_CALL &&
+                tx.nType != TRANSACTION_EVM_SPEND &&
+                tx.nType != TRANSACTION_EVM_FUND &&
+                // D4 Smart-Asset mirror bridge (UTXO <-> EVM ledger). The
+                // UTXO-side burn/mint is validated in CheckWrapAssetTx /
+                // CheckUnwrapAssetTx; the EVM-side credit/debit runs in
+                // ProcessEvm*Tx during ConnectBlock.
+                tx.nType != TRANSACTION_WRAP_ASSET &&
+                tx.nType != TRANSACTION_UNWRAP_ASSET) {
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
             }
             if (tx.IsCoinBase() && tx.nType != TRANSACTION_COINBASE)
@@ -742,15 +766,25 @@ static bool AcceptToMemoryPoolWorker(const CChainParams &chainparams, CTxMemPool
             return state.DoS(0, false, REJECT_NONSTANDARD, "bad-txns-too-many-sigops", false,
                              strprintf("%d", nSigOps));
 
+        // Phase 3.5 — EVM-typed txs pay their fee on the EVM side
+        // (gasLimit * effectiveGasPrice debited from the sender's EVM
+        // balance during ConnectBlock). They legitimately carry no
+        // UTXO-side fee, so skip the mempool/relay fee gates that
+        // expect a positive nModifiedFees on the UTXO side.
+        const bool isEvmTx =
+            tx.nType == TRANSACTION_EVM_DEPLOY ||
+            tx.nType == TRANSACTION_EVM_CALL ||
+            tx.nType == TRANSACTION_EVM_SPEND;
+
         CAmount mempoolRejectFee = pool.GetMinFee(
                 gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(nSize);
-        if (!bypass_limits && mempoolRejectFee > 0 && nModifiedFees < mempoolRejectFee) {
+        if (!bypass_limits && !isEvmTx && mempoolRejectFee > 0 && nModifiedFees < mempoolRejectFee) {
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool min fee not met", false,
                              strprintf("%d < %d", nModifiedFees, mempoolRejectFee));
         }
 
         // No transactions are allowed below minRelayTxFee except from disconnected blocks
-        if (!bypass_limits && nModifiedFees < ::minRelayTxFee.GetFee(nSize)) {
+        if (!bypass_limits && !isEvmTx && nModifiedFees < ::minRelayTxFee.GetFee(nSize)) {
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "min relay fee not met", false,
                              strprintf("%d < %d", nModifiedFees, ::minRelayTxFee.GetFee(nSize)));
         }
@@ -1633,8 +1667,16 @@ int ApplyTxInUndo(Coin &&undo, CCoinsViewCache &view, const COutPoint &out) {
 /** Undo the effects of this block (with given index) on the UTXO set represented by coins.
  *  When FAILED is returned, view is left in an indeterminate state. */
 DisconnectResult CChainState::DisconnectBlock(const CBlock &block, const CBlockIndex *pindex, CCoinsViewCache &view,
-                                              CAssetsCache *assetsCache) {
+                                              CAssetsCache *assetsCache,
+                                              evm::CEvmStateCache *evmStateCache) {
     AssertLockHeld(cs_main);
+    // Phase 2.4e: the evmStateCache parameter is accepted but reverting
+    // EVM state on disconnect requires the journal/undo records added
+    // by Phase 2.6. Until then the caller is expected to handle reorgs
+    // by re-running from a known-good state rather than rolling back
+    // dirty entries in-place. Mark the parameter used so the compiler
+    // does not warn:
+    (void)evmStateCache;
 
     bool fDIP0003Active = Params().GetConsensus().DIP0003Enabled;
 
@@ -2074,7 +2116,7 @@ void getFutureMaturity(const CTransaction &tx, int &lockOutputIndex, CFutureTx &
  *  can fail if those validity checks fail (among other reasons). */
 bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBlockIndex *pindex,
                                CCoinsViewCache &view, const CChainParams &chainparams, CAssetsCache *assetsCache,
-                               bool fJustCheck) {
+                               bool fJustCheck, evm::CEvmStateCache *evmStateCache) {
     std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
     //boost::posix_time::ptime start = boost::posix_time::microsec_clock::local_time();
 
@@ -2495,6 +2537,351 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
              MILLI * (nTime4 - nTime2), nInputs <= 1 ? 0 : MILLI * (nTime4 - nTime2) / (nInputs - 1),
              nTimeVerify * MICRO, nTimeVerify * MILLI / nBlocksTotal);
 
+    // ------------------------------------------------------------------
+    // Phase 2.4e — EVM transaction execution.
+    //
+    // Once EVM is active, every TRANSACTION_EVM_DEPLOY / CALL / SPEND
+    // in the block is processed through the EIP-1559 ProcessEvm*Tx
+    // pipeline. The aggregated coinbaseTip / burned fees are surfaced
+    // for the caller (currently ignored at the consensus level —
+    // coinbase output verification arrives alongside the header field
+    // changes per D2 in a future hard-fork commit).
+    //
+    // A null evmStateCache or an inactive EVM gate skips this step
+    // entirely; the legacy validation flow continues unchanged.
+    // ------------------------------------------------------------------
+    // Phase 2.4 — EVM_SPEND → UTXO credit settlement.
+    //
+    // ApplyEvmSpendTx debits the EVM account and produces a
+    // UtxoCredit{script, amount}. Those satoshis are NOT new money —
+    // they are EVM balance just destroyed on the state side — so they
+    // are realised as additional outputs on the block's coinbase
+    // (the same carrier already used for smartnode / governance
+    // payments). The total is recomputed HERE by every validator from
+    // re-execution (never trusted from the block) and used to:
+    //   (1) raise the allowed coinbase value by EXACTLY that sum
+    //       (non-inflationary: EVM supply went down by the same
+    //       amount), and
+    //   (2) require the coinbase to actually contain each credit
+    //       output, so a miner can neither inflate nor redirect the
+    //       SPEND to itself.
+    // Stays zero when EVM is inactive → legacy behaviour unchanged.
+    CAmount nEvmSpendCreditTotal = 0;
+
+    // D2 increment 6c — EIP-1559 priority-fee (tip) the miner earns
+    // from this block's EVM txs, in satoshis. Recomputed by every
+    // validator from execution (never trusted from the block); the
+    // allowed coinbase value rises by exactly this. The base-fee
+    // BURN is destroyed automatically (the sender was debited it in
+    // process.cpp and it is credited nowhere). The sub-satoshi tip
+    // remainder is likewise burned (floor division) — deflationary,
+    // never inflationary. Zero unless a v3 block actually executes
+    // EVM txs.
+    CAmount nEvmCoinbaseTipSat = 0;
+
+    if (evmStateCache != nullptr && Updates().IsEvmActive(pindex->pprev)) {
+        // Read the coinbase CCbTx once up front. A v3 coinbase commits
+        // the EVM execution timestamp (D2 inc 6a): the PoW nonce loop
+        // keeps mutating the header nTime after the coinbase is fixed,
+        // so the EVM must execute under the COMMITTED time, identical
+        // for the miner and every validator, or the recomputed roots
+        // diverge. Pre-v3 (everywhere today) we keep the legacy
+        // behaviour (execute under the header time) exactly.
+        CCbTx evmCb;
+        const bool haveEvmV3 =
+            !block.vtx.empty() &&
+            GetTxPayload(*block.vtx[0], evmCb) &&
+            evmCb.nVersion >= CCbTx::EVM_COMMIT_VERSION;
+
+        evm::ExecutionContext evmCtx;
+        evmCtx.chainId = 7373; // TODO: parameterize via chainparams once the
+                               //       EVM chain-id is added to Consensus::Params
+        evmCtx.blockHeight = static_cast<uint64_t>(pindex->nHeight);
+        if (haveEvmV3) {
+            // Committed exec time must lie inside the block's own
+            // consensus-valid time window: strictly after the parent's
+            // median-time-past and not beyond the header time. This
+            // bounds what a miner can commit while still decoupling
+            // EVM determinism from later nTime drift.
+            const int64_t mtp =
+                pindex->pprev ? pindex->pprev->GetMedianTimePast() : 0;
+            if (static_cast<int64_t>(evmCb.evmExecTime) <= mtp ||
+                static_cast<int64_t>(evmCb.evmExecTime) >
+                    block.GetBlockTime()) {
+                return state.DoS(100,
+                    error("%s: committed evmExecTime %d outside (MTP %d, "
+                          "blockTime %d] for block %s",
+                          __func__, evmCb.evmExecTime, mtp,
+                          block.GetBlockTime(),
+                          pindex->GetBlockHash().ToString()),
+                    REJECT_INVALID, "bad-evm-exectime");
+            }
+            evmCtx.blockTimestamp =
+                static_cast<int64_t>(evmCb.evmExecTime);
+        } else {
+            evmCtx.blockTimestamp = block.GetBlockTime();
+        }
+        evmCtx.blockGasLimit = 30'000'000; // hard cap until header field lands
+        // baseFee 0 in Phase 2.4e: real EIP-1559 dynamics activate alongside
+        // the header field change. With baseFee=0, effective_gas_price ==
+        // priority fee and the burn portion is zero — fee accounting still
+        // works, just nothing is removed from circulation yet.
+        // coinbase + prevBlockHash left zero; opcodes that read them get
+        // zeros under Phase 2.4e, which is harmless for the typical contract.
+        //
+        // D2 increment 6c — once v3 commits the EIP-1559 base fee, the
+        // EVM executes UNDER it (BASEFEE opcode + the burn/tip split in
+        // process.cpp). We trust the committed value here for execution
+        // and the inc-5 check below independently re-derives it from
+        // the parent and rejects the block if it isn't the canonical
+        // EIP-1559 value — so a wrong committed base fee can never take
+        // economic effect. Pre-v3 stays baseFee 0 (unchanged).
+        if (haveEvmV3) {
+            evmCtx.baseFee = evm::Uint256FromUint64(evmCb.evmBaseFee);
+        }
+
+        const auto evmResult = evm::ProcessEvmTransactionsInBlock(
+            block, pindex, *evmStateCache, evmCtx);
+        if (!evmResult.ok) {
+            return state.DoS(100,
+                error("%s: EVM transaction processing failed at index %d for block %s",
+                      __func__, evmResult.failedTxIndex,
+                      pindex->GetBlockHash().ToString()),
+                REJECT_INVALID, "bad-evm-tx");
+        }
+
+        // Verify the coinbase realises every EVM_SPEND credit (the
+        // SPEND'd RTM was destroyed EVM-side; it MUST reappear as the
+        // exact destination UTXO or funds are lost) and obtain the
+        // consensus-recomputed total used to raise the value cap.
+        if (!evm::CheckCoinbaseRealisesSpendCredits(
+                evmResult.utxoCredits, *block.vtx[0],
+                nEvmSpendCreditTotal)) {
+            return state.DoS(100,
+                error("%s: coinbase does not realise the EVM_SPEND UTXO "
+                      "credits for block %s",
+                      __func__, pindex->GetBlockHash().ToString()),
+                REJECT_INVALID, "bad-evm-spend-credit");
+        }
+
+        // D2 increment 6c — the miner's EIP-1559 priority-fee income
+        // for this block, recomputed from execution (weis → satoshis,
+        // floor; sub-satoshi remainder burned). Raises the allowed
+        // coinbase value below by exactly this; the base-fee burn is
+        // already destroyed (debited from senders, credited nowhere).
+        nEvmCoinbaseTipSat = static_cast<CAmount>(
+            evmResult.totalCoinbaseTip / evm::kWeisPerSatoshi);
+
+        // D2 increment 3 — committed EVM state-root check.
+        //
+        // Once a block commits the EVM roots (CCbTx v3+, only after
+        // the EVM_COMMIT hard-fork is scheduled — increment 6), the
+        // committed evmStateRoot MUST equal the post-block world-state
+        // root every validator independently recomputes from the cache
+        // here (all EVM txs applied, pre-flush — the exact point and
+        // the exact ComputeStateRoot the Capa-B suite pins across
+        // 20328 fixtures). Recompute-and-compare, never trust the
+        // block — same discipline as merkleRootMNList / the SPEND
+        // credits. Fully inert until v3 coinbases exist (no block has
+        // nVersion>=3 before EVM_COMMIT activates), so this is a
+        // no-op on every network today.
+        if (haveEvmV3) {
+            {
+                const uint256 expectedStateRoot = evm::ComputeStateRoot(
+                    evm::CollectAccountsForStateRoot(*evmStateCache));
+                if (evmCb.evmStateRoot != expectedStateRoot) {
+                    return state.DoS(100,
+                        error("%s: committed evmStateRoot %s != recomputed "
+                              "%s for block %s",
+                              __func__,
+                              evmCb.evmStateRoot.ToString(),
+                              expectedStateRoot.ToString(),
+                              pindex->GetBlockHash().ToString()),
+                        REJECT_INVALID, "bad-evm-stateroot");
+                }
+
+                // D2 increment 4 — committed EVM receipts-root check.
+                // Recompute the receipts trie from the consensus
+                // execution results (status / running cumulativeGas /
+                // logs) in block EVM-tx order — NOT from the persisted
+                // CEvmReceipt (whose ethTxHash/blockHash are
+                // node-local) — so every validator agrees. Same
+                // gated/inert discipline as evmStateRoot above.
+                std::vector<evm::CEvmReceipt> rr;
+                rr.reserve(evmResult.txResults.size());
+                uint64_t cumGas = 0;
+                for (const auto& tr : evmResult.txResults) {
+                    evm::CEvmReceipt e;
+                    e.status =
+                        (tr.apply.statusCode == EVMC_SUCCESS) ? 1 : 0;
+                    cumGas += static_cast<uint64_t>(tr.apply.gasUsed);
+                    e.cumulativeGasUsed = cumGas;
+                    for (const auto& hostLog : tr.apply.logs) {
+                        e.logs.push_back(evm::ConvertHostLog(hostLog));
+                    }
+                    rr.push_back(std::move(e));
+                }
+                const uint256 expectedReceiptsRoot =
+                    evm::ComputeReceiptsRoot(rr);
+                if (evmCb.evmReceiptsRoot != expectedReceiptsRoot) {
+                    return state.DoS(100,
+                        error("%s: committed evmReceiptsRoot %s != "
+                              "recomputed %s for block %s",
+                              __func__,
+                              evmCb.evmReceiptsRoot.ToString(),
+                              expectedReceiptsRoot.ToString(),
+                              pindex->GetBlockHash().ToString()),
+                        REJECT_INVALID, "bad-evm-receiptsroot");
+                }
+
+                // D2 increment 5 — committed evmGasUsed + EIP-1559
+                // evmBaseFee checks.
+                //
+                // (a) evmGasUsed: the block must commit exactly the
+                //     total EVM gas every validator recomputes — it
+                //     is the input the NEXT block's base fee derives
+                //     from, so an unchecked value would let a miner
+                //     steer future base fees.
+                uint64_t blockEvmGasUsed = 0;
+                for (const auto& tr : evmResult.txResults) {
+                    blockEvmGasUsed +=
+                        static_cast<uint64_t>(tr.apply.gasUsed);
+                }
+                if (evmCb.evmGasUsed != blockEvmGasUsed) {
+                    return state.DoS(100,
+                        error("%s: committed evmGasUsed %d != recomputed "
+                              "%d for block %s",
+                              __func__, evmCb.evmGasUsed,
+                              blockEvmGasUsed,
+                              pindex->GetBlockHash().ToString()),
+                        REJECT_INVALID, "bad-evm-gasused");
+                }
+
+                // (b) evmBaseFee: canonical EIP-1559 value derived
+                //     from the PARENT block's committed base fee +
+                //     gas used (no parent re-execution — that is why
+                //     evmGasUsed is committed). If the parent is not
+                //     a v3 coinbase, THIS is the first committed
+                //     block → the activation base fee.
+                uint64_t expectedBaseFee = evm::kInitialEvmBaseFee;
+                if (pindex->pprev != nullptr) {
+                    CBlock parentBlock;
+                    if (!ReadBlockFromDisk(parentBlock, pindex->pprev,
+                                           chainparams.GetConsensus())) {
+                        return state.DoS(100,
+                            error("%s: cannot read parent block %s for "
+                                  "EIP-1559 base fee",
+                                  __func__,
+                                  pindex->pprev->GetBlockHash().ToString()),
+                            REJECT_INVALID, "bad-evm-basefee");
+                    }
+                    CCbTx parentCb;
+                    if (!parentBlock.vtx.empty() &&
+                        GetTxPayload(*parentBlock.vtx[0], parentCb) &&
+                        parentCb.nVersion >= CCbTx::EVM_COMMIT_VERSION) {
+                        expectedBaseFee = evm::ComputeNextBaseFee(
+                            parentCb.evmBaseFee, parentCb.evmGasUsed,
+                            evmCtx.blockGasLimit);
+                    }
+                }
+                if (evmCb.evmBaseFee != expectedBaseFee) {
+                    return state.DoS(100,
+                        error("%s: committed evmBaseFee %d != expected "
+                              "EIP-1559 %d for block %s",
+                              __func__, evmCb.evmBaseFee,
+                              expectedBaseFee,
+                              pindex->GetBlockHash().ToString()),
+                        REJECT_INVALID, "bad-evm-basefee");
+                }
+            }
+        }
+
+        // Phase 3.6 — generate + persist per-tx receipts. We have the
+        // BlockProcessResult that ProcessEvmTransactionsInBlock just
+        // built; each entry carries the per-tx status, gas used,
+        // logs, and the deployed-contract address (for DEPLOY txs).
+        // We key by the wrapper tx's sha256d (block.vtx[bidx]->GetHash())
+        // and additionally maintain an eth_hash → rtm_hash cross-
+        // index so dApps can look up receipts via the Ethereum hash
+        // they got back from eth_sendRawTransaction (the cross-index
+        // is populated at submit time; receipts get the matching
+        // ethTxHash from the DB at write time if available).
+        if (pevmstatedb) {
+            uint64_t cumulativeGas = 0;
+            for (size_t i = 0; i < evmResult.txResults.size(); ++i) {
+                const auto& tr = evmResult.txResults[i];
+                const int bidx = evmResult.txBlockIndices[i];
+                const CTransaction& wrapperTx = *block.vtx[bidx];
+                const uint256 rtmHash = wrapperTx.GetHash();
+
+                evm::CEvmReceipt receipt;
+                receipt.rtmTxHash = rtmHash;
+                receipt.blockHash = pindex->GetBlockHash();
+                receipt.blockHeight = static_cast<uint64_t>(pindex->nHeight);
+                receipt.txIndex = static_cast<uint32_t>(bidx);
+                receipt.status = (tr.apply.statusCode == EVMC_SUCCESS) ? 1 : 0;
+                receipt.gasUsed = static_cast<uint64_t>(tr.apply.gasUsed);
+                cumulativeGas += receipt.gasUsed;
+                receipt.cumulativeGasUsed = cumulativeGas;
+                // effectiveGasPrice = burned/gasUsed + tip/gasUsed if
+                // gasUsed > 0; otherwise zero. The fee split already
+                // carries the per-tx components.
+                receipt.effectiveGasPrice = receipt.gasUsed == 0
+                    ? 0
+                    : (tr.fee.burned + tr.fee.coinbaseTip) / receipt.gasUsed;
+
+                // Sender + recipient: pull from the payload by tx
+                // type. The wrapper carries the payload in
+                // vExtraPayload.
+                if (wrapperTx.nType == TRANSACTION_EVM_DEPLOY) {
+                    evm::CEvmDeployTx payload;
+                    if (GetTxPayload(wrapperTx, payload)) {
+                        std::memcpy(receipt.sender.begin(),
+                                   payload.senderHash.begin() + 12, 20);
+                    }
+                    receipt.isContractCreation = true;
+                    receipt.contractAddress = tr.apply.deployedAddress;
+                } else if (wrapperTx.nType == TRANSACTION_EVM_CALL) {
+                    evm::CEvmCallTx payload;
+                    if (GetTxPayload(wrapperTx, payload)) {
+                        std::memcpy(receipt.sender.begin(),
+                                   payload.senderHash.begin() + 12, 20);
+                        std::memcpy(receipt.to.begin(),
+                                   payload.toAddress.begin() + 12, 20);
+                    }
+                } else if (wrapperTx.nType == TRANSACTION_EVM_SPEND) {
+                    evm::CEvmSpendTx payload;
+                    if (GetTxPayload(wrapperTx, payload)) {
+                        std::memcpy(receipt.sender.begin(),
+                                   payload.fromAddress.begin() + 12, 20);
+                    }
+                }
+
+                // Logs come from the apply-layer result; convert
+                // from evmc::Log to the serializable receipt form.
+                for (const auto& hostLog : tr.apply.logs) {
+                    receipt.logs.push_back(evm::ConvertHostLog(hostLog));
+                }
+
+                // ethTxHash was pre-registered at
+                // eth_sendRawTransaction-submit time via the rtm ->
+                // eth cross-index. Look it up so the persisted
+                // receipt carries the eth hash (eth_getLogs etc.
+                // surface it inline). Missing entry = tx didn't
+                // arrive via eth_sendRawTransaction; receipt's
+                // ethTxHash stays null and clients use the rtm hash.
+                receipt.ethTxHash.SetNull();
+                pevmstatedb->ReadRtmToEthHash(rtmHash, receipt.ethTxHash);
+
+                CDataStream s(SER_DISK, CLIENT_VERSION);
+                s << receipt;
+                std::vector<uint8_t> bytes(s.begin(), s.end());
+                const bool ok = pevmstatedb->WriteReceiptBytes(rtmHash, bytes);
+                assert(ok);
+            }
+        }
+    }
+
 
     // RAPTOREUM
 
@@ -2546,7 +2933,17 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
     LogPrint(BCLog::BENCHMARK, "      - GetBlockSubsidy: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime5_2 - nTime5_1),
              nTimeSubsidy * MICRO, nTimeSubsidy * MILLI / nBlocksTotal);
 
-    if (!IsBlockValueValid(block, pindex->nHeight, (blockReward + specialTxFees), strError)) {
+    // nEvmSpendCreditTotal raises the cap by exactly the destroyed EVM
+    // balance realised as coinbase outputs (verified present above).
+    // nEvmCoinbaseTipSat raises it by exactly the EIP-1559 priority
+    // fees the miner earned (recomputed from execution). Both are
+    // non-inflationary: SPEND credits = EVM balance destroyed 1:1;
+    // the tip was paid by senders' gas debit and the base-fee burn
+    // is destroyed, so total supply only ever decreases or moves.
+    if (!IsBlockValueValid(block, pindex->nHeight,
+                           (blockReward + specialTxFees +
+                            nEvmSpendCreditTotal + nEvmCoinbaseTipSat),
+                           strError)) {
         return state.DoS(0, error("ConnectBlock(RAPTOREUM): %s", strError), REJECT_INVALID, "bad-cb-amount");
     }
 
@@ -2906,6 +3303,27 @@ bool CChainState::DisconnectTip(CValidationState &state, const CChainParams &cha
         assert(flushed);
         bool assetsFlushed = assetCache.Flush();
         assert(assetsFlushed);
+
+        // Phase 2.6 — read + apply + erase the EVM block undo.
+        // Quietly skip when no entry exists (pre-EVM blocks have no
+        // journal, and EVM-active blocks with no EVM txs also write
+        // no journal entry via IsEmpty()).
+        if (pevmstatedb) {
+            std::vector<uint8_t> undoBytes;
+            if (pevmstatedb->ReadBlockUndoBytes(pindexDelete->GetBlockHash(),
+                                                undoBytes)) {
+                CDataStream undoStream(undoBytes, SER_DISK, CLIENT_VERSION);
+                evm::CEvmStateUndo evmUndo;
+                undoStream >> evmUndo;
+                const bool undoApplied =
+                    evm::ApplyUndoToDB(evmUndo, *pevmstatedb);
+                assert(undoApplied);
+                const bool undoErased =
+                    pevmstatedb->EraseBlockUndo(pindexDelete->GetBlockHash());
+                assert(undoErased);
+            }
+        }
+
         dbTx->Commit();
     }
     LogPrint(BCLog::BENCHMARK, "- Disconnect block: %.2fms\n", (GetTimeMicros() - nStart) * MILLI);
@@ -3041,7 +3459,16 @@ bool CChainState::ConnectTip(CValidationState &state, const CChainParams &chainp
 
         CCoinsViewCache view(&CoinsTip());
         CAssetsCache assetCache;
-        bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams, &assetCache);
+        // Phase 2.4e: build a block-local EVM state cache layered over
+        // the persistent pevmstatedb. Only when the DB is initialised
+        // (it is once AppInitMain runs); falls back to nullptr in
+        // edge cases like unit-test contexts where the DB isn't set up.
+        std::unique_ptr<evm::CEvmStateCache> evmCachePtr;
+        if (pevmstatedb) {
+            evmCachePtr.reset(new evm::CEvmStateCache(*pevmstatedb));
+        }
+        bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams, &assetCache,
+                               /*fJustCheck=*/ false, evmCachePtr.get());
         GetMainSignals().BlockChecked(blockConnecting, state);
         if (!rv) {
             if (state.IsInvalid())
@@ -3057,6 +3484,30 @@ bool CChainState::ConnectTip(CValidationState &state, const CChainParams &chainp
         assert(flushed);
         bool assetsFlushed = assetCache.Flush();
         assert(assetsFlushed);
+        if (evmCachePtr) {
+            // Phase 2.6 — build the reorg journal BEFORE the EVM
+            // flush. While the cache still holds the dirty layer
+            // and the DB still has the pre-block state, we walk
+            // the dirty entries and record the pre-block values
+            // we're about to overwrite. The serialized journal
+            // is then persisted to the DB keyed by block hash so
+            // DisconnectTip can revert this block later.
+            evm::CEvmStateUndo evmUndo =
+                evm::BuildUndoFromCache(*evmCachePtr, *pevmstatedb);
+
+            const bool evmFlushed = evmCachePtr->Flush();
+            assert(evmFlushed);
+
+            if (!evmUndo.IsEmpty()) {
+                CDataStream undoStream(SER_DISK, CLIENT_VERSION);
+                undoStream << evmUndo;
+                std::vector<uint8_t> undoBytes(undoStream.begin(),
+                                              undoStream.end());
+                const bool undoWritten = pevmstatedb->WriteBlockUndoBytes(
+                    pindexNew->GetBlockHash(), undoBytes);
+                assert(undoWritten);
+            }
+        }
         dbTx->Commit();
     }
     int64_t nTime4 = GetTimeMicros();

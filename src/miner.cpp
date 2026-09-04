@@ -33,6 +33,12 @@
 
 #include <evo/specialtx.h>
 #include <evo/cbtx.h>
+
+#include <evm/balance.h>
+#include <evm/connectblock.h>
+#include <evm/mpt.h>
+#include <evm/receipt.h>
+#include <evm/state_cache.h>
 #include <evo/simplifiedmns.h>
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_blockprocessor.h>
@@ -236,6 +242,56 @@ std::unique_ptr <CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &s
             }
         }
         LogPrintf("cbTx.merkleRootQuorums %s\n", cbTx.merkleRootQuorums.GetHex().c_str());
+
+        // D2 increment 6b — produce a v3 coinbase committing the EVM
+        // consensus roots once the EVM_COMMIT hard-fork is active.
+        // Computed with the EXACT functions + execution context that
+        // ConnectBlock recomputes them with, so miner output ==
+        // validator recompute (parity is the whole point). Inert until
+        // EVM_COMMIT is registered (regtest first, inc 6d):
+        // IsEvmCommitActive() is false on every other network, so this
+        // never runs and the coinbase stays v2.
+        if (Updates().IsEvmCommitActive(pindexPrev)) {
+            if (!pevmstatedb) {
+                throw std::runtime_error(strprintf(
+                    "%s: EVM_COMMIT active but pevmstatedb uninitialised",
+                    __func__));
+            }
+            // Compute the v3 EVM commitment over the assembled block via
+            // the shared helper — the SAME code ConnectBlock and the
+            // test harness use, so miner output == validator recompute.
+            const auto commit = evm::ComputeCoinbaseEvmCommitment(
+                *pblock, pindexPrev, *pevmstatedb,
+                chainparams.GetConsensus());
+            if (!commit.ok) {
+                throw std::runtime_error(strprintf(
+                    "%s: EVM processing failed building v3 coinbase",
+                    __func__));
+            }
+            cbTx.nVersion = CCbTx::EVM_COMMIT_VERSION;
+            cbTx.evmStateRoot = commit.stateRoot;
+            cbTx.evmReceiptsRoot = commit.receiptsRoot;
+            cbTx.evmBaseFee = commit.baseFee;
+            cbTx.evmGasUsed = commit.gasUsed;
+            cbTx.evmExecTime = commit.execTime;
+
+            // D2 inc 6c — claim the EIP-1559 priority fees (weis →
+            // satoshis, floor; the validator raises the allowed
+            // coinbase value by exactly the same recomputed amount).
+            coinbaseTx.vout[0].nValue += static_cast<CAmount>(
+                commit.totalCoinbaseTip / evm::kWeisPerSatoshi);
+
+            // Realise each EVM_SPEND credit (EVM->UTXO) as a coinbase
+            // output. ConnectBlock's CheckCoinbaseRealisesSpendCredits
+            // REQUIRES these to be present (the SPEND already debited
+            // the EVM account; the destroyed balance must reappear as
+            // the destination UTXO). Without this a SPEND-bearing block
+            // would fail its own TestBlockValidity and wedge mining.
+            for (const auto& credit : commit.utxoCredits) {
+                coinbaseTx.vout.emplace_back(credit.amount, credit.script);
+            }
+        }
+
         SetTxPayload(coinbaseTx, cbTx);
     }
 
@@ -299,6 +355,21 @@ bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries &packa
         if (!IsFinalTx(it->GetTx(), nHeight, nLockTimeCutoff))
             return false;
         if (!llmq::chainLocksHandler->IsTxSafeForMining(it->GetTx().GetHash())) {
+            return false;
+        }
+        // Phase 2.4 stopgap, LIFTED by D2 inc 6c once EVM_COMMIT is
+        // active: a v3 coinbase commits evmExecTime, so the EVM (and
+        // therefore each SPEND's UTXO credit) is now deterministic
+        // regardless of the nonce loop's nTime drift — the miner can
+        // precompute matching credits and the block validates. Before
+        // EVM_COMMIT activation the original hazard stands (the
+        // timestamp is unpinned, a timestamp-dependent SPEND amount
+        // would diverge from re-execution and wedge block production),
+        // so SPEND stays excluded until then — a liveness limitation
+        // only (the EVM-side debit persists solely if the block
+        // connects, which a rejected block never does).
+        if (it->GetTx().nType == TRANSACTION_EVM_SPEND &&
+            !Updates().IsEvmCommitActive(::ChainActive().Tip())) {
             return false;
         }
     }

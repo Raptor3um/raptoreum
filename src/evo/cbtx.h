@@ -22,10 +22,45 @@ class CCbTx {
 public:
     static const uint16_t CURRENT_VERSION = 2;
 
+    // D2 hard-fork: coinbase-committed EVM consensus roots live in
+    // CCbTx version 3, NOT in the 80-byte CBlockHeader (which would
+    // change PoW / the block hash and break every pool, miner and
+    // SPV client). This reuses the proven version-gated additive
+    // serialization that DIP0008 already used to add
+    // merkleRootQuorums at v2 — old-format blocks stay byte-identical.
+    //
+    // CURRENT_VERSION stays 2 until the activation increment wires the
+    // fixed-height hard-fork gate; until then CheckCbTx rejects v3, so
+    // v3 is unconstructible in production and these fields are inert.
+    static const uint16_t EVM_COMMIT_VERSION = 3;
+
     uint16_t nVersion{CURRENT_VERSION};
     int32_t nHeight{0};
     uint256 merkleRootMNList;
     uint256 merkleRootQuorums;
+    // --- v3 (D2) EVM commitments. Only (de)serialized at nVersion>=3.
+    uint256 evmStateRoot;       // MPT root of the full EVM world state
+    uint256 evmReceiptsRoot;    // trie root of this block's receipts
+    uint64_t evmBaseFee{0};     // EIP-1559 base fee (weis) for the block
+    uint64_t evmGasUsed{0};     // total EVM gas used by this block.
+                                // Committed so the NEXT block derives
+                                // its EIP-1559 base fee from the
+                                // parent without re-executing it
+                                // (exactly why Ethereum's header
+                                // carries gasUsed + baseFeePerGas).
+    uint64_t evmExecTime{0};    // block timestamp the EVM executed
+                                // under. Committed so the TIMESTAMP
+                                // opcode is deterministic for every
+                                // validator: the PoW nonce-search
+                                // loop keeps mutating the header nTime
+                                // after the coinbase is fixed, so a
+                                // miner-precomputed state/receipts
+                                // root would diverge from a validator
+                                // re-executing under the published
+                                // nTime. Both sides instead use this
+                                // committed value → exact parity,
+                                // without touching the mining-time
+                                // loop.
 
     SERIALIZE_METHODS(CCbTx, obj
     )
@@ -33,6 +68,11 @@ public:
         READWRITE(obj.nVersion, obj.nHeight, obj.merkleRootMNList);
         if (obj.nVersion >= 2) {
             READWRITE(obj.merkleRootQuorums);
+        }
+        if (obj.nVersion >= EVM_COMMIT_VERSION) {
+            READWRITE(obj.evmStateRoot, obj.evmReceiptsRoot,
+                      obj.evmBaseFee, obj.evmGasUsed,
+                      obj.evmExecTime);
         }
     }
 
@@ -46,6 +86,13 @@ public:
         obj.pushKV("merkleRootMNList", merkleRootMNList.ToString());
         if (nVersion >= 2) {
             obj.pushKV("merkleRootQuorums", merkleRootQuorums.ToString());
+        }
+        if (nVersion >= EVM_COMMIT_VERSION) {
+            obj.pushKV("evmStateRoot", evmStateRoot.ToString());
+            obj.pushKV("evmReceiptsRoot", evmReceiptsRoot.ToString());
+            obj.pushKV("evmBaseFee", (uint64_t) evmBaseFee);
+            obj.pushKV("evmGasUsed", (uint64_t) evmGasUsed);
+            obj.pushKV("evmExecTime", (uint64_t) evmExecTime);
         }
     }
 };

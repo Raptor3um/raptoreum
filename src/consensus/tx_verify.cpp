@@ -19,6 +19,8 @@
 #include <timedata.h>
 #include <assets/assets.h>
 #include <assets/assetstype.h>
+#include <evm/apply.h>   // kWeisPerSatoshi
+#include <evm/evmtx.h>   // CEvmFundTx
 
 // TODO remove the following dependencies
 #include <chain.h>
@@ -90,6 +92,62 @@ checkSpecialTxFee(const CTransaction &tx, CAmount &nFeeTotal, CAmount &specialTx
                     specialTxFee = asset.fee * COIN;
                     nFeeTotal -= specialTxFee;
                 }
+                break;
+            }
+            // EVM transactions (Phase 1.4+ scaffolding).
+            //
+            // Activation gate: until UPDATE_EVM is registered with a
+            // heightActivated in chainparams.cpp, IsEvmActive() returns false
+            // and these cases reject. After activation, the cases fall through
+            // (return true) — Phase 2 will replace the body with full EIP-1559
+            // fee accounting (gasLimit * maxFeePerGas) once the EVM execution
+            // pipeline lands.
+            //
+            // Why a defense-in-depth check here even though CheckSpecialTx also
+            // gates on IsEvmActive: tx_verify runs in multiple contexts
+            // (mempool, block validation, RPC). Ensuring the activation gate
+            // is checked at every entry point means a future refactor that
+            // bypasses CheckSpecialTx still cannot accept an EVM tx pre-fork.
+            // EVM_FUND (AAL: UTXO -> EVM funding). The funded amount must
+            // LEAVE the UTXO money supply WITHOUT being claimable by the
+            // coinbase: it reappears as EVM balance (ApplyEvmFundTx). So,
+            // unlike the asset/future fees above, it is subtracted from the
+            // miner-claimable fee but NOT returned via specialTxFee (which
+            // is added to the coinbase value allowance in ConnectBlock).
+            // Leaving specialTxFee at 0 ensures the miner cannot claim it;
+            // CheckTxInputs' `txfee < 0` guard then enforces that the
+            // inputs cover (fund amount + a non-negative miner fee).
+            case TRANSACTION_EVM_FUND: {
+                if (!Updates().IsEvmActive(::ChainActive().Tip())) {
+                    return false;
+                }
+                evm::CEvmFundTx fund;
+                if (GetTxPayload(tx.vExtraPayload, fund)) {
+                    if (fund.amount % evm::kWeisPerSatoshi != 0) {
+                        return false;  // non-round amount cannot settle
+                    }
+                    const CAmount fundSat = static_cast<CAmount>(
+                        fund.amount / evm::kWeisPerSatoshi);
+                    nFeeTotal -= fundSat;  // removed from UTXO supply
+                    // specialTxFee deliberately left 0 (not coinbase-claimable).
+                }
+                break;
+            }
+            case TRANSACTION_EVM_DEPLOY:
+            case TRANSACTION_EVM_CALL:
+            case TRANSACTION_EVM_SPEND:
+            case TRANSACTION_NEW_EVM_ASSET:    // reserved, Phase 4
+            case TRANSACTION_UPDATE_EVM_ASSET: // reserved, Phase 4
+            case TRANSACTION_MINT_EVM_ASSET:   // reserved, Phase 4
+            case TRANSACTION_WRAP_ASSET:       // reserved, Phase 5+
+            case TRANSACTION_UNWRAP_ASSET: {   // reserved, Phase 5+
+                if (!Updates().IsEvmActive(::ChainActive().Tip())) {
+                    return false;
+                }
+                // Phase 2 TODO: parse the payload, compute EIP-1559 fee:
+                //     specialTxFee = payload.gasLimit * payload.maxFeePerGas
+                //   then debit nFeeTotal accordingly. For now the activation
+                //   gate above is the only block.
                 break;
             }
                 break;
@@ -375,7 +433,17 @@ bool Consensus::CheckTxInputs(const CTransaction &tx, CValidationState &state, c
             return false;
     }
 
-    if (tx.nType != TRANSACTION_MINT_ASSET) {
+    // MINT creates units (outputs without inputs); WRAP burns units to the
+    // EVM ledger (inputs exceed outputs by the wrapped amount); UNWRAP mints
+    // units back from the EVM ledger (outputs exceed inputs). All three are
+    // exempt from the strict per-tx input==output asset conservation here.
+    // The exempted txs each re-impose a CONSTRAINED conservation in their
+    // own CheckSpecialTx handler (CheckWrapAssetTx / CheckUnwrapAssetTx /
+    // CheckMintAssetTx) so the exemption cannot be abused to create or
+    // destroy arbitrary assets.
+    if (tx.nType != TRANSACTION_MINT_ASSET &&
+        tx.nType != TRANSACTION_WRAP_ASSET &&
+        tx.nType != TRANSACTION_UNWRAP_ASSET) {
         if (!checkAssetsOutputs(state, nAssetVin, nAssetVout, mapVinIds, mapVoutIds))
             return false;
     }
