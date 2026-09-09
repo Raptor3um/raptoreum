@@ -20,11 +20,5 @@ natpmp_packages=libnatpmp
 
 $(host_arch)_$(host_os)_native_packages += native_b2
 
-ifneq ($(build_os),darwin)
-darwin_native_packages += native_cctools native_libtapi
-
-ifeq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
-darwin_native_packages += native_clang
-endif
-
-endif
+# Cross-compiling for macOS needs no packages of its own: hosts/darwin.mk
+# drives the clang, lld and llvm binutils installed on the build machine.

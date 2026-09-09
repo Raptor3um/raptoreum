@@ -100,7 +100,26 @@ if test -n "@STRIP@"; then
   ac_cv_path_ac_pt_STRIP="${STRIP}"
 fi
 
+if test -n "@LD@"; then
+  LD="@LD@"
+  ac_cv_path_ac_pt_LD="${LD}"
+fi
+
 if test "@host_os@" = darwin; then
+  # libtool decides whether the linker understands -single_module by looking for
+  # the string "single_module" anywhere in the linker's stderr. lld links the
+  # test library successfully but mentions the flag while doing so:
+  #
+  #     ld64.lld: warning: Option `-single_module' is deprecated in ld64:
+  #     ld64.lld: warning: Unnecessary option: this is already the default
+  #
+  # so libtool concludes the flag is unsupported and falls back to building
+  # shared libraries in two steps, the first being `$CC -r -keep_private_externs
+  # -nostdlib`. lld's Mach-O backend does not implement -r ("Option `-r' is not
+  # yet implemented"), quietly links a normal library instead, and the build
+  # dies on every libc symbol being undefined. Answer the test directly.
+  lt_cv_apple_cc_single_mod=yes
+
   if test -n "@OTOOL@"; then
     OTOOL="@OTOOL@"
     ac_cv_path_ac_pt_OTOOL="${OTOOL}"

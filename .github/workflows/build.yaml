@@ -69,6 +69,7 @@ jobs:
     name: ${{ matrix.platform.name }} Build
     needs: get-version
     runs-on: ${{ matrix.platform.runner }}
+    continue-on-error: ${{ matrix.platform.experimental || false }}
     strategy:
       fail-fast: false
       matrix:
@@ -86,6 +87,17 @@ jobs:
             packages: curl libcurl4-openssl-dev build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake ccache
             platform-id: ubuntu24
             strip-command: strip
+
+          # ubuntu-26.04 is still a public preview runner image (no SLA, capacity
+          # may be constrained), so this build is allowed to fail without failing
+          # the workflow. Drop continue-on-error once the image reaches GA.
+          - name: Ubuntu 26
+            runner: ubuntu-26.04
+            host: x86_64-pc-linux-gnu
+            packages: curl libcurl4-openssl-dev build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake ccache
+            platform-id: ubuntu26
+            strip-command: strip
+            experimental: true
 
           - name: ARM 64-bit
             runner: ubuntu-22.04
@@ -171,6 +183,7 @@ jobs:
     name: ${{ matrix.platform.name }} Tests
     needs: [get-version, build-linux]
     runs-on: ${{ matrix.platform.runner }}
+    continue-on-error: ${{ matrix.platform.experimental || false }}
     strategy:
       fail-fast: false
       matrix:
@@ -178,10 +191,16 @@ jobs:
           - name: Ubuntu 22
             runner: ubuntu-22.04
             platform-id: ubuntu22
-            
+
           - name: Ubuntu 24
             runner: ubuntu-24.04
             platform-id: ubuntu24
+
+          # See the note on the Ubuntu 26 entry in build-linux: preview image.
+          - name: Ubuntu 26
+            runner: ubuntu-26.04
+            platform-id: ubuntu26
+            experimental: true
 
     steps:
       - name: Checkout
@@ -198,6 +217,151 @@ jobs:
           platform: ${{ matrix.platform.name }}
           version: ${{ needs.get-version.outputs.version }}
           coin-name: ${{ env.COIN_NAME }}
+
+  # ============================================================================
+  # macOS SDK
+  # ============================================================================
+  # depends/hosts/darwin.mk builds against an Apple SDK, and an Apple SDK cannot
+  # be redistributed (see contrib/macdeploy/README.md), so there is nowhere for
+  # CI to download one from. A macOS runner already has Xcode installed, so the
+  # SDK is taken from there and handed to the cross-compiling job below.
+  #
+  # This job compiles nothing: it copies a directory and uploads it. The build
+  # environment that has to be maintained -- compiler, dependencies, configure
+  # flags -- is the Linux one, and only the Linux one.
+  macos-sdk:
+    name: macOS SDK
+    runs-on: macos-15
+    outputs:
+      version: ${{ steps.sdk.outputs.version }}
+    steps:
+      - name: Take the SDK from the runner's Xcode
+        id: sdk
+        run: |
+          sdk_path=$(xcrun --sdk macosx --show-sdk-path)
+          sdk_version=$(xcrun --sdk macosx --show-sdk-version)
+          echo "$(xcodebuild -version | head -1), SDK ${sdk_version}, at ${sdk_path}"
+          mkdir sdk
+          ditto "${sdk_path}" "sdk/MacOSX${sdk_version}.sdk"
+          # without this bsdtar stores macOS metadata that GNU tar unpacks as ._ files
+          COPYFILE_DISABLE=1 tar -C sdk -czf macos-sdk.tar.gz "MacOSX${sdk_version}.sdk"
+          echo "version=${sdk_version}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload SDK
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-sdk
+          path: macos-sdk.tar.gz
+          retention-days: 1
+
+  # ============================================================================
+  # macOS Build
+  # ============================================================================
+  # Cross-compiled from Linux rather than built on a macOS runner: one build
+  # environment to maintain instead of two, and a build anyone can reproduce on
+  # a Linux machine once they have the SDK. The only thing left that needs a Mac
+  # is the SDK job above.
+  #
+  # Apple Silicon only. An x86_64 target does not link: relic, inside dashbls,
+  # selects its GMP-backed arithmetic for that architecture and the resulting
+  # link is missing every __gmpn_* symbol. Intel is also on its way out anyway,
+  # since GitHub drops x86_64 macOS runners in August 2027.
+  #
+  # Kept experimental while darwin settles, so a failure cannot fail the
+  # workflow for the other platforms.
+  build-macos:
+    name: ${{ matrix.platform.name }} Build
+    needs: [get-version, macos-sdk]
+    runs-on: ${{ matrix.platform.runner }}
+    continue-on-error: ${{ matrix.platform.experimental || false }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - name: macOS arm64
+            runner: ubuntu-24.04
+            host: arm64-apple-darwin
+            platform-id: macos-arm64
+            experimental: true
+
+    env:
+      OSX_SDK: ${{ github.workspace }}/depends/SDKs/MacOSX${{ needs.macos-sdk.outputs.version }}.sdk
+      OSX_SDK_VERSION: ${{ needs.macos-sdk.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Required Packages
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y curl libcurl4-openssl-dev build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake ccache clang-18 lld-18 llvm-18
+          # hosts/darwin.mk looks for clang, clang++ and the llvm-* tools under
+          # their unversioned names, which only exist in the versioned directory.
+          echo /usr/lib/llvm-18/bin >> "$GITHUB_PATH"
+
+      - name: Download macOS SDK
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-sdk
+          # Not the workspace root: package-artifacts sweeps up every *.tar.gz
+          # it finds there, and the SDK is Apple's to distribute, not ours.
+          path: sdk-artifact
+
+      - name: Unpack macOS SDK
+        run: |
+          mkdir -p depends/SDKs
+          tar -xf sdk-artifact/macos-sdk.tar.gz -C depends/SDKs
+          rm -rf sdk-artifact
+          test -d "${OSX_SDK}"
+
+      - name: Setup Dependencies
+        uses: ./.github/actions/setup-depends
+        with:
+          host: ${{ matrix.platform.host }}
+          fallback-download-path: ${{ env.FALLBACK_DOWNLOAD_PATH }}
+
+      - name: Build Release Binaries
+        uses: ./.github/actions/build-binaries
+        with:
+          host: ${{ matrix.platform.host }}
+          build-type: release
+          # libraptoreumconsensus is declared -no-undefined but is not
+          # self-contained: it references gArgs, GetDataDir, BCLog and
+          # boost::filesystem. An ELF shared object may leave those to be
+          # resolved at load time, a Mach-O dylib may not, so the link fails on
+          # darwin. None of the packaged artifacts is that library, so the
+          # target is simply not built here. Making it self-contained is worth
+          # doing, but it is a change to what the library contains, not to CI.
+          configure-flags: --disable-shared
+
+      - name: Collect Release Binaries
+        run: |
+          mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
+          cp src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}/
+          mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_not_strip/
+          # GNU strip cannot read Mach-O; llvm-strip can
+          llvm-strip ${BUILD_DIR}/*
+          mv src/test/test_raptoreum ${TEST_DIR}
+
+      - name: Package Artifacts
+        uses: ./.github/actions/package-artifacts
+        with:
+          platform: ${{ matrix.platform.platform-id }}
+          version: ${{ needs.get-version.outputs.version }}
+          coin-name: ${{ env.COIN_NAME }}
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.COIN_NAME }}-${{ matrix.platform.platform-id }}-${{ needs.get-version.outputs.version }}
+          path: ${{ env.COMPRESS_DIR }}
+
+      - name: Upload Test Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.COIN_NAME }}-${{ matrix.platform.platform-id }}-test-${{ needs.get-version.outputs.version }}
+          path: ${{ env.TEST_DIR }}
 
   # ============================================================================
   # Windows Build

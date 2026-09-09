@@ -37,12 +37,25 @@ The paths are automatically configured and no other options are needed unless ta
 
 #### For macOS cross compilation:
 
-    sudo apt-get install curl bsdmainutils cmake libz-dev libbz2-dev python3-setuptools libtinfo5 xorriso
+    sudo apt-get install curl bsdmainutils cmake libz-dev libbz2-dev python3-setuptools xorriso clang lld llvm
+
+Clang 18 or later is required, together with the matching `lld` and `llvm-*`
+tools: `hosts/darwin.mk` calls them by their unversioned names and expects to
+find them on `PATH`. Debian and Ubuntu install them under
+`/usr/lib/llvm-<version>/bin`, which has to be added to `PATH`:
+
+    export PATH=/usr/lib/llvm-18/bin:$PATH
 
 Note: You must obtain the macOS SDK before proceeding with a cross-compile.
 Under the depends directory, create a subdirectory `SDKs`.
 Then, place the extracted SDK under this new directory.
 For more information, see [SDK Extraction](../contrib/macdeploy/README.md#sdk-extraction).
+
+To build against an SDK other than the one `hosts/darwin.mk` names by default,
+point `OSX_SDK` at it and set `OSX_SDK_VERSION` to its version:
+
+    make -C depends HOST=arm64-apple-darwin \
+      OSX_SDK=$PWD/depends/SDKs/MacOSX15.5.sdk OSX_SDK_VERSION=15.5
 
 #### For Win64 cross compilation:
 
@@ -80,9 +93,9 @@ The following can be set when running make: `make FOO=bar`
 - `DEBUG`: disable some optimizations and enable more runtime checking
 - `HOST_ID_SALT`: Optional salt to use when generating host package ids
 - `BUILD_ID_SALT`: Optional salt to use when generating build package ids
-- `FORCE_USE_SYSTEM_CLANG`: (EXPERTS_ONLY!!!) When cross-compiling for macOS,
-   use Clang found in the system's <code>$PATH</code> rather than the default prebuilt
-   release of Clang from llvm.org. Clang 8 or later is required.
+- `OSX_SDK`: Path to the macOS SDK to build against, when cross-compiling for
+   macOS with an SDK other than the default one
+- `OSX_SDK_VERSION`: Version of the SDK <code>OSX_SDK</code> points at
 
 If some packages are not built, for example `make NO_WALLET=1`, the appropriate
 options will be passed to Raptoreum Core's configure. In this case, `--disable-wallet`.
