@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Class for raptoreumd node under test"""
 
+import collections
 import contextlib
 import decimal
 import errno
@@ -26,13 +27,37 @@ from .util import (
     wait_until,
     p2p_port,
     get_chain_folder,
-    Options
+    Options,
+    MAX_NODES
 )
 
 # For Python 3.4 compatibility
 JSONDecodeError = getattr(json, "JSONDecodeError", ValueError)
 
 BITCOIND_PROC_WAIT_TIMEOUT = 60
+
+AddressKeyPair = collections.namedtuple('AddressKeyPair', ['address', 'key'])
+
+# Deterministic regtest address/key per node index, used by TestNode.generate() so
+# that coinbase outputs land on a known key. Generated with getnewaddress plus
+# dumpprivkey on a regtest node; there must be one entry per possible node.
+PRIV_KEYS = [
+    AddressKeyPair('yXX6cAJBvfSA8TpeKF8Y8cmkrwTJbtUBHn', 'cMrFohSA3e5jB8zASvcTnv7wGS52Jg4HFFywt5MDnHUKsSWvhj33'),
+    AddressKeyPair('yeuz1NqxzZyBdJmWdWememyoaf9oG4JaF4', 'cPAVWoExLEB2ZEEn4HXTe1Sh7MuMTbndTjc6tRBSytDTu5RrvFWv'),
+    AddressKeyPair('yVwfQmgNB8GREZpAgnqRGM9Y6SboeeWTb3', 'cNdNjpVdJLi7PSrg631jPPp2ot23Q3AZxS47VYH6sg7PYFD7ksd1'),
+    AddressKeyPair('yZLvkjZGjts3Y1e1eEyFT3zxDaLNx7Lpi5', 'cTvQNZ81gdQL1tFKu4wyqoVGRo5PDFiAEBWJC1bbPuSQdRtJmUGJ'),
+    AddressKeyPair('yaQL7mdfHiuSkqXFH6DipyNdgmNSaSts55', 'cTGAARxLN8dDvHMBLtg7J8SSzxNAUVmPN2rJuGd46kmSPxegqui1'),
+    AddressKeyPair('ySPZPk1G1dyhbbmwxU6iHTkSq5kEL4Ez94', 'cPt6WDDLRPhGfWVmDmCXXW4ZkVoP58Z8G1aiz9B3AQoKm2sGT1Fu'),
+    AddressKeyPair('yQEuzbw18eJmfTBgY2jrK3RYcmPvqyCJas', 'cUEZgKW8989paNdgfi6F84ZGYCq2Lxx6zLdRNTQhnYkXGufKdLE7'),
+    AddressKeyPair('yTk16biow6mUqPGRHqr1SL2H5qSQb2A8cr', 'cSiZR5yHnHGkjvZ7JrzYoTDompAPgvrs1fkY9JyPSEhwxoyRTLcE'),
+    AddressKeyPair('yUKqXSvt3QXodJwVPDiNZac1RSomZHvW2w', 'cND6AFoyGgtiihRzTngihFvPPDpmcQqQR4TRvQxAftDQpfvVSb4c'),
+    AddressKeyPair('yWquZJuc69Ky7HCqo6D4hSBnXNiikSXPvR', 'cNkuQhcrtZC6DegcvsmSMVCDxVkqx3ep7Stm8QvqWBb9z3d5auEf'),
+    AddressKeyPair('yf6QwqXePYNLT46mAwQrJWJsiiax611Xeg', 'cVFKZTcXJoXjAzZ1u1PKoU1PpuHNknNbyF9v8XhR6jyinNnowhXj'),
+    AddressKeyPair('yTd78hVUqrvtEyvNouYH4jPFrM6tkwGAdu', 'cMmjhzw2SvrqSpL9PHoskxRaXykHvukATf8kSrKxeiyEVVcTDWgL'),
+    AddressKeyPair('yccTXdX618WTK4RhXhcPYC7LoiUgtnG5LA', 'cRtUro2BK2osHkiShc4VCATc6cszoVCQWGR8dh4iF39Ex7pxxQD1'),
+    AddressKeyPair('yXFDaue8s14fAWBLgQdnqHQNWgmLsFHBRb', 'cUC9xbaa2QoJ55vqbquaaLCxcUSVz2vtShM7y5t5NQzzm8uQPbfT'),
+    AddressKeyPair('yhtZkqsJ9PVhWY9XJdnbfrZEPFVcZanXtF', 'cTBDyBfyqxKWbqUephuQiCdBRjqp34Vr6ZiTJYSMHdkwVeQCnK8q'),
+]
 
 
 class FailedToStartError(Exception):
@@ -194,6 +219,11 @@ class TestNode():
                 str(e).startswith('Error: Please enter the wallet passphrase with walletpassphrase first')
 
         return self.generatetoaddress(nblocks=nblocks, address=self.get_deterministic_priv_key().address, maxtries=maxtries)
+
+    def get_deterministic_priv_key(self):
+        """Return a deterministic priv key in base58, that only depends on the node's index"""
+        assert len(PRIV_KEYS) == MAX_NODES
+        return PRIV_KEYS[self.index]
 
     def get_wallet_rpc(self, wallet_name):
         if self.use_cli:
