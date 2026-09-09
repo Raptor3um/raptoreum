@@ -219,11 +219,48 @@ jobs:
           coin-name: ${{ env.COIN_NAME }}
 
   # ============================================================================
+  # macOS SDK
+  # ============================================================================
+  # depends/hosts/darwin.mk builds against an Apple SDK, and an Apple SDK cannot
+  # be redistributed (see contrib/macdeploy/README.md), so there is nowhere for
+  # CI to download one from. A macOS runner already has Xcode installed, so the
+  # SDK is taken from there and handed to the cross-compiling job below.
+  #
+  # This job compiles nothing: it copies a directory and uploads it. The build
+  # environment that has to be maintained -- compiler, dependencies, configure
+  # flags -- is the Linux one, and only the Linux one.
+  macos-sdk:
+    name: macOS SDK
+    runs-on: macos-15
+    outputs:
+      version: ${{ steps.sdk.outputs.version }}
+    steps:
+      - name: Take the SDK from the runner's Xcode
+        id: sdk
+        run: |
+          sdk_path=$(xcrun --sdk macosx --show-sdk-path)
+          sdk_version=$(xcrun --sdk macosx --show-sdk-version)
+          echo "$(xcodebuild -version | head -1), SDK ${sdk_version}, at ${sdk_path}"
+          mkdir sdk
+          ditto "${sdk_path}" "sdk/MacOSX${sdk_version}.sdk"
+          # without this bsdtar stores macOS metadata that GNU tar unpacks as ._ files
+          COPYFILE_DISABLE=1 tar -C sdk -czf macos-sdk.tar.gz "MacOSX${sdk_version}.sdk"
+          echo "version=${sdk_version}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload SDK
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-sdk
+          path: macos-sdk.tar.gz
+          retention-days: 1
+
+  # ============================================================================
   # macOS Build
   # ============================================================================
-  # Built natively on a macOS runner rather than cross-compiled from Linux. The
-  # depends darwin host needs an extracted Apple SDK (see doc/README_osx.md),
-  # which cannot be redistributed, whereas a macOS runner already has one.
+  # Cross-compiled from Linux rather than built on a macOS runner: one build
+  # environment to maintain instead of two, and a build anyone can reproduce on
+  # a Linux machine once they have the SDK. The only thing left that needs a Mac
+  # is the SDK job above.
   #
   # Apple Silicon only. An x86_64 target does not link: relic, inside dashbls,
   # selects its GMP-backed arithmetic for that architecture and the resulting
@@ -234,7 +271,7 @@ jobs:
   # workflow for the other platforms.
   build-macos:
     name: ${{ matrix.platform.name }} Build
-    needs: get-version
+    needs: [get-version, macos-sdk]
     runs-on: ${{ matrix.platform.runner }}
     continue-on-error: ${{ matrix.platform.experimental || false }}
     strategy:
@@ -242,11 +279,14 @@ jobs:
       matrix:
         platform:
           - name: macOS arm64
-            runner: macos-14
+            runner: ubuntu-24.04
             host: arm64-apple-darwin
             platform-id: macos-arm64
             experimental: true
 
+    env:
+      OSX_SDK: ${{ github.workspace }}/depends/SDKs/MacOSX${{ needs.macos-sdk.outputs.version }}.sdk
+      OSX_SDK_VERSION: ${{ needs.macos-sdk.outputs.version }}
 
     steps:
       - name: Checkout
@@ -254,9 +294,22 @@ jobs:
 
       - name: Install Required Packages
         run: |
-          brew install automake libtool pkg-config ccache
-          # coreutils supplies the GNU tools some of the build scripts expect
-          brew install coreutils
+          sudo apt-get update -y
+          sudo apt-get install -y curl libcurl4-openssl-dev build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake ccache clang-18 lld-18 llvm-18
+          # hosts/darwin.mk looks for clang, clang++ and the llvm-* tools under
+          # their unversioned names, which only exist in the versioned directory.
+          echo /usr/lib/llvm-18/bin >> "$GITHUB_PATH"
+
+      - name: Download macOS SDK
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-sdk
+
+      - name: Unpack macOS SDK
+        run: |
+          mkdir -p depends/SDKs
+          tar -xf macos-sdk.tar.gz -C depends/SDKs
+          test -d "${OSX_SDK}"
 
       - name: Setup Dependencies
         uses: ./.github/actions/setup-depends
@@ -269,13 +322,22 @@ jobs:
         with:
           host: ${{ matrix.platform.host }}
           build-type: release
+          # libraptoreumconsensus is declared -no-undefined but is not
+          # self-contained: it references gArgs, GetDataDir, BCLog and
+          # boost::filesystem. An ELF shared object may leave those to be
+          # resolved at load time, a Mach-O dylib may not, so the link fails on
+          # darwin. None of the packaged artifacts is that library, so the
+          # target is simply not built here. Making it self-contained is worth
+          # doing, but it is a change to what the library contains, not to CI.
+          configure-flags: --disable-shared
 
       - name: Collect Release Binaries
         run: |
           mkdir -p ${BUILD_DIR} ${BUILD_DIR}_not_strip ${TEST_DIR}
           cp src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}/
           mv src/{raptoreum-cli,raptoreumd,qt/raptoreum-qt} ${BUILD_DIR}_not_strip/
-          strip ${BUILD_DIR}/*
+          # GNU strip cannot read Mach-O; llvm-strip can
+          llvm-strip ${BUILD_DIR}/*
           mv src/test/test_raptoreum ${TEST_DIR}
 
       - name: Package Artifacts
