@@ -188,6 +188,7 @@ $(host_prefix)/share/config.site : config.site.in $(host_prefix)/.stamp_$(final_
             -e 's|@AR@|$(host_AR)|' \
             -e 's|@RANLIB@|$(host_RANLIB)|' \
             -e 's|@NM@|$(host_NM)|' \
+            -e 's|@LD@|$(host_LD)|' \
             -e 's|@STRIP@|$(host_STRIP)|' \
             -e 's|@OTOOL@|$(host_OTOOL)|' \
             -e 's|@INSTALL_NAME_TOOL@|$(host_INSTALL_NAME_TOOL)|' \
