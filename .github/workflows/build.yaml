@@ -304,11 +304,15 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: macos-sdk
+          # Not the workspace root: package-artifacts sweeps up every *.tar.gz
+          # it finds there, and the SDK is Apple's to distribute, not ours.
+          path: sdk-artifact
 
       - name: Unpack macOS SDK
         run: |
           mkdir -p depends/SDKs
-          tar -xf macos-sdk.tar.gz -C depends/SDKs
+          tar -xf sdk-artifact/macos-sdk.tar.gz -C depends/SDKs
+          rm -rf sdk-artifact
           test -d "${OSX_SDK}"
 
       - name: Setup Dependencies
