@@ -85,6 +85,14 @@ class CNodeNoVerackIdle(CLazyNode):
         self.send_message(msg_ping())
         self.send_message(msg_getaddr())
 
+class P2PVersionStore(P2PInterface):
+    version_received = None
+
+    def on_version(self, msg):
+        super().on_version(msg)
+        self.version_received = msg
+
+
 class P2PLeakTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
@@ -111,6 +119,18 @@ class P2PLeakTest(BitcoinTestFramework):
         #This node should have been banned
         assert not no_version_bannode.is_connected
 
+        self.log.info('Check that the version message does not leak the local address of the node')
+        # Upstream bounds nTime by wall time; these nodes run on mocktime, so
+        # the version message carries that instead.
+        p2p_version_store = self.nodes[0].add_p2p_connection(P2PVersionStore())
+        wait_until(lambda: p2p_version_store.version_received is not None, timeout=10, lock=mininode_lock)
+        ver = p2p_version_store.version_received
+        assert_equal(ver.nTime, self.mocktime)
+        assert_equal(ver.addrFrom.port, 0)
+        assert_equal(ver.addrFrom.ip, '0.0.0.0')
+        assert_equal(ver.nStartingHeight, self.nodes[0].getblockcount())
+        assert_equal(ver.nRelay, 1)
+
         self.nodes[0].disconnect_p2ps()
 
         # Wait until all connections are closed
@@ -120,6 +140,7 @@ class P2PLeakTest(BitcoinTestFramework):
         assert(no_version_bannode.unexpected_msg == False)
         assert(no_version_idlenode.unexpected_msg == False)
         assert(no_verack_idlenode.unexpected_msg == False)
+
 
 if __name__ == '__main__':
     P2PLeakTest().main()
