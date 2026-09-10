@@ -190,8 +190,8 @@ std::vector <LogCategory> BCLog::Logger::LogCategoriesList() const {
 
     std::vector <LogCategory> ret;
     for (const CLogCategoryDesc &category_desc: categories) {
-        if (category_desc.flag != BCLog::NONE && category_desc.flag != BCLog::ALL &&
-            category_desc.flag != BCLog::RTM)
+        if (category_desc.flag == BCLog::NONE || category_desc.flag == BCLog::ALL ||
+            category_desc.flag == BCLog::RTM)
             continue;
         LogCategory catActive;
         catActive.category = category_desc.category;
