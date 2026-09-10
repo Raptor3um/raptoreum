@@ -74,13 +74,9 @@ class ConfArgsTest(BitcoinTestFramework):
             f.write("datadir=" + new_data_dir + "\n")
             f.write(conf_file_contents)
 
-        # The message is mangled in src/util/system.cpp:973: "secified"; the
-        # format is \%s\" rather than \"%s\", which eats the opening quote;
-        # and the argument is GetArg("-datadit", ""), so the path is always
-        # empty. Message-only, but this assertion cannot name the directory.
         self.nodes[0].assert_start_raises_init_error(
             ['-conf=' + conf_file],
-            'ErrorError reading configuration file: secified data directory " does not exist.')
+            'ErrorError reading configuration file: specified data directory "{}" does not exist.'.format(new_data_dir))
 
         # Create the directory and ensure the config file now works
         os.mkdir(new_data_dir)
