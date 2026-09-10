@@ -254,6 +254,7 @@ static RPCHelpMan getrpcinfo() {
 
                           UniValue result(UniValue::VOBJ);
                           result.pushKV("active_commands", active_commands);
+                          result.pushKV("logpath", LogInstance().m_file_path.string());
 
                           return result;
                       }
