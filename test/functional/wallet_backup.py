@@ -8,7 +8,7 @@ Test case is:
 4 nodes. 1 2 and 3 send transactions between each other,
 fourth node is a miner.
 1 2 3 each mine a block to start, then
-Miner creates 100 blocks so 1 2 3 each have 500 mature
+Miner creates 100 blocks so 1 2 3 each have one mature block reward
 coins to spend.
 Then 5 iterations of 1/2/3 sending coins amongst
 themselves to get transactions in the wallets,
@@ -21,7 +21,7 @@ Miner then generates 101 more blocks, so any
 transaction fees paid mature.
 
 Sanity check:
-  Sum(1,2,3,4 balances) == 114*500
+  Sum(1,2,3,4 balances) == 114 block rewards
 
 1/2/3 are shutdown, and their wallets erased.
 Then restore using wallet.dat backup. And
@@ -96,6 +96,11 @@ class WalletBackupTest(BitcoinTestFramework):
 
     def run_test(self):
         self.log.info("Generating initial blockchain")
+        # Clear the 4 RTM launch window first, mining to an address none of these
+        # wallets holds a key for, so every block they go on to mine is a full
+        # reward and the balances below stay exact.
+        self.mine_past_launch_window(self.nodes[3])
+        self.sync_blocks()
         self.nodes[0].generate(1)
         self.sync_blocks()
         self.nodes[1].generate(1)
@@ -105,9 +110,9 @@ class WalletBackupTest(BitcoinTestFramework):
         self.nodes[3].generate(100)
         self.sync_blocks()
 
-        assert_equal(self.nodes[0].getbalance(), 500)
-        assert_equal(self.nodes[1].getbalance(), 500)
-        assert_equal(self.nodes[2].getbalance(), 500)
+        assert_equal(self.nodes[0].getbalance(), REGTEST_SUBSIDY)
+        assert_equal(self.nodes[1].getbalance(), REGTEST_SUBSIDY)
+        assert_equal(self.nodes[2].getbalance(), REGTEST_SUBSIDY)
         assert_equal(self.nodes[3].getbalance(), 0)
 
         self.log.info("Creating transactions")
@@ -138,9 +143,11 @@ class WalletBackupTest(BitcoinTestFramework):
         balance3 = self.nodes[3].getbalance()
         total = balance0 + balance1 + balance2 + balance3
 
-        # At this point, there are 214 blocks (103 for setup, then 10 rounds, then 101.)
-        # 114 are mature, so the sum of all wallets should be 114 * 500 = 57000.
-        assert_equal(total, 57000)
+        # 114 of the wallets' own 214 blocks have matured. Not exact like upstream:
+        # the founder takes 5% of fees as well as subsidy, so the total falls a hair
+        # short. The bound is still far tighter than a wrong subsidy could slip past.
+        assert_greater_than_or_equal(114 * REGTEST_SUBSIDY, total)
+        assert_greater_than(total, 114 * REGTEST_SUBSIDY - Decimal("0.01"))
 
         ##
         # Test restoring spender wallets from backups
