@@ -405,7 +405,30 @@ namespace Consensus {
             .recoveryMembers = 50,
     };
 
-// this one is for testing only
+// Both of these are for testing only. LLMQ_5_60 (100) and LLMQ_TEST_V17 (101) exist on no
+// real network; regtest registers them instead of the production types so that a handful of
+// local smartnodes can fill a quorum, and so that the DKG error injection in
+// CDKGSession::ShouldSimulateError, which fires only for LLMQ_5_60, has a type to fire on.
+    static constexpr LLMQParams
+    llmq_test = {
+            .type = LLMQ_5_60,
+            .name = "llmq_test",
+            .size = 3,
+            .minSize = 2,
+            .threshold = 2,
+
+            .dkgInterval = 30, // one DKG per hour
+            .dkgPhaseBlocks = 2,
+            .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
+            .dkgMiningWindowEnd = 18,
+            .dkgBadVotesThreshold = 2,
+
+            .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
+
+            .keepOldConnections = 3,
+            .recoveryMembers = 3,
+    };
+
     static constexpr LLMQParams
     llmq_test_v17 = {
             .type = LLMQ_TEST_V17,
