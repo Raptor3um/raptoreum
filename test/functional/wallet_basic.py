@@ -515,12 +515,22 @@ class WalletTest(BitcoinTestFramework):
         assert not address_info["ismine"]
         assert not address_info["iswatchonly"]
         assert not address_info["isscript"]
+        assert not address_info["ischange"]
 
-        # Upstream also checks getaddressinfo's 'ischange' here, on both an
-        # external address and a change address. Raptoreum documents that field
-        # in the getaddressinfo help (src/wallet/rpcwallet.cpp) but no code path
-        # ever pushes it, so the key is simply absent from the response and there
-        # is nothing to assert. Restore these checks if the field is implemented.
+        # Test getaddressinfo 'ischange' field on change address.
+        self.nodes[0].generate(1)
+        destination = self.nodes[1].getnewaddress()
+        txid = self.nodes[0].sendtoaddress(destination, 0.123)
+        tx = self.nodes[0].decoderawtransaction(self.nodes[0].gettransaction(txid)['hex'])
+        output_addresses = [vout['scriptPubKey']['addresses'][0] for vout in tx["vout"]]
+        assert len(output_addresses) > 1
+        for address in output_addresses:
+            ischange = self.nodes[0].getaddressinfo(address)['ischange']
+            assert_equal(ischange, address != destination)
+            if ischange:
+                change = address
+        self.nodes[0].setlabel(change, 'foobar')
+        assert_equal(self.nodes[0].getaddressinfo(change)['ischange'], False)
 
 
 if __name__ == '__main__':
