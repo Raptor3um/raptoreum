@@ -4,7 +4,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 from test_framework.mininode import *
-from test_framework.test_framework import DashTestFramework
+from test_framework.test_framework import LLMQ_TEST_TYPE, RaptoreumTestFramework
 from test_framework.util import assert_equal
 
 '''
@@ -72,7 +72,7 @@ class LLMQCoinbaseCommitmentsTest(RaptoreumTestFramework):
         expectedDeleted = [new_mn.proTxHash]
         expectedUpdated = []
         baseBlockHash2 = self.nodes[0].getbestblockhash()
-        self.remove_masternode(self.mn_count)
+        self.remove_smartnode(self.mn_count)
         mnList = self.test_getmnlistdiff(baseBlockHash2, self.nodes[0].getbestblockhash(), mnList, expectedDeleted, expectedUpdated)
 
         # When comparing genesis and best block, we shouldn't see the previously added and then deleted MN
@@ -100,7 +100,7 @@ class LLMQCoinbaseCommitmentsTest(RaptoreumTestFramework):
 
         # Verify that the first quorum appears in MNLISTDIFF
         expectedDeleted = []
-        expectedNew = [QuorumId(100, int(first_quorum, 16))]
+        expectedNew = [QuorumId(LLMQ_TEST_TYPE, int(first_quorum, 16))]
         quorumList = self.test_getmnlistdiff_quorums(null_hash, self.nodes[0].getbestblockhash(), {}, expectedDeleted, expectedNew)
         baseBlockHash = self.nodes[0].getbestblockhash()
 
@@ -108,26 +108,26 @@ class LLMQCoinbaseCommitmentsTest(RaptoreumTestFramework):
 
         # Verify that the second quorum appears in MNLISTDIFF
         expectedDeleted = []
-        expectedNew = [QuorumId(100, int(second_quorum, 16))]
+        expectedNew = [QuorumId(LLMQ_TEST_TYPE, int(second_quorum, 16))]
         quorums_before_third = self.test_getmnlistdiff_quorums(baseBlockHash, self.nodes[0].getbestblockhash(), quorumList, expectedDeleted, expectedNew)
         block_before_third = self.nodes[0].getbestblockhash()
 
         third_quorum = self.mine_quorum()
 
         # Verify that the first quorum is deleted and the third quorum is added in MNLISTDIFF (the first got inactive)
-        expectedDeleted = [QuorumId(100, int(first_quorum, 16))]
-        expectedNew = [QuorumId(100, int(third_quorum, 16))]
+        expectedDeleted = [QuorumId(LLMQ_TEST_TYPE, int(first_quorum, 16))]
+        expectedNew = [QuorumId(LLMQ_TEST_TYPE, int(third_quorum, 16))]
         self.test_getmnlistdiff_quorums(block_before_third, self.nodes[0].getbestblockhash(), quorums_before_third, expectedDeleted, expectedNew)
 
         # Verify that the diff between genesis and best block is the current active set (second and third quorum)
         expectedDeleted = []
-        expectedNew = [QuorumId(100, int(second_quorum, 16)), QuorumId(100, int(third_quorum, 16))]
+        expectedNew = [QuorumId(LLMQ_TEST_TYPE, int(second_quorum, 16)), QuorumId(LLMQ_TEST_TYPE, int(third_quorum, 16))]
         self.test_getmnlistdiff_quorums(null_hash, self.nodes[0].getbestblockhash(), {}, expectedDeleted, expectedNew)
 
         # Now verify that diffs are correct around the block that mined the third quorum.
         # This tests the logic in CalcCbTxMerkleRootQuorums, which has to manually add the commitment from the current
         # block
-        mined_in_block = self.nodes[0].quorum("info", 100, third_quorum)["minedBlock"]
+        mined_in_block = self.nodes[0].quorum("info", LLMQ_TEST_TYPE, third_quorum)["minedBlock"]
         prev_block = self.nodes[0].getblock(mined_in_block)["previousblockhash"]
         prev_block2 = self.nodes[0].getblock(prev_block)["previousblockhash"]
         next_block = self.nodes[0].getblock(mined_in_block)["nextblockhash"]
@@ -138,8 +138,8 @@ class LLMQCoinbaseCommitmentsTest(RaptoreumTestFramework):
         self.test_getmnlistdiff_quorums(block_before_third, prev_block2, quorums_before_third, expectedDeleted, expectedNew)
         self.test_getmnlistdiff_quorums(block_before_third, prev_block, quorums_before_third, expectedDeleted, expectedNew)
         # The block in which the quorum was mined and the 2 after that should all give the same diff
-        expectedDeleted = [QuorumId(100, int(first_quorum, 16))]
-        expectedNew = [QuorumId(100, int(third_quorum, 16))]
+        expectedDeleted = [QuorumId(LLMQ_TEST_TYPE, int(first_quorum, 16))]
+        expectedNew = [QuorumId(LLMQ_TEST_TYPE, int(third_quorum, 16))]
         quorums_with_third = self.test_getmnlistdiff_quorums(block_before_third, mined_in_block, quorums_before_third, expectedDeleted, expectedNew)
         self.test_getmnlistdiff_quorums(block_before_third, next_block, quorums_before_third, expectedDeleted, expectedNew)
         self.test_getmnlistdiff_quorums(block_before_third, next_block2, quorums_before_third, expectedDeleted, expectedNew)
@@ -249,14 +249,12 @@ class LLMQCoinbaseCommitmentsTest(RaptoreumTestFramework):
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 4070908800)
         self.wait_for_sporks_same()
 
-        cbtx = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)["tx"][0]
-        assert(cbtx["cbTx"]["version"] == 1)
-
-        assert(self.nodes[0].getblockchaininfo()["bip9_softforks"]["dip0008"]["status"] != "active")
-
-        while self.nodes[0].getblockchaininfo()["bip9_softforks"]["dip0008"]["status"] != "active":
-            self.nodes[0].generate(4)
-            self.sync_all()
+        # No pre-DIP8 phase to observe: consensus.DIP0008Enabled is an
+        # unconditional bool in CRegTestParams, and CheckCbTx rejects a coinbase
+        # payload below version 2 outright (src/evo/cbtx.cpp), so the CbTx is
+        # version 2 from genesis. Upstream asserts version 1 here.
+        self.wait_for_dip8_activation()
+        self.sync_all()
         self.nodes[0].generate(1)
         self.sync_blocks()
 
