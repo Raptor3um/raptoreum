@@ -607,6 +607,10 @@ void SetupServerArgs() {
     gArgs.AddArg("-allowprivatenet", strprintf("Allow RFC1918 addresses to be relayed and connected to (default: %u)",
                                                DEFAULT_ALLOWPRIVATENET), ArgsManager::ALLOW_ANY,
                  OptionsCategory::CONNECTION);
+    gArgs.AddArg("-asmap=<file>",
+                 strprintf("Specify asn mapping used for bucketing of the peers (default: %s). Relative paths will be prefixed by the net-specific datadir location.",
+                           DEFAULT_ASMAP_FILENAME), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY,
+                 OptionsCategory::CONNECTION);
     gArgs.AddArg("-banscore=<n>",
                  strprintf("Threshold for disconnecting misbehaving peers (default: %u)", DEFAULT_BANSCORE_THRESHOLD),
                  ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
