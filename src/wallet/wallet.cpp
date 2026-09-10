@@ -3302,12 +3302,13 @@ std::map <CTxDestination, std::vector<COutput>> CWallet::ListAssets() const {
     // postponed until after https://github.com/bitcoin/bitcoin/pull/10244 to
     // avoid adding some extra complexity to the Qt code.
 
+    AssertLockHeld(cs_wallet);
+
     std::map <CTxDestination, std::vector<COutput>> result;
 
     std::map <std::string, std::vector<COutput>> mapAssets;
     AvailableAssets(mapAssets);
 
-    LOCK2(cs_main, cs_wallet);
     for (auto asset: mapAssets) {
         for (auto &coin: asset.second) {
             CTxDestination address;

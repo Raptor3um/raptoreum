@@ -192,7 +192,7 @@ static UniValue smartnode_outputs(const JSONRPCRequest& request)
     CCoinControl coin_control;
     coin_control.nCoinType = CoinType::ONLY_SMARTNODE_COLLATERAL;
     {
-      LOCK2(cs_main, pwallet->cs_wallet);
+      LOCK(pwallet->cs_wallet);
       pwallet->AvailableCoins(vPossibleCoins, true, &coin_control);
     }
     UniValue obj(UniValue::VOBJ);
