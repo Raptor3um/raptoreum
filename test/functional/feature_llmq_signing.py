@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.mininode import *
-from test_framework.test_framework import DashTestFramework
+from test_framework.test_framework import LLMQ_TEST_NAME, RaptoreumTestFramework, LLMQ_TEST_TYPE
 from test_framework.util import *
 
 '''
@@ -14,10 +14,10 @@ Checks LLMQs signing sessions
 
 '''
 
-class LLMQSigningTest(DashTestFramework):
+class LLMQSigningTest(RaptoreumTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(6, 5, fast_dip3_enforcement=True)
-        self.set_dash_llmq_test_params(5, 3)
+        self.set_raptoreum_test_params(6, 5, fast_dip3_enforcement=True)
+        self.set_raptoreum_llmq_test_params(5, 3)
 
     def add_options(self, parser):
         parser.add_option("--spork21", dest="spork21", default=False, action="store_true",
@@ -27,7 +27,7 @@ class LLMQSigningTest(DashTestFramework):
 
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         if self.options.spork21:
-            self.nodes[0].spork("SPORK_21_QUORUM_ALL_CONNECTED", 0)
+            self.nodes[0].spork("SPORK_23_QUORUM_ALL_CONNECTED", 0)
         self.wait_for_sporks_same()
 
         self.mine_quorum()
@@ -41,11 +41,11 @@ class LLMQSigningTest(DashTestFramework):
 
         def check_sigs(hasrecsigs, isconflicting1, isconflicting2):
             for mn in self.mninfo:
-                if mn.node.quorum("hasrecsig", 100, id, msgHash) != hasrecsigs:
+                if mn.node.quorum("hasrecsig", LLMQ_TEST_TYPE, id, msgHash) != hasrecsigs:
                     return False
-                if mn.node.quorum("isconflicting", 100, id, msgHash) != isconflicting1:
+                if mn.node.quorum("isconflicting", LLMQ_TEST_TYPE, id, msgHash) != isconflicting1:
                     return False
-                if mn.node.quorum("isconflicting", 100, id, msgHashConflict) != isconflicting2:
+                if mn.node.quorum("isconflicting", LLMQ_TEST_TYPE, id, msgHashConflict) != isconflicting2:
                     return False
             return True
 
@@ -59,24 +59,24 @@ class LLMQSigningTest(DashTestFramework):
         wait_for_sigs(False, False, False, 1)
 
         # Sign first share without any optional parameter, should not result in recovered sig
-        self.mninfo[0].node.quorum("sign", 100, id, msgHash)
+        self.mninfo[0].node.quorum("sign", LLMQ_TEST_TYPE, id, msgHash)
         assert_sigs_nochange(False, False, False, 3)
         # Sign second share and test optional quorumHash parameter, should not result in recovered sig
         # 1. Providing an invalid quorum hash should fail and cause no changes for sigs
-        assert(not self.mninfo[1].node.quorum("sign", 100, id, msgHash, msgHash))
+        assert(not self.mninfo[1].node.quorum("sign", LLMQ_TEST_TYPE, id, msgHash, msgHash))
         assert_sigs_nochange(False, False, False, 3)
         # 2. Providing a valid quorum hash should succeed and cause no changes for sigss
-        quorumHash = self.mninfo[1].node.quorum("selectquorum", 100, id)["quorumHash"]
-        assert(self.mninfo[1].node.quorum("sign", 100, id, msgHash, quorumHash))
+        quorumHash = self.mninfo[1].node.quorum("selectquorum", LLMQ_TEST_TYPE, id)["quorumHash"]
+        assert(self.mninfo[1].node.quorum("sign", LLMQ_TEST_TYPE, id, msgHash, quorumHash))
         assert_sigs_nochange(False, False, False, 3)
         # Sign third share and test optional submit parameter if spork21 is enabled, should result in recovered sig
         # and conflict for msgHashConflict
         if self.options.spork21:
             # 1. Providing an invalid quorum hash and set submit=false, should throw an error
-            assert_raises_rpc_error(-8, 'quorum not found', self.mninfo[2].node.quorum, "sign", 100, id, msgHash, id, False)
+            assert_raises_rpc_error(-8, 'quorum not found', self.mninfo[2].node.quorum, "sign", LLMQ_TEST_TYPE, id, msgHash, id, False)
             # 2. Providing a valid quorum hash and set submit=false, should return a valid sigShare object
-            sig_share_rpc_1 = self.mninfo[2].node.quorum("sign", 100, id, msgHash, quorumHash, False)
-            sig_share_rpc_2 = self.mninfo[2].node.quorum("sign", 100, id, msgHash, "", False)
+            sig_share_rpc_1 = self.mninfo[2].node.quorum("sign", LLMQ_TEST_TYPE, id, msgHash, quorumHash, False)
+            sig_share_rpc_2 = self.mninfo[2].node.quorum("sign", LLMQ_TEST_TYPE, id, msgHash, "", False)
             assert_equal(sig_share_rpc_1, sig_share_rpc_2)
             assert_sigs_nochange(False, False, False, 3)
             # 3. Sending the sig share received from RPC to the recovery member through P2P interface, should result
@@ -91,7 +91,7 @@ class LLMQSigningTest(DashTestFramework):
             for mn in self.mninfo:
                 assert mn.node.getconnectioncount() == self.llmq_size
             # Get the current recovery member of the quorum
-            q = self.nodes[0].quorum('selectquorum', 100, id)
+            q = self.nodes[0].quorum('selectquorum', LLMQ_TEST_TYPE, id)
             mn = self.get_mninfo(q['recoveryMembers'][0])
             # Open a P2P connection to it
             p2p_interface = mn.node.add_p2p_connection(P2PInterface())
@@ -101,7 +101,7 @@ class LLMQSigningTest(DashTestFramework):
             p2p_interface.send_message(msg_qsigshare([sig_share]))
         else:
             # If spork21 is not enabled just sign regularly
-            self.mninfo[2].node.quorum("sign", 100, id, msgHash)
+            self.mninfo[2].node.quorum("sign", LLMQ_TEST_TYPE, id, msgHash)
 
         wait_for_sigs(True, False, True, 15)
 
@@ -111,19 +111,19 @@ class LLMQSigningTest(DashTestFramework):
 
         # Test `quorum verify` rpc
         node = self.mninfo[0].node
-        recsig = node.quorum("getrecsig", 100, id, msgHash)
+        recsig = node.quorum("getrecsig", LLMQ_TEST_TYPE, id, msgHash)
         # Find quorum automatically
         height = node.getblockcount()
         height_bad = node.getblockheader(recsig["quorumHash"])["height"]
         hash_bad = node.getblockhash(0)
-        assert(node.quorum("verify", 100, id, msgHash, recsig["sig"]))
-        assert(node.quorum("verify", 100, id, msgHash, recsig["sig"], "", height))
-        assert(not node.quorum("verify", 100, id, msgHashConflict, recsig["sig"]))
-        assert not node.quorum("verify", 100, id, msgHash, recsig["sig"], "", height_bad)
+        assert(node.quorum("verify", LLMQ_TEST_TYPE, id, msgHash, recsig["sig"]))
+        assert(node.quorum("verify", LLMQ_TEST_TYPE, id, msgHash, recsig["sig"], "", height))
+        assert(not node.quorum("verify", LLMQ_TEST_TYPE, id, msgHashConflict, recsig["sig"]))
+        assert not node.quorum("verify", LLMQ_TEST_TYPE, id, msgHash, recsig["sig"], "", height_bad)
         # Use specifc quorum
-        assert(node.quorum("verify", 100, id, msgHash, recsig["sig"], recsig["quorumHash"]))
-        assert(not node.quorum("verify", 100, id, msgHashConflict, recsig["sig"], recsig["quorumHash"]))
-        assert_raises_rpc_error(-8, "quorum not found", node.quorum, "verify", 100, id, msgHash, recsig["sig"], hash_bad)
+        assert(node.quorum("verify", LLMQ_TEST_TYPE, id, msgHash, recsig["sig"], recsig["quorumHash"]))
+        assert(not node.quorum("verify", LLMQ_TEST_TYPE, id, msgHashConflict, recsig["sig"], recsig["quorumHash"]))
+        assert_raises_rpc_error(-8, "quorum not found", node.quorum, "verify", LLMQ_TEST_TYPE, id, msgHash, recsig["sig"], hash_bad)
 
         # Mine one more quorum, so that we have 2 active ones, nothing should change
         self.mine_quorum()
@@ -132,10 +132,10 @@ class LLMQSigningTest(DashTestFramework):
         # Create a recovered sig for the oldest quorum i.e. the active quorum which will be moved
         # out of the active set when a new quorum appears
         request_id = 2
-        oldest_quorum_hash = node.quorum("list")["llmq_test"][-1]
+        oldest_quorum_hash = node.quorum("list")[LLMQ_TEST_NAME][-1]
         # Search for a request id which selects the last active quorum
         while True:
-            selected_hash = node.quorum('selectquorum', 100, uint256_to_string(request_id))["quorumHash"]
+            selected_hash = node.quorum('selectquorum', LLMQ_TEST_TYPE, uint256_to_string(request_id))["quorumHash"]
             if selected_hash == oldest_quorum_hash:
                 break
             else:
@@ -143,12 +143,12 @@ class LLMQSigningTest(DashTestFramework):
         # Produce the recovered signature
         id = uint256_to_string(request_id)
         for mn in self.mninfo:
-            mn.node.quorum("sign", 100, id, msgHash)
+            mn.node.quorum("sign", LLMQ_TEST_TYPE, id, msgHash)
         # And mine a quorum to move the quorum which signed out of the active set
         self.mine_quorum()
         # Verify the recovered sig. This triggers the "signHeight + dkgInterval" verification
-        recsig = node.quorum("getrecsig", 100, id, msgHash)
-        assert node.quorum("verify", 100, id, msgHash, recsig["sig"], "", node.getblockcount())
+        recsig = node.quorum("getrecsig", LLMQ_TEST_TYPE, id, msgHash)
+        assert node.quorum("verify", LLMQ_TEST_TYPE, id, msgHash, recsig["sig"], "", node.getblockcount())
 
         recsig_time = self.mocktime
 
@@ -167,21 +167,21 @@ class LLMQSigningTest(DashTestFramework):
         wait_for_sigs(False, False, False, 15)
 
         for i in range(2):
-            self.mninfo[i].node.quorum("sign", 100, id, msgHashConflict)
+            self.mninfo[i].node.quorum("sign", LLMQ_TEST_TYPE, id, msgHashConflict)
         for i in range(2, 5):
-            self.mninfo[i].node.quorum("sign", 100, id, msgHash)
+            self.mninfo[i].node.quorum("sign", LLMQ_TEST_TYPE, id, msgHash)
         wait_for_sigs(True, False, True, 15)
 
         if self.options.spork21:
             id = uint256_to_string(request_id + 1)
 
             # Isolate the node that is responsible for the recovery of a signature and assert that recovery fails
-            q = self.nodes[0].quorum('selectquorum', 100, id)
+            q = self.nodes[0].quorum('selectquorum', LLMQ_TEST_TYPE, id)
             mn = self.get_mninfo(q['recoveryMembers'][0])
             mn.node.setnetworkactive(False)
             wait_until(lambda: mn.node.getconnectioncount() == 0)
             for i in range(4):
-                self.mninfo[i].node.quorum("sign", 100, id, msgHash)
+                self.mninfo[i].node.quorum("sign", LLMQ_TEST_TYPE, id, msgHash)
             assert_sigs_nochange(False, False, False, 3)
             # Need to re-connect so that it later gets the recovered sig
             mn.node.setnetworkactive(True)

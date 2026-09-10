@@ -6,10 +6,10 @@
 import time
 from decimal import Decimal
 
-from test_framework.blocktools import get_masternode_payment, create_coinbase, create_block
+from test_framework.blocktools import get_smartnode_payment, create_coinbase, create_block
 from test_framework.mininode import *
-from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, get_bip9_status
+from test_framework.test_framework import RaptoreumTestFramework, LLMQ_TEST_TYPE
+from test_framework.util import assert_equal, assert_raises_rpc_error, get_bip9_status, wait_until
 
 '''
 feature_llmq_is_cl_conflicts.py
@@ -48,16 +48,19 @@ class TestP2PConn(P2PInterface):
 
 class LLMQ_IS_CL_Conflicts(RaptoreumTestFramework):
     def set_test_params(self):
+        # Five smartnodes, as upstream has. Not three: this test stops two of
+        # them partway through to break ChainLocks, and with three that leaves a
+        # single signer against llmq_3_60's threshold of two, so the
+        # create_chainlock afterwards can never gather a recovered signature.
         self.set_raptoreum_test_params(6, 5, fast_dip3_enforcement=True)
         #disable_mocktime()
 
     def run_test(self):
 
-        while self.nodes[0].getblockchaininfo()["bip9_softforks"]["dip0008"]["status"] != "active":
-            self.nodes[0].generate(10)
+        self.wait_for_dip8_activation()
         self.sync_blocks(self.nodes, timeout=60*5)
 
-        self.test_node = self.nodes[0].add_p2p_connection(TestNode())
+        self.test_node = self.nodes[0].add_p2p_connection(TestP2PConn())
         network_thread_start()
         self.nodes[0].p2p.wait_for_verack()
 
@@ -205,11 +208,13 @@ class LLMQ_IS_CL_Conflicts(RaptoreumTestFramework):
         # Create an ISLOCK but don't broadcast it yet
         islock = self.create_islock(rawtx2, deterministic)
 
-        # Stop enough MNs so that ChainLocks don't work anymore
-        for i in range(2):
-            self.stop_node(len(self.nodes) - 1)
-            self.nodes.pop(len(self.nodes) - 1)
-            self.mninfo.pop(len(self.mninfo) - 1)
+        # Disable ChainLocks by spork rather than stopping smartnodes: ChainLocks
+        # and InstantSend share a quorum here, so stopping members breaks both and
+        # the forged clsig too. Upstream fixed it the same way. Bump first to keep
+        # the spork message unique across the two runs.
+        self.bump_mocktime(1)
+        self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 4070908800)
+        self.wait_for_sporks_same()
 
         # Send tx1, which will later conflict with the ISLOCK
         self.nodes[0].sendrawtransaction(rawtx1)
@@ -236,22 +241,34 @@ class LLMQ_IS_CL_Conflicts(RaptoreumTestFramework):
         # Send the ISLOCK, which should result in the last 2 blocks to be invalidated, even though the nodes don't know
         # the locked transaction yet
         self.test_node.send_islock(islock, deterministic)
-        time.sleep(5)
+        for node in self.nodes:
+            wait_until(lambda: node.getbestblockhash() == good_tip, timeout=10, sleep=0.5)
+            # The islock for tx2 is still incomplete, so tx1 returns to the
+            # mempool now that the blocks holding it are disconnected.
+            assert rawtx1_txid in set(node.getrawmempool())
 
-        assert(self.nodes[0].getbestblockhash() == good_tip)
-        assert(self.nodes[1].getbestblockhash() == good_tip)
-
-        # Send the actual transaction and mine it
+        # Should drop tx1 and accept tx2, because an islock is waiting for it.
         self.nodes[0].sendrawtransaction(rawtx2)
-        self.nodes[0].generate(1)
+        # Transaction relay is on the mocked clock, so waiting on wall time
+        # alone never lets the lock reach the other nodes.
+        self.bump_mocktime(60)
+        # Wait for the lock before mining. Without this the miner still has tx1
+        # in its mempool and puts that in the block instead, which the islock
+        # then invalidates, leaving tx2 in neither a block nor the mempool.
+        for node in self.nodes:
+            self.wait_for_instantlock(rawtx2_txid, node)
+
+        # Should not allow competing txes now
+        assert_raises_rpc_error(-26, "tx-txlock-conflict", self.nodes[0].sendrawtransaction, rawtx1)
+
+        islock_tip = self.nodes[0].generate(1)[0]
         self.sync_all()
 
-        assert(self.nodes[0].getrawtransaction(rawtx2_txid, True)['confirmations'] > 0)
-        assert(self.nodes[1].getrawtransaction(rawtx2_txid, True)['confirmations'] > 0)
-        assert(self.nodes[0].getrawtransaction(rawtx2_txid, True)['instantlock'])
-        assert(self.nodes[1].getrawtransaction(rawtx2_txid, True)['instantlock'])
+        for node in self.nodes:
+            self.wait_for_instantlock(rawtx2_txid, node)
+            assert_equal(node.getrawtransaction(rawtx2_txid, True)['confirmations'], 1)
+            assert_equal(node.getbestblockhash(), islock_tip)
         assert(self.nodes[0].getbestblockhash() != good_tip)
-        assert(self.nodes[1].getbestblockhash() != good_tip)
 
         # Check that the CL-ed block overrides the one with islocks
         self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)  # Re-enable ChainLocks to accept clsig
@@ -267,7 +284,11 @@ class LLMQ_IS_CL_Conflicts(RaptoreumTestFramework):
 
         coinbasevalue = bt['coinbasevalue']
         miner_address = node.getnewaddress()
-        mn_payee = bt['smartnode'][0]['payee']
+        # Take the smartnode payment from the template rather than recomputing it.
+        # GetSmartnodePayment pays nothing while the list holds fewer than ten
+        # smartnodes, and nothing before nSmartnodePaymentsStartBlock, so the
+        # template's list is empty here where upstream's never is.
+        mn_payments = bt['smartnode']
 
         # calculate fees that the block template included (we'll have to remove it from the coinbase as we won't
         # include the template's transactions
@@ -290,12 +311,12 @@ class LLMQ_IS_CL_Conflicts(RaptoreumTestFramework):
         coinbasevalue -= bt_fees
         coinbasevalue += new_fees
 
-        mn_amount = get_smartnode_payment(height, coinbasevalue)
+        mn_amount = sum(p['amount'] for p in mn_payments)
         miner_amount = coinbasevalue - mn_amount
 
         outputs = {miner_address: str(Decimal(miner_amount) / COIN)}
-        if mn_amount > 0:
-            outputs[mn_payee] = str(Decimal(mn_amount) / COIN)
+        for p in mn_payments:
+            outputs[p['payee']] = str(Decimal(p['amount']) / COIN)
 
         coinbase = FromHex(CTransaction(), node.createrawtransaction([], outputs))
         coinbase.vin = create_coinbase(height).vin
@@ -309,7 +330,7 @@ class LLMQ_IS_CL_Conflicts(RaptoreumTestFramework):
 
         coinbase.calc_sha256()
 
-        block = create_block(int(tip_hash, 16), coinbase, nTime=bt['curtime'])
+        block = create_block(int(tip_hash, 16), coinbase, nTime=bt['curtime'], node=self.nodes[0])
         block.vtx += vtx
 
         # Add quorum commitments from template
@@ -329,7 +350,7 @@ class LLMQ_IS_CL_Conflicts(RaptoreumTestFramework):
 
         quorum_member = None
         for mn in self.mninfo:
-            res = mn.node.quorum('sign', 100, request_id, message_hash)
+            res = mn.node.quorum('sign', LLMQ_TEST_TYPE, request_id, message_hash)
             if res and quorum_member is None:
                 quorum_member = mn
 
