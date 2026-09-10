@@ -38,6 +38,11 @@ class ReceivedByTest(BitcoinTestFramework):
         # Bury Tx under 10 block so it will be returned by listreceivedbyaddress
         self.nodes[1].generate(10)
         self.sync_all()
+        # generate() imports a deterministic key labelled 'coinbase' and mines to
+        # it, so that address is listed here too. Upstream's generate did not, which is where
+        # its absolute counts of 2 and 3 below come from; measure the difference
+        # once rather than hardcoding a new number.
+        mined = len(self.nodes[1].listreceivedbyaddress(0, True, True, True)) - 1
         assert_array_result(self.nodes[1].listreceivedbyaddress(),
                             {"address": addr},
                             {"address": addr, "label": "", "amount": Decimal("0.1"), "confirmations": 10, "txids": [txid, ]})
@@ -68,7 +73,7 @@ class ReceivedByTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, "address_filter parameter was invalid", self.nodes[1].listreceivedbyaddress, minconf=0, addlocked=True, include_empty=True, include_watchonly=True, address_filter="bamboozling")
         #Another address receive money
         res = self.nodes[1].listreceivedbyaddress(0, True, True, True)
-        assert_equal(len(res), 2) #Right now 2 entries
+        assert_equal(len(res), 2 + mined)
         other_addr = self.nodes[1].getnewaddress()
         txid2 = self.nodes[0].sendtoaddress(other_addr, 0.1)
         self.nodes[0].generate(1)
@@ -85,7 +90,7 @@ class ReceivedByTest(BitcoinTestFramework):
         assert_equal(len(res), 1)
         #Should be two entries though without filter
         res = self.nodes[1].listreceivedbyaddress(0, True, True, True)
-        assert_equal(len(res), 3) #Became 3 entries
+        assert_equal(len(res), 3 + mined)
 
         #Not on random addr
         other_addr = self.nodes[0].getnewaddress() # note on node[0]! just a random addr
