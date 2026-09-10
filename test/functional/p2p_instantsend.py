@@ -5,7 +5,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.mininode import *
-from test_framework.test_framework import DashTestFramework
+from test_framework.test_framework import RaptoreumTestFramework
 from test_framework.util import isolate_node, reconnect_isolated_node, assert_equal, \
     assert_raises_rpc_error
 
@@ -38,8 +38,12 @@ class InstantSendTest(RaptoreumTestFramework):
 
         # feed the sender with some balance
         sender_addr = sender.getnewaddress()
-        self.nodes[0].sendtoaddress(sender_addr, 1)
-        self.bump_mocktime(1)
+        fund_txid = self.nodes[0].sendtoaddress(sender_addr, 1)
+        # Relay runs on the mocked clock, and IsTxSafeForMining refuses a tx that
+        # is neither islocked nor 10 minutes old. Move the clock, let it lock,
+        # then mine.
+        self.bump_mocktime(3)
+        self.wait_for_instantlock(fund_txid, self.nodes[0])
         self.nodes[0].generate(2)
         self.sync_all()
 
@@ -74,13 +78,18 @@ class InstantSendTest(RaptoreumTestFramework):
             # wait for long time only for first node
             timeout = 1
         # send coins back to the controller node without waiting for confirmations
-        receiver.sendtoaddress(self.nodes[0].getnewaddress(), 0.9, "", "", True)
+        sentback_txid = receiver.sendtoaddress(address=self.nodes[0].getnewaddress(), amount=0.9, subtractfeefromamount=True)
         assert_equal(receiver.getwalletinfo()["balance"], 0)
         # mine more blocks
         # TODO: mine these blocks on an isolated node
         self.bump_mocktime(1)
         # make sure the above TX is on node0
         self.sync_mempools([n for n in self.nodes if n is not isolated])
+        # Wait for the lock before mining: IsTxSafeForMining refuses a tx that is
+        # neither islocked nor ten minutes old, and the lock lands a fraction of a
+        # second after generate() would run. Without this the tx is in no block and
+        # not in the reconnected node's mempool, so sync_all cannot converge.
+        self.wait_for_instantlock(sentback_txid, self.nodes[0])
         self.nodes[0].generate(2)
         self.sync_all()
 
@@ -91,8 +100,12 @@ class InstantSendTest(RaptoreumTestFramework):
 
         # feed the sender with some balance
         sender_addr = sender.getnewaddress()
-        self.nodes[0].sendtoaddress(sender_addr, 1)
-        self.bump_mocktime(1)
+        fund_txid = self.nodes[0].sendtoaddress(sender_addr, 1)
+        # Relay runs on the mocked clock, and IsTxSafeForMining refuses a tx that
+        # is neither islocked nor 10 minutes old. Move the clock, let it lock,
+        # then mine.
+        self.bump_mocktime(3)
+        self.wait_for_instantlock(fund_txid, self.nodes[0])
         self.nodes[0].generate(2)
         self.sync_all()
 
@@ -119,7 +132,7 @@ class InstantSendTest(RaptoreumTestFramework):
             self.wait_for_instantlock(is_id, node)
         assert_raises_rpc_error(-5, "No such mempool or blockchain transaction", isolated.getrawtransaction, dblspnd_txid)
         # send coins back to the controller node without waiting for confirmations
-        receiver.sendtoaddress(self.nodes[0].getnewaddress(), 0.9, "", "", True)
+        receiver.sendtoaddress(address=self.nodes[0].getnewaddress(), amount=0.9, subtractfeefromamount=True)
         assert_equal(receiver.getwalletinfo()["balance"], 0)
         # mine more blocks
         self.bump_mocktime(1)
