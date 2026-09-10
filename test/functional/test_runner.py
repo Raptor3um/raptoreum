@@ -140,6 +140,7 @@ BASE_SCRIPTS = [
     'feature_addressindex.py',
     'feature_timestampindex.py',
     'feature_spentindex.py',
+    'rpc_dumptxoutset.py',
     'rpc_decodescript.py',
     'rpc_blockchain.py',
     'rpc_deprecated.py',
