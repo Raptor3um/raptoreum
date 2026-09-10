@@ -12,7 +12,7 @@ RPCs tested are:
 from collections import defaultdict
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error
+from test_framework.util import REGTEST_SUBSIDY, assert_equal, assert_raises_rpc_error
 
 class WalletLabelsTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -24,14 +24,19 @@ class WalletLabelsTest(BitcoinTestFramework):
         node = self.nodes[0]
         assert_equal(len(node.listunspent()), 0)
 
+        # Get past the 4 RTM launch window first; these blocks belong to nobody
+        # here, so the balances below are only what this wallet mines.
+        self.mine_past_launch_window()
+
         # Note each time we call generate, all generated coins go into
-        # the same address, so we call twice to get two addresses w/500 each
+        # the same address, so we call twice to get two addresses with one
+        # mature block reward each
         node.generatetoaddress(nblocks=1, address=node.getnewaddress(label='coinbase'))
         node.generatetoaddress(nblocks=101, address=node.getnewaddress(label='coinbase'))
-        assert_equal(node.getbalance(), 1000)
+        assert_equal(node.getbalance(), 2 * REGTEST_SUBSIDY)
 
         # there should be 2 address groups
-        # each with 1 address with a balance of 500 Dash
+        # each with 1 address holding one mature block reward
         address_groups = node.listaddressgroupings()
         assert_equal(len(address_groups), 2)
         # the addresses aren't linked now, but will be after we send to the
@@ -40,14 +45,14 @@ class WalletLabelsTest(BitcoinTestFramework):
         for address_group in address_groups:
             assert_equal(len(address_group), 1)
             assert_equal(len(address_group[0]), 3)
-            assert_equal(address_group[0][1], 500)
+            assert_equal(address_group[0][1], REGTEST_SUBSIDY)
             assert_equal(address_group[0][2], 'coinbase')
             linked_addresses.add(address_group[0][0])
 
-        # send 500 from each address to a third address not in this wallet
+        # send the balance of each address to a third address not in this wallet
         common_address = "yd5KMREs3GLMe6mTJYr3YrH1juwNwrFCfB"
         node.sendmany(
-            amounts={common_address: 1000},
+            amounts={common_address: 2 * REGTEST_SUBSIDY},
             minconf=1,
             addlocked=False,
             comment="",
@@ -147,6 +152,7 @@ class Label:
 
     def add_receive_address(self, address):
         self.add_address(address)
+        self.receive_address = address
 
     def verify(self, node):
         if self.receive_address is not None:

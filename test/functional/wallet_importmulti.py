@@ -36,6 +36,7 @@ from test_framework.script import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.descriptors import descsum_create
 from test_framework.util import (
+    CACHE_WARMUP_BLOCKS,
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
@@ -117,6 +118,12 @@ class ImportMultiTest(BitcoinTestFramework):
 
     def run_test(self):
         self.log.info("Mining blocks...")
+        # Clear the 4 RTM launch window: a launch-window block cannot fund the
+        # sends later in this test. The blocks go to an address no wallet here
+        # holds a key for. These nodes are deliberately not connected, so each
+        # keeps its own chain and each needs its own warm-up.
+        self.mine_past_launch_window(self.nodes[0])
+        self.mine_past_launch_window(self.nodes[1])
         self.nodes[0].generate(1)
         self.nodes[1].generate(1)
         timestamp = self.nodes[1].getblock(self.nodes[1].getbestblockhash())['mediantime']
@@ -126,8 +133,9 @@ class ImportMultiTest(BitcoinTestFramework):
         # Check only one address
         assert_equal(node0_address1['ismine'], True)
 
-        # Node 1 sync test
-        assert_equal(self.nodes[1].getblockcount(), 1)
+        # Node 1 sync test: one block of its own on top of the launch-window
+        # warm-up above.
+        assert_equal(self.nodes[1].getblockcount(), CACHE_WARMUP_BLOCKS + 1)
 
         # Address Test - before import
         address_info = self.nodes[1].getaddressinfo(node0_address1['address'])
@@ -143,11 +151,12 @@ class ImportMultiTest(BitcoinTestFramework):
         self.test_importmulti({"scriptPubKey": {"address": address},
                                "timestamp": "now"},
                               True)
+        # getaddressinfo documents ischange but never returns it in this tree
+        # (nothing calls pushKV("ischange")), so it cannot be asserted here.
         self.test_address(address,
                           iswatchonly=True,
                           ismine=False,
-                          timestamp=timestamp,
-                          ischange=False)
+                          timestamp=timestamp)
         watchonly_address = address
         watchonly_timestamp = timestamp
 
@@ -168,8 +177,7 @@ class ImportMultiTest(BitcoinTestFramework):
         self.test_address(key.p2pkh_addr,
                           iswatchonly=True,
                           ismine=False,
-                          timestamp=timestamp,
-                          ischange=True)
+                          timestamp=timestamp)
 
         # ScriptPubKey + internal + label
         self.log.info("Should not allow a label to be specified when internal is true")
@@ -499,7 +507,7 @@ class ImportMultiTest(BitcoinTestFramework):
         self.log.info("Should import the ranged descriptor with specified range as solvable")
         self.test_importmulti({"desc": descsum_create(desc),
                                "timestamp": "now",
-                               "range": {"end": 1}},
+                               "range": 1},
                               success=True,
                               warnings=["Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag."])
 
