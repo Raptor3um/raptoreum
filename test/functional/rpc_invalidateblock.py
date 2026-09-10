@@ -5,7 +5,13 @@
 """Test the invalidateblock RPC."""
 
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.descriptors import descsum_create
 from test_framework.util import *
+
+# Raptoreum's regtest pubkey prefix is 140, the same as Dash's, so upstream's
+# unspendable address is valid here too. Nobody holds the key, which keeps the
+# blocks these sections mine out of every wallet.
+ADDRESS_UNSPENDABLE = 'yVg3NBUHNEhgDceqwVUjsZHreC5PBHnUo9'
 
 class InvalidateTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -85,6 +91,37 @@ class InvalidateTest(BitcoinTestFramework):
         self.restart_node(1, extra_args=["-checkblocks=5"])
         wait_until(lambda: self.nodes[1].getblockcount() == newheight + 20)
         assert_equal(tip, self.nodes[1].getbestblockhash())
+
+        # Upstream hardcodes the checksummed descriptor. Compute it instead and
+        # make the node agree, which gives getdescriptorinfo an assertion rather
+        # than leaving it uncalled.
+        unspendable_desc = descsum_create('addr({})'.format(ADDRESS_UNSPENDABLE))
+        assert_equal(self.nodes[1].getdescriptorinfo(unspendable_desc)['checksum'],
+                     unspendable_desc.split('#')[1])
+
+        self.log.info("Verify that we reconsider all ancestors as well")
+        blocks = self.nodes[1].generatetodescriptor(10, unspendable_desc)
+        assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
+        # Invalidate the two blocks at the tip
+        self.nodes[1].invalidateblock(blocks[-1])
+        self.nodes[1].invalidateblock(blocks[-2])
+        assert_equal(self.nodes[1].getbestblockhash(), blocks[-3])
+        # Reconsider only the previous tip
+        self.nodes[1].reconsiderblock(blocks[-1])
+        # Should be back at the tip by now
+        assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
+
+        self.log.info("Verify that we reconsider all descendants")
+        blocks = self.nodes[1].generatetodescriptor(10, unspendable_desc)
+        assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
+        # Invalidate the two blocks at the tip
+        self.nodes[1].invalidateblock(blocks[-2])
+        self.nodes[1].invalidateblock(blocks[-4])
+        assert_equal(self.nodes[1].getbestblockhash(), blocks[-5])
+        # Reconsider only the previous tip
+        self.nodes[1].reconsiderblock(blocks[-4])
+        # Should be back at the tip by now
+        assert_equal(self.nodes[1].getbestblockhash(), blocks[-1])
 
 
 if __name__ == '__main__':
