@@ -108,8 +108,8 @@ UniValue createasset(const JSONRPCRequest &request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK2(cs_main, mempool.cs);
     LOCK(pwallet->cs_wallet);
+    LOCK2(cs_main, mempool.cs);
 
     if (pwallet->GetBroadcastTransactions() && !pwallet->chain().p2pEnabled()) {
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
@@ -345,8 +345,8 @@ UniValue updateasset(const JSONRPCRequest &request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK2(cs_main, mempool.cs);
     LOCK(pwallet->cs_wallet);
+    LOCK2(cs_main, mempool.cs);
 
     if (pwallet->GetBroadcastTransactions() && !pwallet->chain().p2pEnabled()) {
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
@@ -547,8 +547,8 @@ UniValue mintasset(const JSONRPCRequest &request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK2(cs_main, mempool.cs);
     LOCK(pwallet->cs_wallet);
+    LOCK2(cs_main, mempool.cs);
 
     if (pwallet->GetBroadcastTransactions() && !pwallet->chain().p2pEnabled()) {
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
@@ -653,7 +653,7 @@ UniValue sendasset(const JSONRPCRequest &request) {
     if (!wallet) return NullUniValue;
     CWallet *const pwallet = wallet.get();
 
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK(pwallet->cs_wallet);
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -829,7 +829,7 @@ UniValue listassetsbalance(const JSONRPCRequest &request) {
     if (!wallet) return NullUniValue;
     CWallet *const pwallet = wallet.get();
 
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK(pwallet->cs_wallet);
 
     std::map <std::string, std::vector<COutput>> mapAssetCoins;
     pwallet->AvailableAssets(mapAssetCoins);
@@ -1009,7 +1009,7 @@ UniValue listunspentassets(const JSONRPCRequest& request)
 
     UniValue results(UniValue::VARR);
     std::map<std::string, std::vector<COutput> > mapAssetCoins;
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK(pwallet->cs_wallet);
 
     pwallet->AvailableAssets(mapAssetCoins, !include_unsafe, &coinControl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth);
     for (const auto asset : mapAssetCoins) {
