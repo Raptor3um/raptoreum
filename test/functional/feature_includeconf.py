@@ -44,7 +44,7 @@ class IncludeConfTest(BitcoinTestFramework):
 
         self.log.info("-includeconf cannot be used as command-line arg")
         self.stop_node(0)
-        self.nodes[0].assert_start_raises_init_error(extra_args=["-includeconf=relative2.conf"], expected_msg="ErrorError parsing command line arguments: -includeconf can not be used from commandline. Ignoring -includeconf=relative2.conf")
+        self.nodes[0].assert_start_raises_init_error(extra_args=["-includeconf=relative2.conf"], expected_msg="Error: Error parsing command line arguments: -includeconf can not be used from commandline. Ignoring -includeconf=relative2.conf")
 
         self.log.info("-includeconf cannot be used recursively. subversion should end with 'main; relative)/'")
         with open(os.path.join(self.options.tmpdir, "node0", "relative.conf"), "a", encoding="utf8") as f:
@@ -69,7 +69,7 @@ class IncludeConfTest(BitcoinTestFramework):
 
         self.log.info("-includeconf cannot be invalid path")
         os.remove(os.path.join(self.options.tmpdir, "node0", "relative.conf"))
-        self.nodes[0].assert_start_raises_init_error(expected_msg="ErrorError reading configuration file: Failed to include configuration file relative.conf")
+        self.nodes[0].assert_start_raises_init_error(expected_msg="Error: Error reading configuration file: Failed to include configuration file relative.conf")
 
         self.log.info("multiple -includeconf args can be used from the base config file. subversion should end with 'main; relative; relative2)/'")
         with open(os.path.join(self.options.tmpdir, "node0", "relative.conf"), "w", encoding="utf8") as f:
