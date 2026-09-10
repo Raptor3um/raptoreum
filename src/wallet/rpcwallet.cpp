@@ -3884,6 +3884,7 @@ UniValue getaddressinfo(const JSONRPCRequest &request) {
         ret.pushKV("desc", InferDescriptor(scriptPubKey, *pwallet)->ToString());
     }
     ret.pushKV("iswatchonly", bool(mine & ISMINE_WATCH_ONLY));
+    ret.pushKV("ischange", pwallet->IsChange(scriptPubKey));
     ret.pushKV("solvable", IsSolvable(*pwallet, scriptPubKey));
     UniValue detail = DescribeWalletAddress(pwallet, dest);
     ret.pushKVs(detail);

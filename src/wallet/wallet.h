@@ -1506,6 +1506,8 @@ public:
 
     bool IsChange(const CTxOut &txout) const;
 
+    bool IsChange(const CScript &script) const;
+
     CAmount GetChange(const CTxOut &txout) const;
 
     bool IsMine(const CTransaction &tx) const;
