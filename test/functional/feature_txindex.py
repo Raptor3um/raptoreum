@@ -55,14 +55,14 @@ class TxIndexTest(BitcoinTestFramework):
         tx.rehash()
 
         signed_tx = self.nodes[0].signrawtransactionwithwallet(binascii.hexlify(tx.serialize()).decode("utf-8"))
-        txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True)
+        txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], 0)
         self.nodes[0].generate(1)
         self.sync_all()
 
         # Check verbose raw transaction results
         verbose = self.nodes[3].getrawtransaction(txid, 1)
-        assert_equal(verbose["vout"][0]["valueSat"], 50000000000 - tx_fee_sat)
-        assert_equal(verbose["vout"][0]["value"] * 100000000, 50000000000 - tx_fee_sat)
+        assert_equal(verbose["vout"][0]["valueSat"], REGTEST_LAUNCH_SUBSIDY_SAT - tx_fee_sat)
+        assert_equal(verbose["vout"][0]["value"] * 100000000, REGTEST_LAUNCH_SUBSIDY_SAT - tx_fee_sat)
 
         self.log.info("Passed")
 
