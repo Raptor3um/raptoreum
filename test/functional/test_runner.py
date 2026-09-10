@@ -108,6 +108,8 @@ BASE_SCRIPTS = [
     'rpc_rawtransaction.py',
     'feature_reindex.py',
     # vv Tests less than 30s vv
+    'rpc_blockchain_queries.py',
+    'wallet_address_queries.py',
     'wallet_keypool_topup.py',
     'interface_zmq_dash.py',
     'interface_zmq.py',
