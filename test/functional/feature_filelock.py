@@ -22,13 +22,13 @@ class FilelockTest(BitcoinTestFramework):
         self.log.info("Using datadir {}".format(datadir))
 
         self.log.info("Check that we can't start a second raptoreumd instance using the same datadir")
-        expected_msg = "ErrorCannot obtain a lock on data directory {}. Raptoreum Core is probably already running.".format(datadir)
+        expected_msg = "Error: Cannot obtain a lock on data directory {}. Raptoreum Core is probably already running.".format(datadir)
         self.nodes[1].assert_start_raises_init_error(extra_args=['-datadir={}'.format(self.nodes[0].datadir), '-noserver'], expected_msg=expected_msg)
 
         if self.is_wallet_compiled():
             wallet_dir = os.path.join(datadir, 'wallets')
             self.log.info("Check that we can't start a second dashd instance using the same wallet")
-            expected_msg = "ErrorError initializing wallet database environment"
+            expected_msg = "Error: Error initializing wallet database environment"
             self.nodes[1].assert_start_raises_init_error(extra_args=['-walletdir={}'.format(wallet_dir), '-noserver'], expected_msg=expected_msg, partial_match=True)
 
 if __name__ == '__main__':

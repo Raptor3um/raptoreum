@@ -16,10 +16,8 @@ Simulate and check DKG errors
 
 class LLMQDKGErrors(RaptoreumTestFramework):
     def set_test_params(self):
-        # Three smartnodes for a quorum of three, so every smartnode is a member
-        # of every session. With five, only three are chosen and mninfo[0] --
-        # the one this test tells to misbehave -- is often not among them, so
-        # its simulated errors go unnoticed and no one complains.
+        # Three smartnodes for a quorum of three, so the one told to misbehave
+        # is always a member. With five it often is not chosen.
         self.set_raptoreum_test_params(4, 3, [["-whitelist=127.0.0.1"]] * 4, fast_dip3_enforcement=True)
 
     def run_test(self):
@@ -95,18 +93,10 @@ class LLMQDKGErrors(RaptoreumTestFramework):
                 assert(m['valid'])
 
     def heal_smartnodes(self, blockCount):
-        # We're not testing PoSe here, so lets heal the MNs :)
-        #
-        # Mine until every penalty is actually back to zero rather than a fixed
-        # number of blocks. A DKG that marks a member bad costs 66 against a cap
-        # of 100 (CalcMaxPoSePenalty is max(100, mn count), and there are three
-        # smartnodes here), the decay is one per block, and a member that reaches
-        # the cap is banned for good -- DecreasePoSePenalties skips banned nodes,
-        # so no amount of mining lifts a ban. With three smartnodes filling a
-        # three-member quorum, one banned member means no quorum can form and the
-        # next session never leaves phase 1. Upstream's fixed 33 blocks are not
-        # enough on this chain: the penalty ran 0 -> 66 -> 87 -> 100 and the
-        # member was banned before the last two scenarios could run.
+        # Mine until every penalty is back to zero, not a fixed number of
+        # blocks. A bad DKG costs 66 against a cap of 100 and decays one per
+        # block, and a member that reaches the cap is banned for good, which
+        # with three smartnodes means no quorum can form again.
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 4070908800)
         self.wait_for_sporks_same()
 
