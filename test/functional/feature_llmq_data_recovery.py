@@ -185,44 +185,40 @@ class QuorumDataRecoveryTest(RaptoreumTestFramework):
         self.test_llmq_qvvec_sync([(llmq_test, 0)])
         self.test_llmq_qvvec_sync([(llmq_test_v17, 1)])
         self.test_llmq_qvvec_sync([(llmq_test, 0), (llmq_test_v17, 1)])
-        # RTM's InitError prints the "Error" prefix with no separator, so the
-        # messages read "ErrorInvalid format in ..." rather than upstream's
-        # "Error: Invalid format in ...". Same quirk as feature_asmap and
-        # feature_config_args. The message bodies themselves match.
         logger.info("Test invalid command line parameter values")
         node.stop_node()
         node.wait_until_stopped()
         # Test -llmq-qvvec-sync entry format
         node.assert_start_raises_init_error(["-llmq-qvvec-sync="],
-                                            "ErrorInvalid format in -llmq-qvvec-sync:")
+                                            "Error: Invalid format in -llmq-qvvec-sync:")
         node.assert_start_raises_init_error(["-llmq-qvvec-sync=0"],
-                                            "ErrorInvalid format in -llmq-qvvec-sync: 0")
+                                            "Error: Invalid format in -llmq-qvvec-sync: 0")
         node.assert_start_raises_init_error(["-llmq-qvvec-sync=0:"],
-                                            "ErrorInvalid format in -llmq-qvvec-sync: 0:")
+                                            "Error: Invalid format in -llmq-qvvec-sync: 0:")
         node.assert_start_raises_init_error(["-llmq-qvvec-sync=:0"],
-                                            "ErrorInvalid format in -llmq-qvvec-sync: :0")
+                                            "Error: Invalid format in -llmq-qvvec-sync: :0")
         node.assert_start_raises_init_error(["-llmq-qvvec-sync=0:0:0"],
-                                            "ErrorInvalid format in -llmq-qvvec-sync: 0:0:0")
+                                            "Error: Invalid format in -llmq-qvvec-sync: 0:0:0")
         node.assert_start_raises_init_error(["-llmq-qvvec-sync=0::"],
-                                            "ErrorInvalid format in -llmq-qvvec-sync: 0::")
+                                            "Error: Invalid format in -llmq-qvvec-sync: 0::")
         node.assert_start_raises_init_error(["-llmq-qvvec-sync=::0"],
-                                            "ErrorInvalid format in -llmq-qvvec-sync: ::0")
+                                            "Error: Invalid format in -llmq-qvvec-sync: ::0")
         node.assert_start_raises_init_error(["-llmq-qvvec-sync=:0:"],
-                                            "ErrorInvalid format in -llmq-qvvec-sync: :0:")
+                                            "Error: Invalid format in -llmq-qvvec-sync: :0:")
         # Test llmqType
         node.assert_start_raises_init_error(["-llmq-qvvec-sync=0:0"],
-                                            "ErrorInvalid llmqType in -llmq-qvvec-sync: 0:0")
+                                            "Error: Invalid llmqType in -llmq-qvvec-sync: 0:0")
         node.assert_start_raises_init_error(["-llmq-qvvec-sync=llmq-test:0"],
-                                            "ErrorInvalid llmqType in -llmq-qvvec-sync: llmq-test:0")
+                                            "Error: Invalid llmqType in -llmq-qvvec-sync: llmq-test:0")
         node.assert_start_raises_init_error(["-llmq-qvvec-sync=100:0", "-llmq-qvvec-sync=0"],
-                                            "ErrorInvalid llmqType in -llmq-qvvec-sync: 100:0")
+                                            "Error: Invalid llmqType in -llmq-qvvec-sync: 100:0")
         node.assert_start_raises_init_error(["-llmq-qvvec-sync=llmq_test:0", "-llmq-qvvec-sync=llmq_test:0"],
-                                            "ErrorDuplicated llmqType in -llmq-qvvec-sync: llmq_test:0")
+                                            "Error: Duplicated llmqType in -llmq-qvvec-sync: llmq_test:0")
         # Test mode
         node.assert_start_raises_init_error(["-llmq-qvvec-sync=llmq_test:-1"],
-                                            "ErrorInvalid mode in -llmq-qvvec-sync: llmq_test:-1")
+                                            "Error: Invalid mode in -llmq-qvvec-sync: llmq_test:-1")
         node.assert_start_raises_init_error(["-llmq-qvvec-sync=llmq_test:2"],
-                                            "ErrorInvalid mode in -llmq-qvvec-sync: llmq_test:2")
+                                            "Error: Invalid mode in -llmq-qvvec-sync: llmq_test:2")
 
 
 if __name__ == '__main__':
