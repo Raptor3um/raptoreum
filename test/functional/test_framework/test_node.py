@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Class for raptoreumd node under test"""
 
+import collections
 import contextlib
 import decimal
 import errno
@@ -19,6 +20,7 @@ import urllib.parse
 
 from .authproxy import JSONRPCException
 from .util import (
+    MAX_NODES,
     append_config,
     delete_cookie_file,
     get_rpc_proxy,
@@ -39,6 +41,10 @@ class FailedToStartError(Exception):
     """Raised when a node fails to start correctly."""
 
 
+
+AddressKeyPair = collections.namedtuple('AddressKeyPair', ['address', 'key'])
+
+
 class TestNode():
     """A class for representing a raptoreumd node under test.
 
@@ -52,6 +58,26 @@ class TestNode():
 
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
+    # Regtest keys (PUBKEY_ADDRESS=140, SECRET_KEY=239), one per node index.
+    # Deterministic so a node always mines to the same address across runs.
+    PRIV_KEYS = [
+        AddressKeyPair('yXQsTFfMUkAa7j9TeKQXn8woS8umNDzGPn', 'cMceqPhHedrhbcR9eXgzmfWy7kRqLyAxMYwFT6ABDWsiwUp9Nsq9'),
+        AddressKeyPair('yhozmHU7FQB5jjRzpHw2erMSpDUmQgQNo6', 'cMec2DGaTXkYJYfi7x3ZGjRXkeqmAvYAoWzMAcWj5fdLaqudWsNi'),
+        AddressKeyPair('ySHisRjMmo2kKMXkUuojqSdftoXciGdrDV', 'cMgZD2qsGReP1UvGbNQ7moL6PZFgzsuPFV3St8sGwpNxED4hqkEM'),
+        AddressKeyPair('yYmUY8Gj7h9bVT5xd3MmeuyDwfP6nErTEk', 'cMiWPrRA5KYDiRAq4nkgGsEf2TfcpqGbhT6YbfDpoy8ZsaAHiDeo'),
+        AddressKeyPair('yafm7meGGGcaKQr7UiMtvcq2BxcmtaG2QK', 'cMkTafzStDS4RMRPYD7Emw9DfN5Yendp9R9eKBaNg7tBWwGU43fD'),
+        AddressKeyPair('yfiKvLtKegUdmCNTPT2xyL256EhMyLqcwJ', 'cMnQmVZjh7Ku8Hfx1dToH13nJGVUUk12bPCk2hvvYGdoAJQi13CW'),
+        AddressKeyPair('ybFR23ZZjWb5UFke4RtDPoEVgCtNukW5zu', 'cMpMxK92W1DjqDvWV3pMn4xLwAuQJhNF3MFqkEHUQRPQofUJku8R'),
+        AddressKeyPair('yNxmBrC39rW38aRbJatJTXpgpSqAb9eWYq', 'cMrK98iKJu7aYAB4xUAvH8rua5KL8ejTVKJwTke2Ga92T2gMTLvo'),
+        AddressKeyPair('yViKd1G7uY4dyAkmATbt7ugg3w2dnJReVQ', 'cMtGKxHc7o1RF6RdRtXUnCmUCyjFxc6fwHN3BGza8ite6PjEaEJn'),
+        AddressKeyPair('yMfrFbpqd7ESgNWiAbhFa4VKRD9QH3Q8Qz', 'cMvDWmrtvguFx2gBuJt3HGg2qt9BnZTtPFR8toM7zseFjkuCHFYe'),
+        AddressKeyPair('ygJiJkn55HhGgY9CXiovyxE3BCoJw7JfQa', 'cMxAhbSBjao6exvkNjEbnLabUnZ7cWq6qDUEcKhfs2PsP826jXUZ'),
+        AddressKeyPair('yWSBPcegshZF4p68upFMi8uZCdDoWk3S7M', 'cMz7tR1UYUgwMuBJr9bAHQVA7gy3SUCKHBXLKr4DjB9V2V5jWxLp'),
+        AddressKeyPair('yTSn9z7YtZw8RHWGMPEfe49Th1xLzME74q', 'cN255EamMNan4qRsKZwinUPikbNyGRZXj9aS3NQmbKu6frEcBri1'),
+        AddressKeyPair('yZRGv8hGa4S1ZjQaFZWVEUzcryid48jweA', 'cN42G4A4AGUcmmgRnzJHHYJHPVnu6NvkB7dXktmKTUeiKDMgp4b6'),
+        AddressKeyPair('yco7cqiZ6uGdDFNajoKc2XVLevNqZexLoJ', 'cN5ySsjLyANTUhvzGQeqncCr2QCpvLHxd5gdUR7sKdQKxaPavJC8'),
+    ]
+
 
     def __init__(self, i, datadir, extra_args_from_options, chain, rpchost, timewait, bitcoind, bitcoin_cli, stderr, mocktime, coverage_dir, extra_conf=None, extra_args=None, use_cli=False):
         self.index = i
@@ -66,6 +92,11 @@ class TestNode():
         self.rpc_timeout *= Options.timeout_scale
         self.binary = bitcoind
         self.stderr = stderr
+        # Must exist as a real attribute: __getattr__ turns any missing name
+        # into an RPC call, so getattr(self, '_stderr_file', None) would hand
+        # back a proxy rather than None and .close() would go to the node.
+        self._stderr_file = None
+        self._stderr_pos = 0
         self.coverage_dir = coverage_dir
         self.mocktime = mocktime
         if extra_conf != None:
@@ -135,6 +166,17 @@ class TestNode():
             extra_args = self.extra_args
         if stderr is None:
             stderr = self.stderr
+        if stderr is None:
+            # Send the node's own stderr to a file rather than letting it be
+            # inherited by the test process. test_runner marks a test failed if
+            # it writes anything at all to stderr, so a node-level warning --
+            # Raptoreum emits one for every non-HD wallet -- fails a test that
+            # otherwise passed. The output is still on disk to be read.
+            self._stderr_file = open(os.path.join(self.datadir, "node_stderr.log"), "a")
+            # Remember where this run's output starts, so stop_node can check
+            # only what this run wrote.
+            self._stderr_pos = self._stderr_file.tell()
+            stderr = self._stderr_file
         all_args = self.args + self.extra_args_from_options + extra_args
         if self.mocktime != 0:
             all_args = all_args + ["-mocktime=%d" % self.mocktime]
@@ -195,6 +237,11 @@ class TestNode():
 
         return self.generatetoaddress(nblocks=nblocks, address=self.get_deterministic_priv_key().address, maxtries=maxtries)
 
+    def get_deterministic_priv_key(self):
+        """Return a deterministic priv key in base58, that only depends on the node's index"""
+        assert len(self.PRIV_KEYS) == MAX_NODES
+        return self.PRIV_KEYS[self.index]
+
     def get_wallet_rpc(self, wallet_name):
         if self.use_cli:
             return self.cli("-rpcwallet={}".format(wallet_name))
@@ -203,8 +250,13 @@ class TestNode():
             wallet_path = "wallet/{}".format(urllib.parse.quote(wallet_name))
             return self.rpc / wallet_path
 
-    def stop_node(self, wait=0):
-        """Stop the node."""
+    def stop_node(self, wait=0, expected_stderr=''):
+        """Stop the node.
+
+        expected_stderr: what this run should have written to stderr, if
+        anything. Raptoreum writes startup warnings there, and a test that
+        provokes one needs to assert on it.
+        """
         if not self.running:
             return
         self.log.debug("Stopping node")
@@ -212,6 +264,23 @@ class TestNode():
             self.stop(wait=wait)
         except http.client.CannotSendRequest:
             self.log.exception("Unable to stop node.")
+        if expected_stderr is not None and expected_stderr != '':
+            # Let the process finish writing before reading what it wrote.
+            try:
+                self.process.wait(timeout=self.rpc_timeout)
+            except subprocess.TimeoutExpired:
+                pass
+            if self._stderr_file is not None:
+                self._stderr_file.flush()
+                with open(self._stderr_file.name, 'r', encoding='utf-8') as f:
+                    f.seek(self._stderr_pos)
+                    stderr = f.read().strip()
+                if stderr != expected_stderr.strip():
+                    raise AssertionError(
+                        "Unexpected stderr {} != {}".format(stderr, expected_stderr))
+        if self._stderr_file is not None:
+            self._stderr_file.close()
+            self._stderr_file = None
         del self.p2ps[:]
 
     def is_node_stopped(self):
@@ -237,6 +306,40 @@ class TestNode():
 
     def wait_until_stopped(self, timeout=BITCOIND_PROC_WAIT_TIMEOUT):
         wait_until(self.is_node_stopped, timeout=timeout)
+
+    def get_mem_rss_kilobytes(self):
+        """Get the memory usage (RSS) per `ps`, or None if it cannot be read."""
+        if not (self.running and self.process):
+            self.log.warning("Couldn't get memory usage; process isn't running.")
+            return None
+        try:
+            return int(subprocess.check_output(
+                "ps h -o rss {}".format(self.process.pid),
+                shell=True, stderr=subprocess.DEVNULL).strip())
+        except Exception:
+            self.log.exception("Unable to get memory usage")
+            return None
+
+    @contextlib.contextmanager
+    def assert_memory_usage_stable(self, *, increase_allowed=0.03):
+        """Assert the node's RSS does not grow by more than increase_allowed."""
+        before_memory_usage = self.get_mem_rss_kilobytes()
+
+        yield
+
+        after_memory_usage = self.get_mem_rss_kilobytes()
+
+        if not (before_memory_usage and after_memory_usage):
+            self.log.warning("Unable to detect memory usage (RSS) - skipping memory check.")
+            return
+
+        perc_increase_memory_usage = 1 - (float(before_memory_usage) / after_memory_usage)
+
+        if perc_increase_memory_usage > increase_allowed:
+            self._raise_assertion_error(
+                "Memory usage increased over threshold of {:.3f}% from {} to {} ({:.3f}%)".format(
+                    increase_allowed * 100, before_memory_usage, after_memory_usage,
+                    perc_increase_memory_usage * 100))
 
     @contextlib.contextmanager
     def assert_debug_log(self, expected_msgs):
@@ -329,7 +432,20 @@ class TestNode():
                     if p['subver'] == p2p.strSubVer.decode():
                         return False
             return True
-        wait_until(check_peers, timeout=5)
+
+        # Measured under a five-way parallel suite this wait is instant: 165
+        # samples, median 0.00s, max 0.10s. So the rare feature_block failure
+        # here is not slowness, and the longer deadline is only insurance. The
+        # message says what survived, so the next occurrence is evidence rather
+        # than a bare timeout.
+        try:
+            wait_until(check_peers, timeout=20)
+        except AssertionError:
+            stuck = [p['subver'] for p in self.getpeerinfo()]
+            self._raise_assertion_error(
+                "peers still connected 20s after disconnect: {}".format(stuck))
+
+        del self.p2ps[:]
 
         del self.p2ps[:]
 
@@ -344,6 +460,11 @@ class TestNodeCLIAttr:
     def get_request(self, *args, **kwargs):
         return lambda: self(*args, **kwargs)
 
+
+class TestNodeCLI():
+    """Interface to raptoreum-cli for an individual node"""
+
+    @staticmethod
     def arg_to_cli(arg):
         if isinstance(arg, bool):
             return str(arg).lower()
@@ -351,9 +472,6 @@ class TestNodeCLIAttr:
             return json.dumps(arg)
         else:
             return str(arg)
-
-class TestNodeCLI():
-    """Interface to raptoreum-cli for an individual node"""
 
     def __init__(self, binary, datadir):
         self.options = []
@@ -383,8 +501,8 @@ class TestNodeCLI():
 
     def send_cli(self, command=None, *args, **kwargs):
         """Run raptoreum-cli command. Deserializes returned string as python object."""
-        pos_args = [arg_to_cli(arg) for arg in args]
-        named_args = [str(key) + "=" + arg_to_cli(value) for (key, value) in kwargs.items()]
+        pos_args = [self.arg_to_cli(arg) for arg in args]
+        named_args = [str(key) + "=" + self.arg_to_cli(value) for (key, value) in kwargs.items()]
         assert not (pos_args and named_args), "Cannot use positional arguments and named arguments in the same raptoreum-cli call"
         p_args = [self.binary, "-datadir=" + self.datadir] + self.options
         if named_args:
