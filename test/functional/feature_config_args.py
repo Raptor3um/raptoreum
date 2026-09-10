@@ -24,11 +24,11 @@ class ConfArgsTest(BitcoinTestFramework):
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('-raptoreum=1\n')
-        self.nodes[0].assert_start_raises_init_error(expected_msg='ErrorError reading configuration file: parse error on line 1: -raptoreum=1, options in configuration file must be specified without leading -')
+        self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on line 1: -raptoreum=1, options in configuration file must be specified without leading -')
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('nono\n')
-        self.nodes[0].assert_start_raises_init_error(expected_msg='ErrorError reading configuration file: parse error on line 1: nono, if you intended to specify a negated option, use nono=1 instead')
+        self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on line 1: nono, if you intended to specify a negated option, use nono=1 instead')
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('testnot.datadir=1\n[testnet]\n')
@@ -36,8 +36,8 @@ class ConfArgsTest(BitcoinTestFramework):
         # InitWarning prefixes each with the file and line it came from, and
         # they are reported in the order the sections appear in the file.
         self.nodes[0].stop_node(expected_stderr=(
-            'Warning{}:1 Section [testnot] is not recognized.'.format(inc_conf_file_path) + os.linesep +
-            'Warning{}:2 Section [testnet] is not recognized.'.format(inc_conf_file_path)))
+            'Warning: {}:1 Section [testnot] is not recognized.'.format(inc_conf_file_path) + os.linesep +
+            'Warning: {}:2 Section [testnet] is not recognized.'.format(inc_conf_file_path)))
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('')  # clear
@@ -63,7 +63,7 @@ class ConfArgsTest(BitcoinTestFramework):
 
         # Check that using -datadir argument on non-existent directory fails
         self.nodes[0].datadir = new_data_dir
-        self.nodes[0].assert_start_raises_init_error(['-datadir=' + new_data_dir], 'ErrorError: Specified data directory "' + re.escape(new_data_dir) + '" does not exist.')
+        self.nodes[0].assert_start_raises_init_error(['-datadir=' + new_data_dir], 'Error: Error: Specified data directory "' + re.escape(new_data_dir) + '" does not exist.')
 
         # Check that using non-existent datadir in conf file fails
         conf_file = os.path.join(default_data_dir, "raptoreum.conf")
@@ -76,7 +76,7 @@ class ConfArgsTest(BitcoinTestFramework):
 
         self.nodes[0].assert_start_raises_init_error(
             ['-conf=' + conf_file],
-            'ErrorError reading configuration file: specified data directory "{}" does not exist.'.format(new_data_dir))
+            'Error: Error reading configuration file: specified data directory "{}" does not exist.'.format(new_data_dir))
 
         # Create the directory and ensure the config file now works
         os.mkdir(new_data_dir)
