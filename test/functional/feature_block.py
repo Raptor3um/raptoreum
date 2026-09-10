@@ -7,7 +7,7 @@ import copy
 import struct
 import time
 
-from test_framework.blocktools import create_block, create_coinbase, create_tx_with_script, get_legacy_sigopcount_block
+from test_framework.blocktools import create_block, create_coinbase, create_transaction, get_legacy_sigopcount_block
 from test_framework.key import ECKey
 from test_framework.messages import (
     CBlock,
@@ -16,7 +16,8 @@ from test_framework.messages import (
     CTransaction,
     CTxIn,
     CTxOut,
-    MAX_BLOCK_SIZE,
+    MAX_DIP0001_BLOCK_SIZE,
+    MAX_STANDARD_TX_SIZE,
     uint256_from_compact,
     uint256_from_str,
 )
@@ -45,7 +46,10 @@ from test_framework.script import (
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
-MAX_BLOCK_SIGOPS = 20000
+# Raptoreum: MaxBlockSigOps() is MaxBlockSize() / 50, and DIP0001 is enabled on
+# regtest, so the block size is MAX_DIP0001_BLOCK_SIZE (2 MB) and the sigop
+# limit is 40000 -- double Bitcoin's 1 MB-derived 20000.
+MAX_BLOCK_SIGOPS = 40000
 
 class PreviousSpendableOutput():
     def __init__(self, tx=CTransaction(), n=-1):
@@ -74,8 +78,8 @@ class FullBlockTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
-        # Must set '-dip3params=2000:2000' to create pre-dip3 blocks only
-        self.extra_args = [['-dip3params=2000:2000']]
+        # Must setto create pre-dip3 blocks only
+        self.extra_args = [[]]
 
     def setup_nodes(self):
         # Very large reorgs cause cs_main to be held for a very long time in ActivateBestChainStep,
@@ -90,6 +94,11 @@ class FullBlockTest(BitcoinTestFramework):
         self.bootstrap_p2p()  # Add one p2p connection to the node
 
         self.block_heights = {}
+        # Parent of every block this test builds. create_block needs the hash of
+        # the block that started a DKG session, which may not have reached the
+        # node yet; and this test builds competing chains, so that hash has to be
+        # looked up along the chain the new block extends rather than by height.
+        self.block_parents = {}
         self.coinbase_key = ECKey()
         self.coinbase_key.generate()
         self.coinbase_pubkey = self.coinbase_key.get_pubkey().get_bytes()
@@ -268,33 +277,25 @@ class FullBlockTest(BitcoinTestFramework):
         b22 = self.next_block(22, spend=out[5])
         self.send_blocks([b22], False, 16, b'bad-txns-premature-spend-of-coinbase')
 
-        # Create a block on either side of MAX_BLOCK_SIZE and make sure its accepted/rejected
+        # Create a block on either side of MAX_DIP0001_BLOCK_SIZE and make sure its accepted/rejected
         #     genesis -> b1 (0) -> b2 (1) -> b5 (2) -> b6  (3)
         #                                          \-> b12 (3) -> b13 (4) -> b15 (5) -> b23 (6)
         #                                                                           \-> b24 (6) -> b25 (7)
         #                      \-> b3 (1) -> b4 (2)
-        self.log.info("Accept a block of size MAX_BLOCK_SIZE")
+        self.log.info("Accept a block of size MAX_DIP0001_BLOCK_SIZE")
         self.move_tip(15)
         b23 = self.next_block(23, spend=out[6])
-        tx = CTransaction()
-        script_length = MAX_BLOCK_SIZE - len(b23.serialize()) - 69
-        script_output = CScript([b'\x00' * script_length])
-        tx.vout.append(CTxOut(0, script_output))
-        tx.vin.append(CTxIn(COutPoint(b23.vtx[1].sha256, 0)))
-        b23 = self.update_block(23, [tx])
-        # Make sure the math above worked out to produce a max-sized block
-        assert_equal(len(b23.serialize()), MAX_BLOCK_SIZE)
+        b23 = self.pad_block_to_size(23, MAX_DIP0001_BLOCK_SIZE)
+        # Make sure the padding above worked out to produce a max-sized block
+        assert_equal(len(b23.serialize()), MAX_DIP0001_BLOCK_SIZE)
         self.send_blocks([b23], True)
         self.save_spendable_output()
 
-        self.log.info("Reject a block of size MAX_BLOCK_SIZE + 1")
+        self.log.info("Reject a block of size MAX_DIP0001_BLOCK_SIZE + 1")
         self.move_tip(15)
         b24 = self.next_block(24, spend=out[6])
-        script_length = MAX_BLOCK_SIZE - len(b24.serialize()) - 69
-        script_output = CScript([b'\x00' * (script_length + 1)])
-        tx.vout = [CTxOut(0, script_output)]
-        b24 = self.update_block(24, [tx])
-        assert_equal(len(b24.serialize()), MAX_BLOCK_SIZE + 1)
+        b24 = self.pad_block_to_size(24, MAX_DIP0001_BLOCK_SIZE + 1)
+        assert_equal(len(b24.serialize()), MAX_DIP0001_BLOCK_SIZE + 1)
         self.send_blocks([b24], False, 16, b'bad-blk-length', reconnect=True)
 
         b25 = self.next_block(25, spend=out[7])
@@ -308,7 +309,10 @@ class FullBlockTest(BitcoinTestFramework):
         self.log.info("Reject a block with coinbase input script size out of range")
         self.move_tip(15)
         b26 = self.next_block(26, spend=out[6])
-        b26.vtx[0].vin[0].scriptSig = b'\x00'
+        # CheckTransaction lets a CbTx coinbase have a one-byte scriptSig -- the
+        # height lives in the CbTx payload instead -- so only an empty one is
+        # short enough to reject.
+        b26.vtx[0].vin[0].scriptSig = b''
         b26.vtx[0].rehash()
         # update_block causes the merkle root to get updated, even with no new
         # transactions, and updates the required state.
@@ -443,22 +447,25 @@ class FullBlockTest(BitcoinTestFramework):
         b39 = self.update_block(39, [tx])
         b39_outputs += 1
 
-        # Until block is full, add tx's with 1 satoshi to p2sh_script, the rest to OP_TRUE
-        tx_new = None
+        # Add tx's with 1 satoshi to p2sh_script, the rest to OP_TRUE, until
+        # there are enough P2SH outputs for b40 to reach the sigop limit.
+        # Bitcoin's version fills the whole block; at Raptoreum's 2 MB that is
+        # 26000 transactions to build in Python for no extra coverage.
+        needed = MAX_BLOCK_SIGOPS // b39_sigops_per_output + 2
         tx_last = tx
-        total_size = len(b39.serialize())
-        while(total_size < MAX_BLOCK_SIZE):
+        more_txs = []
+        while b39_outputs < needed:
             tx_new = self.create_tx(tx_last, 1, 1, p2sh_script)
             tx_new.vout.append(CTxOut(tx_last.vout[1].nValue - 1, CScript([OP_TRUE])))
             tx_new.rehash()
-            total_size += len(tx_new.serialize())
-            if total_size >= MAX_BLOCK_SIZE:
-                break
-            b39.vtx.append(tx_new)  # add tx to block
+            more_txs.append(tx_new)
             tx_last = tx_new
             b39_outputs += 1
 
-        b39 = self.update_block(39, [])
+        # Through update_block, so they stay in front of the quorum commitments:
+        # b40 spends b39.vtx[1:] by index.
+        b39 = self.update_block(39, more_txs)
+        assert len(b39.serialize()) < MAX_DIP0001_BLOCK_SIZE
         self.send_blocks([b39], True)
         self.save_spendable_output()
 
@@ -507,7 +514,9 @@ class FullBlockTest(BitcoinTestFramework):
         self.log.info("Accept a block with the max number of P2SH sigops")
         self.move_tip(39)
         b41 = self.next_block(41, spend=None)
-        self.update_block(41, b40.vtx[1:-1])
+        # b40's own transactions, minus the last one that pushed it over the
+        # limit. Not b40.vtx[1:-1]: b40 also carries quorum commitments.
+        self.update_block(41, [b40.vtx[1]] + new_txs[:-1])
         b41_sigops_to_fill = b40_sigops_to_fill - 1
         tx = CTransaction()
         tx.vin.append(CTxIn(lastOutpoint, b''))
@@ -548,6 +557,7 @@ class FullBlockTest(BitcoinTestFramework):
         b44.solve()
         self.tip = b44
         self.block_heights[b44.sha256] = height
+        self.block_parents[b44.sha256] = b44.hashPrevBlock
         self.blocks[44] = b44
         self.send_blocks([b44], True)
 
@@ -562,6 +572,7 @@ class FullBlockTest(BitcoinTestFramework):
         b45.calc_sha256()
         b45.solve()
         self.block_heights[b45.sha256] = self.block_heights[self.tip.sha256] + 1
+        self.block_parents[b45.sha256] = b45.hashPrevBlock
         self.tip = b45
         self.blocks[45] = b45
         self.send_blocks([b45], False, 16, b'bad-cb-missing', reconnect=True)
@@ -576,6 +587,7 @@ class FullBlockTest(BitcoinTestFramework):
         b46.hashMerkleRoot = 0
         b46.solve()
         self.block_heights[b46.sha256] = self.block_heights[b44.sha256] + 1
+        self.block_parents[b46.sha256] = b46.hashPrevBlock
         self.tip = b46
         assert 46 not in self.blocks
         self.blocks[46] = b46
@@ -585,7 +597,10 @@ class FullBlockTest(BitcoinTestFramework):
         self.move_tip(44)
         b47 = self.next_block(47, solve=False)
         target = uint256_from_compact(b47.nBits)
-        while b47.sha256 < target:
+        # Against the GhostRider hash, which is what the node checks -- grinding
+        # the identity hash instead leaves the proof of work valid about half the
+        # time, and the block is then accepted.
+        while b47.calc_pow_hash() < target:
             b47.nNonce += 1
             b47.rehash()
         self.send_blocks([b47], False, request_block=False)
@@ -752,23 +767,9 @@ class FullBlockTest(BitcoinTestFramework):
         self.send_blocks([b60], True)
         self.save_spendable_output()
 
-        # Test BIP30
-        #
-        # -> b39 (11) -> b42 (12) -> b43 (13) -> b53 (14) -> b55 (15) -> b57 (16) -> b60 (17)
-        #                                                                                    \-> b61 (18)
-        #
-        # Blocks are not allowed to contain a transaction whose id matches that of an earlier,
-        # not-fully-spent transaction in the same chain. To test, make identical coinbases;
-        # the second one should be rejected.
-        #
-        self.log.info("Reject a block with a transaction with a duplicate hash of a previous transaction (BIP30)")
-        self.move_tip(60)
-        b61 = self.next_block(61, spend=out[18])
-        b61.vtx[0].vin[0].scriptSig = b60.vtx[0].vin[0].scriptSig  # Equalize the coinbases
-        b61.vtx[0].rehash()
-        b61 = self.update_block(61, [])
-        assert_equal(b60.vtx[0].serialize(), b61.vtx[0].serialize())
-        self.send_blocks([b61], False, 16, b'bad-txns-BIP30', reconnect=True)
+        # BIP30 is not tested: Raptoreum has no such rule, nothing rejects with
+        # bad-txns-BIP30, and a DIP3 coinbase carries its height in the CbTx
+        # payload so two coinbases can never collide anyway.
 
         # Test tx.isFinal is properly rejected (not an exhaustive tx.isFinal test, that should be in data-driven transaction tests)
         #
@@ -803,7 +804,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.send_blocks([b63], False, 16, b'bad-txns-nonfinal')
 
         #  This checks that a block with a bloated VARINT between the block_header and the array of tx such that
-        #  the block is > MAX_BLOCK_SIZE with the bloated varint, but <= MAX_BLOCK_SIZE without the bloated varint,
+        #  the block is > MAX_DIP0001_BLOCK_SIZE with the bloated varint, but <= MAX_DIP0001_BLOCK_SIZE without the bloated varint,
         #  does not cause a subsequent, identical block with canonical encoding to be rejected.  The test does not
         #  care whether the bloated block is accepted or rejected; it only cares that the second block is accepted.
         #
@@ -825,15 +826,12 @@ class FullBlockTest(BitcoinTestFramework):
         b64a.initialize(regular_block)
         self.blocks["64a"] = b64a
         self.tip = b64a
-        tx = CTransaction()
 
-        # use canonical serialization to calculate size
-        script_length = MAX_BLOCK_SIZE - len(b64a.normal_serialize()) - 69
-        script_output = CScript([b'\x00' * script_length])
-        tx.vout.append(CTxOut(0, script_output))
-        tx.vin.append(CTxIn(COutPoint(b64a.vtx[1].sha256, 0)))
-        b64a = self.update_block("64a", [tx])
-        assert_equal(len(b64a.serialize()), MAX_BLOCK_SIZE + 8)
+        # pad against the canonical serialization, which is what the size rule
+        # is about; the bloated varint adds the extra 8 bytes on top
+        b64a = self.pad_block_to_size("64a", MAX_DIP0001_BLOCK_SIZE, serializer=b64a.normal_serialize)
+        assert_equal(len(b64a.normal_serialize()), MAX_DIP0001_BLOCK_SIZE)
+        assert_equal(len(b64a.serialize()), MAX_DIP0001_BLOCK_SIZE + 8)
         self.send_blocks([b64a], False, 1, b'error parsing message')
 
         # raptoreumd doesn't disconnect us for sending a bloated block, but if we subsequently
@@ -847,7 +845,7 @@ class FullBlockTest(BitcoinTestFramework):
         b64 = CBlock(b64a)
         b64.vtx = copy.deepcopy(b64a.vtx)
         assert_equal(b64.hash, b64a.hash)
-        assert_equal(len(b64.serialize()), MAX_BLOCK_SIZE)
+        assert_equal(len(b64.serialize()), MAX_DIP0001_BLOCK_SIZE)
         self.blocks[64] = b64
         b64 = self.update_block(64, [])
         self.send_blocks([b64], True)
@@ -952,6 +950,7 @@ class FullBlockTest(BitcoinTestFramework):
         b71 = copy.deepcopy(b72)
         b71.vtx.append(tx2)   # add duplicate tx2
         self.block_heights[b71.sha256] = self.block_heights[b69.sha256] + 1  # b71 builds off b69
+        self.block_parents[b71.sha256] = b71.hashPrevBlock
         self.blocks[71] = b71
 
         assert_equal(len(b71.vtx), 4)
@@ -1068,18 +1067,20 @@ class FullBlockTest(BitcoinTestFramework):
         self.log.info("Test transaction resurrection during a re-org")
         self.move_tip(76)
         b77 = self.next_block(77)
-        tx77 = self.create_and_sign_transaction(out[24].tx, out[24].n, 10 * COIN)
+        # A launch-window coinbase pays 4 RTM, so upstream's 10/9/8 RTM chain
+        # does not fit. Same shape, smaller values.
+        tx77 = self.create_and_sign_transaction(out[24].tx, out[24].n, 3 * COIN)
         b77 = self.update_block(77, [tx77])
         self.send_blocks([b77], True)
         self.save_spendable_output()
 
         b78 = self.next_block(78)
-        tx78 = self.create_tx(tx77, 0, 9 * COIN)
+        tx78 = self.create_tx(tx77, 0, 2 * COIN)
         b78 = self.update_block(78, [tx78])
         self.send_blocks([b78], True)
 
         b79 = self.next_block(79)
-        tx79 = self.create_tx(tx78, 0, 8 * COIN)
+        tx79 = self.create_tx(tx78, 0, 1 * COIN)
         b79 = self.update_block(79, [tx79])
         self.send_blocks([b79], True)
 
@@ -1175,22 +1176,30 @@ class FullBlockTest(BitcoinTestFramework):
         self.log.info("Test a re-org of ~2 days' worth of blocks (1088 blocks)")
 
         self.move_tip(88)
-        LARGE_REORG_SIZE = 1088
+        # 300, not upstream's 1088: ProcessNewBlock passes the tip's height to
+        # CheckBlock instead of the block's own (validation.cpp:4384), so a fork
+        # block is checked against the tip's founder rule and its peer banned.
+        # 300 keeps both chains under the founder start at 500.
+        LARGE_REORG_SIZE = 300
         blocks = []
         spend = out[32]
+        # The point here is the depth of the reorg, not the size of its blocks.
+        # Padding each one to the full 2 MB would move 2.2 GB through the p2p
+        # connection and build 22000 padding transactions in Python; one
+        # padding transaction per block keeps the blocks non-trivial at a
+        # twentieth of the cost.
         for i in range(89, LARGE_REORG_SIZE + 89):
             b = self.next_block(i, spend)
-            tx = CTransaction()
-            script_length = MAX_BLOCK_SIZE - len(b.serialize()) - 69
-            script_output = CScript([b'\x00' * script_length])
-            tx.vout.append(CTxOut(0, script_output))
-            tx.vin.append(CTxIn(COutPoint(b.vtx[1].sha256, 0)))
-            b = self.update_block(i, [tx])
-            assert_equal(len(b.serialize()), MAX_BLOCK_SIZE)
+            b = self.pad_block_to_size(i, len(b.serialize()) + MAX_STANDARD_TX_SIZE)
             blocks.append(b)
             self.save_spendable_output()
             spend = self.get_spendable_output()
 
+        # Raptoreum's MAX_FUTURE_BLOCK_TIME is 15 minutes, not Bitcoin's two
+        # hours (src/chain.h), and these blocks step one second each, so a
+        # thousand of them run past the node's clock. Move the clock with them.
+        self.nodes[0].setmocktime(blocks[-1].nTime)
+        self.mocktime = blocks[-1].nTime
         self.send_blocks(blocks, True, timeout=960)
         chain1_tip = i
 
@@ -1217,7 +1226,12 @@ class FullBlockTest(BitcoinTestFramework):
 
     def add_transactions_to_block(self, block, tx_list):
         [tx.rehash() for tx in tx_list]
-        block.vtx.extend(tx_list)
+        # create_block appends any required quorum commitments straight after the
+        # coinbase. Put this test's transactions in front of them, so vtx[1] is
+        # still the first transaction the test added -- a lot of cases index it
+        # directly to spend it later. The node does not care about the order.
+        pos = next((i for i, tx in enumerate(block.vtx) if tx.nType == 6), len(block.vtx))
+        block.vtx[pos:pos] = tx_list
 
     # this is a little handier to use than the version in blocktools.py
     def create_tx(self, spend_tx, n, value, script=CScript([OP_TRUE])):
@@ -1239,6 +1253,18 @@ class FullBlockTest(BitcoinTestFramework):
         tx.rehash()
         return tx
 
+    def chain_hash_at(self, base_block_hash):
+        """Resolve a height to the block at it on the chain ending at
+        base_block_hash, or None if this test did not build that far back."""
+        def resolve(height):
+            h = base_block_hash
+            while self.block_heights.get(h, -1) > height:
+                if h not in self.block_parents:
+                    return None
+                h = self.block_parents[h]
+            return h if self.block_heights.get(h) == height else None
+        return resolve
+
     def next_block(self, number, spend=None, additional_coinbase_value=0, script=CScript([OP_TRUE]), solve=True):
         if self.tip is None:
             base_block_hash = self.genesis_hash
@@ -1252,11 +1278,13 @@ class FullBlockTest(BitcoinTestFramework):
         coinbase.vout[0].nValue += additional_coinbase_value
         coinbase.rehash()
         if spend is None:
-            block = create_block(base_block_hash, coinbase, block_time)
+            block = create_block(base_block_hash, coinbase, block_time,
+                                 node=self.nodes[0], block_hashes=self.chain_hash_at(base_block_hash))
         else:
             coinbase.vout[0].nValue += spend.tx.vout[spend.n].nValue - 1  # all but one satoshi to fees
             coinbase.rehash()
-            block = create_block(base_block_hash, coinbase, block_time)
+            block = create_block(base_block_hash, coinbase, block_time,
+                                 node=self.nodes[0], block_hashes=self.chain_hash_at(base_block_hash))
             tx = create_transaction(spend.tx, spend.n, b"", 1, script)  # spend 1 satoshi
             self.sign_tx(tx, spend.tx, spend.n)
             self.add_transactions_to_block(block, [tx])
@@ -1265,6 +1293,7 @@ class FullBlockTest(BitcoinTestFramework):
             block.solve()
         self.tip = block
         self.block_heights[block.sha256] = height
+        self.block_parents[block.sha256] = base_block_hash
         assert number not in self.blocks
         self.blocks[number] = block
         return block
@@ -1284,6 +1313,78 @@ class FullBlockTest(BitcoinTestFramework):
         self.tip = self.blocks[number]
 
     # adds transactions to the block and updates state
+    def pad_split_tx(self, prev_hash, n):
+        """Turn one anyone-can-spend output into n of them."""
+        tx = CTransaction()
+        tx.vin.append(CTxIn(COutPoint(prev_hash, 0)))
+        for _ in range(n):
+            tx.vout.append(CTxOut(0, CScript([OP_TRUE])))
+        tx.calc_sha256()
+        return tx
+
+    def pad_tx(self, prev_hash, n, script_length):
+        tx = CTransaction()
+        tx.vin.append(CTxIn(COutPoint(prev_hash, n)))
+        tx.vout.append(CTxOut(0, CScript([b'\x00' * script_length])))
+        tx.calc_sha256()
+        return tx
+
+    def pad_tx_of_size(self, prev_hash, n, size):
+        """A padding transaction that serializes to exactly `size` bytes.
+
+        The overhead is 69 bytes for the sizes this test asks for, but it steps
+        down at the script-length varint and OP_PUSHDATA boundaries, so solve
+        for it rather than assuming."""
+        script_length = size - 69
+        for _ in range(4):
+            tx = self.pad_tx(prev_hash, n, script_length)
+            short = size - len(tx.serialize())
+            if short == 0:
+                return tx
+            script_length += short
+        raise AssertionError("no padding transaction of exactly %d bytes" % size)
+
+    def pad_block_to_size(self, block_number, size, serializer=None):
+        """Pad a block out to exactly `size` bytes.
+
+        Raptoreum enforces MAX_STANDARD_TX_SIZE as a consensus rule wherever
+        DIP0001 is active, which on regtest is always (src/validation.cpp,
+        "bad-txns-oversize"), so a block cannot be filled with one giant
+        transaction the way Bitcoin's version of this test does. The padding is
+        a splitter transaction that fans the block's last output out into one
+        anyone-can-spend output per padding transaction, followed by padding
+        transactions just inside the limit. They have to come off the splitter
+        rather than off each other: a padding transaction's own output is a
+        single push far past MAX_SCRIPT_ELEMENT_SIZE and can never be spent.
+
+        `serializer` overrides how the block's current size is measured, for
+        CBrokenBlock, which has to be padded against its canonical encoding."""
+        block = self.blocks[block_number]
+        if serializer is None:
+            serializer = block.serialize
+        # vtx[1] is the transaction next_block added; add_transactions_to_block
+        # keeps the test's own transactions in front of the quorum commitments.
+        prev_hash = block.vtx[1].sha256
+
+        n = 1
+        while True:
+            splitter = self.pad_split_tx(prev_hash, n)
+            budget = size - len(serializer()) - len(splitter.serialize())
+            if budget <= n * MAX_STANDARD_TX_SIZE:
+                break
+            n += 1
+        assert budget > 0
+
+        pad = [splitter]
+        for i in range(n):
+            share = budget // n + (1 if i < budget % n else 0)
+            pad.append(self.pad_tx_of_size(splitter.sha256, i, share))
+        assert len(block.vtx) + len(pad) < 253, "the transaction count varint would grow"
+
+        block = self.update_block(block_number, pad)
+        assert_equal(len(serializer()), size)
+        return block
+
     def update_block(self, block_number, new_transactions):
         block = self.blocks[block_number]
         self.add_transactions_to_block(block, new_transactions)
@@ -1295,6 +1396,7 @@ class FullBlockTest(BitcoinTestFramework):
         if block.sha256 != old_sha256:
             self.block_heights[block.sha256] = self.block_heights[old_sha256]
             del self.block_heights[old_sha256]
+            self.block_parents[block.sha256] = self.block_parents.pop(old_sha256)
         self.blocks[block_number] = block
         return block
 
