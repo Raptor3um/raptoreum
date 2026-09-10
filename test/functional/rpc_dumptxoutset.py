@@ -3,6 +3,11 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the generation of UTXO snapshots using `dumptxoutset`.
+
+This file was already in the tree but no runner entry referenced it, so it had
+never run. The hashes below are Raptoreum's, not the inherited Bitcoin ones, and
+are stable across runs; they pin the snapshot format so a future change to it
+cannot pass unnoticed.
 """
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
@@ -29,19 +34,25 @@ class DumptxoutsetTest(BitcoinTestFramework):
 
         assert expected_path.is_file()
 
-        assert_equal(out['coins_written'], 100)
+        # Two coins per block, not one: every Raptoreum coinbase carries a
+        # second output for the founder payment, which is present but zero
+        # valued below the founder start height.
+        assert_equal(out['coins_written'], 200)
         assert_equal(out['base_height'], 100)
         assert_equal(out['path'], str(expected_path))
-        # Blockhash should be deterministic based on mocked time.
+        # Blockhash should be deterministic based on mocked time. These two
+        # values move whenever the set of quorum types regtest registers
+        # changes, since that changes which commitments every block in the
+        # DKG mining window carries.
         assert_equal(
             out['base_hash'],
-            '65a627bab5f50aea8e69acbf9fcbe6e5162bd556ce1c46f0ec4452afaedbb702')
+            '0a17fcd5051e169c998b551198a65e7eab52f54b2bd7963ea2ec9c14f21f05d9')
 
         with open(str(expected_path), 'rb') as f:
             digest = hashlib.sha256(f.read()).hexdigest()
             # UTXO snapshot hash should be deterministic based on mocked time.
             assert_equal(
-                digest, '1d34e230e9d7d5691aaa03684492798ca8f92a9254c6cf80528241bf35939869')
+                digest, '03cde3c0a493e8f1ab232f00a7f4b54f544418a803bf74c670cf0ac1ce229ad3')
 
         # Specifying a path to an existing file will fail.
         assert_raises_rpc_error(
