@@ -65,7 +65,7 @@ class WalletUpgradeToHDTest(BitcoinTestFramework):
 
         self.log.info("Should no longer be able to start it with HD disabled")
         self.stop_node(0)
-        node.assert_start_raises_init_error(['-usehd=0'], "Error: Error loading : You can't disable HD on an already existing HD wallet")
+        node.assert_start_raises_init_error(['-usehd=0'], "ErrorError loading : You can't disable HD on an already existing HD wallet")
         self.start_node(0)
         balance_after = node.getbalance()
 
