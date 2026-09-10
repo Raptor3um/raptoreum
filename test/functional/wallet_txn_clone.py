@@ -22,8 +22,8 @@ class TxnMallTest(BitcoinTestFramework):
         disconnect_nodes(self.nodes[2], 1)
 
     def run_test(self):
-        # All nodes should start with 12,500 RAPTOREUM:
-        starting_balance = 12500
+        # All nodes start with 25 mature blocks from the cache.
+        starting_balance = 25 * REGTEST_SUBSIDY
         for i in range(4):
             assert_equal(self.nodes[i].getbalance(), starting_balance)
             self.nodes[i].getnewaddress()  # bug workaround, coins generated assigned to first getnewaddress!
@@ -84,7 +84,7 @@ class TxnMallTest(BitcoinTestFramework):
         # matured block, minus tx1 and tx2 amounts, and minus transaction fees:
         expected = starting_balance + node0_tx1["fee"] + node0_tx2["fee"]
         if self.options.mine_block:
-            expected += 500
+            expected += REGTEST_SUBSIDY
         expected += tx1["amount"] + tx1["fee"]
         expected += tx2["amount"] + tx2["fee"]
         assert_equal(self.nodes[0].getbalance(), expected)
@@ -119,11 +119,11 @@ class TxnMallTest(BitcoinTestFramework):
         assert_equal(tx1_clone["confirmations"], 2)
         assert_equal(tx2["confirmations"], 1)
 
-        # Check node0's total balance; should be same as before the clone, + 1000 RAPTOREUM for 2 matured,
+        # Check node0's total balance; should be same as before the clone, + two matured block rewards,
         # less possible orphaned matured subsidy
-        expected += 1000
+        expected += 2 * REGTEST_SUBSIDY
         if (self.options.mine_block):
-            expected -= 500
+            expected -= REGTEST_SUBSIDY
         assert_equal(self.nodes[0].getbalance(), expected)
 
 if __name__ == '__main__':

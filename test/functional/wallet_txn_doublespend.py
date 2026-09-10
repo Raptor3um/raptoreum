@@ -22,8 +22,8 @@ class TxnMallTest(BitcoinTestFramework):
         disconnect_nodes(self.nodes[2], 1)
 
     def run_test(self):
-        # All nodes should start with 12,500 RAPTOREUM:
-        starting_balance = 12500
+        # All nodes start with 25 mature blocks from the cache.
+        starting_balance = 25 * REGTEST_SUBSIDY
         for i in range(4):
             assert_equal(self.nodes[i].getbalance(), starting_balance)
             self.nodes[i].getnewaddress("")  # bug workaround, coins generated assigned to first getnewaddress!
@@ -40,6 +40,20 @@ class TxnMallTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getbalance(),
                      starting_balance + fund_foo_tx["fee"] + fund_bar_tx["fee"])
 
+        # Lock everything except foo and bar: the cache leaves 25 mature blocks,
+        # so coin selection would otherwise fund the sends from unrelated coins
+        # and the two would never conflict.
+        foo_vout = find_output(self.nodes[0], fund_foo_txid, 12190)
+        bar_vout = find_output(self.nodes[0], fund_bar_txid, 290)
+        keep = {(fund_foo_txid, foo_vout), (fund_bar_txid, bar_vout)}
+        self.nodes[0].lockunspent(False, [
+            {"txid": u["txid"], "vout": u["vout"]}
+            # minconf 0: the funding transactions' own change is unconfirmed and
+            # far larger than foo or bar, so it must be locked too.
+            for u in self.nodes[0].listunspent(0)
+            if (u["txid"], u["vout"]) not in keep
+        ])
+
         # Coins are sent to node1_address
         node1_address = self.nodes[1].getnewaddress()
 
@@ -48,10 +62,10 @@ class TxnMallTest(BitcoinTestFramework):
         doublespend_fee = Decimal('-.02')
         rawtx_input_0 = {}
         rawtx_input_0["txid"] = fund_foo_txid
-        rawtx_input_0["vout"] = find_output(self.nodes[0], fund_foo_txid, 12190)
+        rawtx_input_0["vout"] = foo_vout
         rawtx_input_1 = {}
         rawtx_input_1["txid"] = fund_bar_txid
-        rawtx_input_1["vout"] = find_output(self.nodes[0], fund_bar_txid, 290)
+        rawtx_input_1["vout"] = bar_vout
         inputs = [rawtx_input_0, rawtx_input_1]
         change_address = self.nodes[0].getnewaddress()
         outputs = {}
@@ -77,7 +91,7 @@ class TxnMallTest(BitcoinTestFramework):
         # matured block, minus 400, minus 200, and minus transaction fees:
         expected = starting_balance + fund_foo_tx["fee"] + fund_bar_tx["fee"]
         if self.options.mine_block:
-            expected += 500
+            expected += REGTEST_SUBSIDY
         expected += tx1["amount"] + tx1["fee"]
         expected += tx2["amount"] + tx2["fee"]
         assert_equal(self.nodes[0].getbalance(), expected)
@@ -112,14 +126,14 @@ class TxnMallTest(BitcoinTestFramework):
         assert_equal(tx1["confirmations"], -2)
         assert_equal(tx2["confirmations"], -2)
 
-        # Node0's total balance should be starting balance, plus 1000RAPTOREUM for
+        # Node0's total balance should be starting balance, plus two block rewards for
         # two more matured blocks, minus 12400 for the double-spend, plus fees (which are
         # negative):
-        expected = starting_balance + 1000 - 12400 + fund_foo_tx["fee"] + fund_bar_tx["fee"] + doublespend_fee
+        expected = starting_balance + 2 * REGTEST_SUBSIDY - 12400 + fund_foo_tx["fee"] + fund_bar_tx["fee"] + doublespend_fee
         assert_equal(self.nodes[0].getbalance(), expected)
 
-        # Node1's balance should be its initial balance (12500 for 25 block rewards) plus the doublespend:
-        assert_equal(self.nodes[1].getbalance(), 12500 + 12400)
+        # Node1's balance should be its initial balance (25 block rewards) plus the doublespend:
+        assert_equal(self.nodes[1].getbalance(), starting_balance + 12400)
 
 if __name__ == '__main__':
     TxnMallTest().main()

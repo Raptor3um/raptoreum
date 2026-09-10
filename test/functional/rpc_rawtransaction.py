@@ -48,6 +48,11 @@ class RawTransactionsTest(BitcoinTestFramework):
 
     def run_test(self):
         self.log.info('prepare some coins for multiple *rawtransaction commands')
+        # Clear the 4 RTM launch window: these tests move far more than a
+        # launch-window block pays, and the coins go to an address no wallet
+        # here holds a key for.
+        self.mine_past_launch_window()
+        self.sync_all()
         self.nodes[2].generate(1)
         self.sync_all()
         self.nodes[0].generate(101)
@@ -79,7 +84,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "txid must be hexadecimal string", self.nodes[0].createrawtransaction, [{'txid': 'foo'}], {})
         assert_raises_rpc_error(-8, "Invalid parameter, missing vout key", self.nodes[0].createrawtransaction, [{'txid': txid}], {})
         assert_raises_rpc_error(-8, "Invalid parameter, missing vout key", self.nodes[0].createrawtransaction, [{'txid': txid, 'vout': 'foo'}], {})
-        assert_raises_rpc_error(-8, "Invalid parameter, vout must be positive", self.nodes[0].createrawtransaction, [{'txid': txid, 'vout': -1}], {})
+        assert_raises_rpc_error(-8, "Invalid parameter, vout cannot be negative", self.nodes[0].createrawtransaction, [{'txid': txid, 'vout': -1}], {})
         assert_raises_rpc_error(-8, "Invalid parameter, sequence number is out of range", self.nodes[0].createrawtransaction, [{'txid': txid, 'vout': 0, 'sequence': -1}], {})
 
         # Test `createrawtransaction` invalid `outputs`
@@ -245,7 +250,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.sync_all()
         self.nodes[0].generate(1)
         self.sync_all()
-        assert_equal(self.nodes[0].getbalance(), bal+Decimal('500.00000000')+Decimal('2.19000000')) #block reward + tx
+        assert_equal(self.nodes[0].getbalance(), bal+REGTEST_SUBSIDY+Decimal('2.19000000')) #block reward + tx
 
         # 2of2 test for combining transactions
         bal = self.nodes[2].getbalance()
@@ -294,7 +299,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.sync_all()
         self.nodes[0].generate(1)
         self.sync_all()
-        assert_equal(self.nodes[0].getbalance(), bal+Decimal('500.00000000')+Decimal('2.19000000')) #block reward + tx
+        assert_equal(self.nodes[0].getbalance(), bal+REGTEST_SUBSIDY+Decimal('2.19000000')) #block reward + tx
 
         # getrawtransaction tests
         # 1. valid parameters - only supply txid
@@ -365,6 +370,29 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtx = ToHex(tx)
         decrawtx = self.nodes[0].decoderawtransaction(rawtx)
         assert_equal(decrawtx['version'], 0x7fff)
+
+        self.log.info('sendrawtransaction with maxfeerate')
+
+        txId = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 1.0)
+        rawTx = self.nodes[0].getrawtransaction(txId, True)
+        vout = next(o for o in rawTx['vout'] if o['value'] == Decimal('1.00000000'))
+
+        self.sync_all()
+        inputs = [{"txid": txId, "vout": vout['n']}]
+        outputs = {self.nodes[0].getnewaddress(): Decimal("0.99999000")}  # 1000 sat fee
+        rawTx = self.nodes[2].createrawtransaction(inputs, outputs)
+        rawTxSigned = self.nodes[2].signrawtransactionwithwallet(rawTx)
+        assert_equal(rawTxSigned['complete'], True)
+
+        # ~1000 sat over ~200 bytes is around 5 sat/b, so a 1 sat/b cap must refuse it
+        assert_raises_rpc_error(-26, "absurdly-high-fee", self.nodes[2].sendrawtransaction, rawTxSigned['hex'], 0.00001000)
+        # and a 7 sat/b cap must accept it. Numeric, not upstream's string:
+        # rawtransaction.cpp:1083 refuses anything else.
+        self.nodes[2].sendrawtransaction(rawTxSigned['hex'], 0.00007000)
+
+        # Upstream pairs each of these with testmempoolaccept, which this tree
+        # does not have.
+
 
 if __name__ == '__main__':
     RawTransactionsTest().main()
