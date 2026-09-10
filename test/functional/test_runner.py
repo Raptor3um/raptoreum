@@ -167,6 +167,7 @@ BASE_SCRIPTS = [
     'p2p_compactblocks.py',
     'p2p_connect_to_devnet.py',
     'feature_assets.py',
+    'feature_assets_rules.py',
     'feature_sporks.py',
     'rpc_getblockstats.py',
     'wallet_encryption.py',
