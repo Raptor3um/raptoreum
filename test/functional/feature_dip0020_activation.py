@@ -6,12 +6,23 @@ from test_framework.messages import COutPoint, CTransaction, CTxIn, CTxOut, ToHe
 from test_framework.mininode import COIN
 from test_framework.script import CScript, OP_CAT
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, get_bip9_status, satoshi_round
+from test_framework.util import assert_equal, assert_raises_rpc_error, satoshi_round
 
 '''
 feature_dip0020_activation.py
 
-This test checks activation of DIP0020 opcodes
+This test checks activation of DIP0020 opcodes.
+
+Upstream drives this with a BIP9 versionbits deployment. Raptoreum deleted
+versionbits and gates the opcodes on its own miner-voted v17 update instead
+(GetBlockScriptFlags sets SCRIPT_ENABLE_DIP0020_OPCODES when
+Updates().IsActive(EUpdate::DEPLOYMENT_V17, pindex)). On regtest v17 locks in at
+height 110 and activates at 210, and the cached chain starts at 200, so both
+sides of the rule are reachable. The deployment status is read from
+getblockchaininfo's rip1_softforks rather than from get_bip9_status.
+
+This is a consensus rule and it still runs: every node syncing from genesis
+replays the 427392 blocks before mainnet activation with the opcodes disabled.
 '''
 
 DISABLED_OPCODE_ERROR = "non-mandatory-script-verify-flag (Attempted to use a disabled opcode)"
@@ -19,11 +30,17 @@ DISABLED_OPCODE_ERROR = "non-mandatory-script-verify-flag (Attempted to use a di
 
 class DIP0020ActivationTest(BitcoinTestFramework):
     def set_test_params(self):
+        # Clean chain, unlike upstream: the shared cache starts at height 921,
+        # past v17's activation at 210, so the disabled side is unreachable.
+        self.setup_clean_chain = True
         self.num_nodes = 1
 
     def run_test(self):
         self.node = self.nodes[0]
         self.relayfee = satoshi_round(self.nodes[0].getnetworkinfo()["relayfee"])
+
+        self.node.generate(105)  # COINBASE_MATURITY is 100
+        assert self.node.getblockchaininfo()["rip1_softforks"]["v17"]["status"] != "active"
 
         # We should have some coins already
         utxos = self.node.listunspent()
@@ -52,16 +69,15 @@ class DIP0020ActivationTest(BitcoinTestFramework):
         tx0_hex = ToHex(tx0)
 
         # This tx isn't valid yet
-        assert_equal(get_bip9_status(self.nodes[0], 'dip0020')['status'], 'locked_in')
+        assert self.node.getblockchaininfo()["rip1_softforks"]["v17"]["status"] != "active"
         assert_raises_rpc_error(-26, DISABLED_OPCODE_ERROR, self.node.sendrawtransaction, tx0_hex)
 
         # Generate enough blocks to activate DIP0020 opcodes
-        self.node.generate(98)
-        assert_equal(get_bip9_status(self.nodes[0], 'dip0020')['status'], 'active')
+        self.activate_v17()
+        assert_equal(self.node.getblockchaininfo()["rip1_softforks"]["v17"]["status"], "active")
 
-        # Still need 1 more block for mempool to accept new opcodes
-        assert_raises_rpc_error(-26, DISABLED_OPCODE_ERROR, self.node.sendrawtransaction, tx0_hex)
-        self.node.generate(1)
+        # Upstream needs one more block here because it mines to exactly the
+        # activation height; activate_v17 batches and lands past it.
 
         # Should be spendable now
         tx0id = self.node.sendrawtransaction(tx0_hex)
