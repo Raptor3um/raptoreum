@@ -2,42 +2,41 @@
 # Copyright (c) 2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test version bits warning system.
+"""Test the unknown-block-version warnings.
 
-Generate chains with block versions that appear to be signalling unknown
-soft-forks, and test that warning alerts are generated.
+UpdateTip() in src/validation.cpp compares each new tip's nVersion against
+UpdateManager::ComputeBlockVersion() and builds two warnings: one when the tip
+itself sets a bit no deployment expects, and one counting how many of the last
+100 blocks did. Both are detected correctly.
+
+Neither is surfaced, though. Raptoreum kept DoWarning() -- which is what puts a
+warning into strMiscWarning, and from there into getmininginfo()/getnetworkinfo()
+and -alertnotify -- but dropped every call to it, so the function is dead code
+and the warnings only ever reach debug.log. That is what this test asserts: the
+log lines, and the empty RPC warnings field that goes with them. If the RPC
+assertions here ever start failing, DoWarning() was wired back up and these
+assertions belong on the RPC side instead.
 """
-import os
 import re
 
 from test_framework.blocktools import create_block, create_coinbase
 from test_framework.messages import msg_block
-from test_framework.mininode import P2PInterface, network_thread_start, mininode_lock
+from test_framework.mininode import P2PInterface, network_thread_start
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import wait_until
+from test_framework.util import assert_equal
 
-VB_PERIOD = 144           # versionbits period length for regtest
-VB_THRESHOLD = 108        # versionbits activation threshold for regtest
 VB_TOP_BITS = 0x20000000
 VB_UNKNOWN_BIT = 27       # Choose a bit unassigned to any deployment
 VB_UNKNOWN_VERSION = VB_TOP_BITS | (1 << VB_UNKNOWN_BIT)
 
-WARN_UNKNOWN_RULES_MINED = "Unknown block versions being mined! It's possible unknown rules are in effect"
-WARN_UNKNOWN_RULES_ACTIVE = "unknown new rules activated (versionbit {})".format(VB_UNKNOWN_BIT)
-VB_PATTERN = re.compile("Warning: unknown new rules activated.*versionbit")
+WARN_UNKNOWN_RULES_ACTIVE = "Warning: unknown new rules activated"
+VB_PATTERN = re.compile("unknown new rules activated")
+
 
 class VersionBitsWarningTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
-
-    def setup_network(self):
-        self.alert_filename = os.path.join(self.options.tmpdir, "alert.txt")
-        # Open and close to create zero-length file
-        with open(self.alert_filename, 'w', encoding='utf8'):
-            pass
-        self.extra_args = [["-alertnotify=echo %s >> \"" + self.alert_filename + "\""]]
-        self.setup_nodes()
 
     def send_blocks_with_version(self, peer, numblocks, version):
         """Send numblocks blocks to peer with version set"""
@@ -47,7 +46,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         tip = int(tip, 16)
 
         for _ in range(numblocks):
-            block = create_block(tip, create_coinbase(height + 1), block_time)
+            block = create_block(tip, create_coinbase(height + 1), block_time, node=self.nodes[0])
             block.nVersion = version
             block.solve()
             peer.send_message(msg_block(block))
@@ -56,57 +55,33 @@ class VersionBitsWarningTest(BitcoinTestFramework):
             tip = block.sha256
         peer.sync_with_ping()
 
-    def versionbits_in_alert_file(self):
-        """Test that the versionbits warning has been written to the alert file."""
-        alert_text = open(self.alert_filename, 'r', encoding='utf8').read()
-        return VB_PATTERN.search(alert_text) is not None
-
     def run_test(self):
-        # Handy alias
         node = self.nodes[0]
         node.add_p2p_connection(P2PInterface())
         network_thread_start()
         node.p2p.wait_for_verack()
 
-        # Mine one period worth of blocks
-        node.generate(VB_PERIOD)
-
-        self.log.info("Check that there is no warning if previous VB_BLOCKS have <VB_THRESHOLD blocks with unknown versionbits version.")
-        # Build one period of blocks with < VB_THRESHOLD blocks signaling some unknown bit
-        self.send_blocks_with_version(node.p2p, VB_THRESHOLD - 1, VB_UNKNOWN_VERSION)
-        node.generate(VB_PERIOD - VB_THRESHOLD + 1)
-
-        # Check that we're not getting any versionbit-related errors in get*info()
-        assert(not VB_PATTERN.match(node.getmininginfo()["warnings"]))
-        assert(not VB_PATTERN.match(node.getnetworkinfo()["warnings"]))
-
-        self.log.info("Check that there is a warning if >50 blocks in the last 100 were an unknown version")
-        # Build one period of blocks with VB_THRESHOLD blocks signaling some unknown bit
-        self.send_blocks_with_version(node.p2p, VB_THRESHOLD, VB_UNKNOWN_VERSION)
-        node.generate(VB_PERIOD - VB_THRESHOLD)
-
-        # Check that get*info() shows the 51/100 unknown block version error.
-        assert(WARN_UNKNOWN_RULES_MINED in node.getmininginfo()["warnings"])
-        assert(WARN_UNKNOWN_RULES_MINED in node.getnetworkinfo()["warnings"])
-
-        self.log.info("Check that there is a warning if previous VB_BLOCKS have >=VB_THRESHOLD blocks with unknown versionbits version.")
-        # Mine a period worth of expected blocks so the generic block-version warning
-        # is cleared. This will move the versionbit state to ACTIVE.
-        node.generate(VB_PERIOD)
-
-        # Stop-start the node. This is required because raptoreumd will only warn once about unknown versions or unknown rules activating.
-        self.restart_node(0)
-
-        # Generating one block guarantees that we'll get out of IBD
+        # Leave initial block download; the warnings are not computed during it.
         node.generate(1)
-        wait_until(lambda: not node.getblockchaininfo()['initialblockdownload'], timeout=10, lock=mininode_lock)
-        # Generating one more block will be enough to generate an error.
-        node.generate(1)
-        # Check that get*info() shows the versionbits unknown rules warning
-        assert(WARN_UNKNOWN_RULES_ACTIVE in node.getmininginfo()["warnings"])
-        assert(WARN_UNKNOWN_RULES_ACTIVE in node.getnetworkinfo()["warnings"])
-        # Check that the alert file shows the versionbits unknown rules warning
-        wait_until(lambda: self.versionbits_in_alert_file(), timeout=60)
+        assert not node.getblockchaininfo()['initialblockdownload']
+
+        self.log.info("A block signalling an unknown bit warns about unknown new rules")
+        with node.assert_debug_log([WARN_UNKNOWN_RULES_ACTIVE]):
+            self.send_blocks_with_version(node.p2p, 1, VB_UNKNOWN_VERSION)
+
+        self.log.info("The last-100 counter grows with each such block")
+        with node.assert_debug_log(["4 of last 100 blocks have unexpected version"]):
+            self.send_blocks_with_version(node.p2p, 3, VB_UNKNOWN_VERSION)
+
+        self.log.info("Blocks of the expected version do not warn")
+        expected_version = node.getblocktemplate({'rules': []})['version']
+        with node.assert_debug_log(["4 of last 100 blocks have unexpected version"]):
+            self.send_blocks_with_version(node.p2p, 1, expected_version)
+
+        self.log.info("None of this reaches the RPC warnings field: DoWarning() is dead code")
+        assert_equal(VB_PATTERN.search(node.getmininginfo()["warnings"]), None)
+        assert_equal(VB_PATTERN.search(node.getnetworkinfo()["warnings"]), None)
+
 
 if __name__ == '__main__':
     VersionBitsWarningTest().main()
