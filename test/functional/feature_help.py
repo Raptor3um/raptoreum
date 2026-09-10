@@ -42,10 +42,10 @@ class HelpTest(BitcoinTestFramework):
         self.nodes[0].start(extra_args=['-fakearg'], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         # Node should exit immediately and output an error to stderr
         ret_code = self.nodes[0].process.wait(timeout=1)
-        assert_equals(ret_code, 1)
+        assert_equal(ret_code, 1)
         output = self.nodes[0].process.stderr.read()
         assert b'Error parsing command line arguments' in output
-        self.log.into("Error message received: {} (...)".format(output[0:60]))
+        self.log.info("Error message received: {} (...)".format(output[0:60]))
 
         # Clean up TestNode state
         self.nodes[0].running = False
