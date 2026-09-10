@@ -5,7 +5,7 @@
 
 import time
 
-from test_framework.test_framework import DashTestFramework
+from test_framework.test_framework import RaptoreumTestFramework
 from test_framework.util import *
 
 '''
@@ -15,10 +15,10 @@ Checks simple PoSe system based on LLMQ commitments
 
 '''
 
-class LLMQSimplePoSeTest(DashTestFramework):
+class LLMQSimplePoSeTest(RaptoreumTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(6, 5, fast_dip3_enforcement=True)
-        self.set_dash_llmq_test_params(5, 3)
+        self.set_raptoreum_test_params(6, 5, fast_dip3_enforcement=True)
+        self.set_raptoreum_llmq_test_params(5, 3)
 
     def run_test(self):
 
@@ -33,8 +33,8 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
         self.repair_masternodes(False)
 
-        self.nodes[0].spork("SPORK_21_QUORUM_ALL_CONNECTED", 0)
-        self.nodes[0].spork("SPORK_23_QUORUM_POSE", 0)
+        self.nodes[0].spork("SPORK_23_QUORUM_ALL_CONNECTED", 0)
+        self.nodes[0].spork("SPORK_25_QUORUM_POSE", 0)
         self.wait_for_sporks_same()
 
         self.reset_probe_timeouts()
@@ -48,15 +48,15 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.repair_masternodes(True)
         self.reset_probe_timeouts()
 
-        self.test_banning(self.force_old_mn_proto, 3)
+        # Upstream bans an outdated-protocol smartnode here and again below.
+        # Impossible on RTM: MIN_PEER_PROTO_VERSION and
+        # MIN_SMARTNODE_PROTO_VERSION are both 70219, so a node too old for the
+        # quorum never completes a handshake. The ban itself still exists
+        # (quorums_dkgsession.cpp:479); only the way to provoke it is gone.
 
-        # With PoSe off there should be no punishing for non-reachable and outdated nodes
-        self.nodes[0].spork("SPORK_23_QUORUM_POSE", 4070908800)
+        # With PoSe off there should be no punishing for non-reachable nodes
+        self.nodes[0].spork("SPORK_25_QUORUM_POSE", 4070908800)
         self.wait_for_sporks_same()
-
-        self.repair_masternodes(True)
-        self.force_old_mn_proto(self.mninfo[0])
-        self.test_no_banning(3)
 
         self.repair_masternodes(True)
         self.close_mn_port(self.mninfo[0])
@@ -69,19 +69,16 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
     def close_mn_port(self, mn):
         self.stop_node(mn.node.index)
-        self.start_masternode(mn, ["-listen=0", "-nobind"])
+        self.start_smartnode(mn, ["-listen=0", "-nobind"])
         connect_nodes(mn.node, 0)
+        # Before the smartnode connections, not after: MNAUTH is dropped while
+        # unsynced (mnauth.cpp:63) and each peer only sends it once per
+        # connection, so one dropped here never counts as a quorum connection.
+        force_finish_mnsync(mn.node)
         # Make sure the to-be-banned node is still connected well via outbound connections
         for mn2 in self.mninfo:
             if mn2 is not mn:
                 connect_nodes(mn.node, mn2.node.index)
-        self.reset_probe_timeouts()
-        return False
-
-    def force_old_mn_proto(self, mn):
-        self.stop_node(mn.node.index)
-        self.start_masternode(mn, ["-pushversion=70216"])
-        connect_nodes(mn.node, 0)
         self.reset_probe_timeouts()
         return False
 
@@ -127,7 +124,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
                 if restart:
                     self.stop_node(mn.node.index)
-                    self.start_masternode(mn)
+                    self.start_smartnode(mn)
                 else:
                     mn.node.setnetworkactive(True)
             connect_nodes(mn.node, 0)
@@ -138,8 +135,12 @@ class LLMQSimplePoSeTest(DashTestFramework):
             mn.node.setnetworkactive(False)
             wait_until(lambda: mn.node.getconnectioncount() == 0)
             mn.node.setnetworkactive(True)
-            force_finish_mnsync(mn.node)
             connect_nodes(mn.node, 0)
+            # After connect_nodes, not before: CConnman resets the smartnode
+            # sync on setnetworkactive (net.cpp:2730) and again on the 0 -> N
+            # connection edge (net.cpp:1275), and while unsynced the node opens
+            # no quorum connections (net.cpp:2309) and so never probes.
+            force_finish_mnsync(mn.node)
 
     def reset_probe_timeouts(self):
         # Make sure all masternodes will reconnect/re-probe

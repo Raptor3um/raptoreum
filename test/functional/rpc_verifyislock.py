@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.messages import CTransaction, FromHex, hash256, ser_compact_size, ser_string
-from test_framework.test_framework import DashTestFramework
+from test_framework.test_framework import LLMQ_TEST_NAME, RaptoreumTestFramework, LLMQ_TEST_TYPE
 from test_framework.util import assert_raises_rpc_error, bytes_to_hex_str, satoshi_round, wait_until
 
 '''
@@ -14,11 +14,11 @@ Test verifyislock rpc
 
 '''
 
-class RPCVerifyISLockTest(DashTestFramework):
+class RPCVerifyISLockTest(RaptoreumTestFramework):
     def set_test_params(self):
         # -whitelist is needed to avoid the trickling logic on node0
-        self.set_dash_test_params(6, 5, [["-whitelist=127.0.0.1"], [], [], [], [], []], fast_dip3_enforcement=True)
-        self.set_dash_llmq_test_params(5, 3)
+        self.set_raptoreum_test_params(6, 5, [["-whitelist=127.0.0.1"], [], [], [], [], []], fast_dip3_enforcement=True)
+        self.set_raptoreum_llmq_test_params(5, 3)
 
     def get_request_id(self, tx_hex):
         tx = FromHex(CTransaction(), tx_hex)
@@ -40,9 +40,9 @@ class RPCVerifyISLockTest(DashTestFramework):
         self.wait_for_instantlock(txid, node)
 
         request_id = self.get_request_id(self.nodes[0].getrawtransaction(txid))
-        wait_until(lambda: node.quorum("hasrecsig", 100, request_id, txid))
+        wait_until(lambda: node.quorum("hasrecsig", LLMQ_TEST_TYPE, request_id, txid))
 
-        rec_sig = node.quorum("getrecsig", 100, request_id, txid)['sig']
+        rec_sig = node.quorum("getrecsig", LLMQ_TEST_TYPE, request_id, txid)['sig']
         assert(node.verifyislock(request_id, txid, rec_sig))
         # Not mined, should use maxHeight
         assert not node.verifyislock(request_id, txid, rec_sig, 1)
@@ -59,7 +59,7 @@ class RPCVerifyISLockTest(DashTestFramework):
         # out of the active set when a new quorum appears
         selected_hash = None
         request_id = None
-        oldest_quorum_hash = node.quorum("list")["llmq_test"][-1]
+        oldest_quorum_hash = node.quorum("list")[LLMQ_TEST_NAME][-1]
         utxos = node.listunspent()
         fee = 0.001
         amount = 1
@@ -77,7 +77,7 @@ class RPCVerifyISLockTest(DashTestFramework):
             rawtx = node.createrawtransaction([utxo], outputs)
             rawtx = node.signrawtransactionwithwallet(rawtx)["hex"]
             request_id = self.get_request_id(rawtx)
-            selected_hash = node.quorum('selectquorum', 100, request_id)["quorumHash"]
+            selected_hash = node.quorum('selectquorum', LLMQ_TEST_TYPE, request_id)["quorumHash"]
             if selected_hash == oldest_quorum_hash:
                 break
         assert selected_hash == oldest_quorum_hash
