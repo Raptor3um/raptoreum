@@ -4,27 +4,41 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test deprecation of RPC calls."""
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import assert_equal, assert_raises_rpc_error
 
 class DeprecatedRpcTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
-        self.extra_args = [[], ["-deprecatedrpc=generate"]]
+        # node1 re-enables both deprecated calls; node0 leaves them off.
+        self.extra_args = [
+            [],
+            ["-deprecatedrpc=smartnode_winner", "-deprecatedrpc=smartnode_current"],
+        ]
 
     def skip_test_is_missing_module(self):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        # This test should be used to verify correct behaviour of deprecated
-        # RPC methods with and without the -deprecatedrpc flags. For example:
+        # This test verifies the behaviour of deprecated RPC methods with and
+        # without the -deprecatedrpc flag. Add a case here whenever a method is
+        # deprecated.
         #
-        # self.log.info("Make sure that -deprecatedrpc=createmultisig allows it to take addresses")
-        # assert_raises_rpc_error(-5, "Invalid public key", self.nodes[0].createmultisig, 1, [self.nodes[0].getnewaddress()])
-        # self.nodes[1].createmultisig(1, [self.nodes[1].getnewaddress()])
+        # Upstream checks the wallet's `generate`; this tree has no such RPC.
 
-        self.log.info("Test generate RPC")
-        assert_raises_rpc_error(-32, 'The wallet generate rpc method is deprecated', self.nodes[0].rpc.generate, 1)
-        self.nodes[1].generate(1)
+        for method, arg in (("winner", "smartnode_winner"),
+                            ("current", "smartnode_current")):
+            self.log.info("Test 'smartnode %s' is deprecated", method)
+            # src/rpc/smartnode.cpp throws before the help is even checked, so
+            # the call fails whatever else is wrong with the chain.
+            assert_raises_rpc_error(
+                -1, "DEPRECATED: set -deprecatedrpc={} to enable it".format(arg),
+                self.nodes[0].smartnode, method)
+
+            # With the flag the guard is gone and the call goes through. With no
+            # smartnodes configured it answers "unknown", which is a successful
+            # return rather than an error; any exception here fails the test.
+            assert_equal(self.nodes[1].smartnode(method), "unknown")
 
 if __name__ == '__main__':
     DeprecatedRpcTest().main()
