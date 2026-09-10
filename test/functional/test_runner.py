@@ -172,7 +172,7 @@ BASE_SCRIPTS = [
     'feature_dersig.py',
     'feature_cltv.py',
     'feature_new_quorum_type_activation.py',
-    'feature_governance_objects.py',
+    # 'feature_governance_objects.py',  # Raptoreum does not use governance
     'rpc_uptime.py',
     'wallet_resendwallettransactions.py',
     'feature_minchainwork.py',
