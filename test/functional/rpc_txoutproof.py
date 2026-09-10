@@ -36,9 +36,9 @@ class MerkleBlockTest(BitcoinTestFramework):
 
         tx_fee = Decimal('0.00001')
         node0utxos = self.nodes[0].listunspent(1)
-        tx1 = self.nodes[0].createrawtransaction([node0utxos.pop()], {self.nodes[1].getnewaddress(): 500 - tx_fee})
+        tx1 = self.nodes[0].createrawtransaction([node0utxos.pop()], {self.nodes[1].getnewaddress(): REGTEST_LAUNCH_SUBSIDY - tx_fee})
         txid1 = self.nodes[0].sendrawtransaction(self.nodes[0].signrawtransactionwithwallet(tx1)["hex"])
-        tx2 = self.nodes[0].createrawtransaction([node0utxos.pop()], {self.nodes[1].getnewaddress(): 500 - tx_fee})
+        tx2 = self.nodes[0].createrawtransaction([node0utxos.pop()], {self.nodes[1].getnewaddress(): REGTEST_LAUNCH_SUBSIDY - tx_fee})
         txid2 = self.nodes[0].sendrawtransaction(self.nodes[0].signrawtransactionwithwallet(tx2)["hex"])
         # This will raise an exception because the transaction is not yet in a block
         assert_raises_rpc_error(-5, "Transaction not yet in block", self.nodes[0].gettxoutproof, [txid1])
@@ -47,17 +47,19 @@ class MerkleBlockTest(BitcoinTestFramework):
         blockhash = self.nodes[0].getblockhash(chain_height + 1)
         self.sync_all()
 
-        txlist = []
+        # Select the two transactions by identity, not by position. The block
+        # may also carry a quorum commitment, which the node's miner inserts
+        # right after the coinbase, so blocktxn[1] is not necessarily txid1.
         blocktxn = self.nodes[0].getblock(blockhash, True)["tx"]
-        txlist.append(blocktxn[1])
-        txlist.append(blocktxn[2])
+        txlist = [tx for tx in blocktxn if tx in (txid1, txid2)]
+        assert_equal(len(txlist), 2)
 
         assert_equal(self.nodes[2].verifytxoutproof(self.nodes[2].gettxoutproof([txid1])), [txid1])
         assert_equal(self.nodes[2].verifytxoutproof(self.nodes[2].gettxoutproof([txid1, txid2])), txlist)
         assert_equal(self.nodes[2].verifytxoutproof(self.nodes[2].gettxoutproof([txid1, txid2], blockhash)), txlist)
 
         txin_spent = self.nodes[1].listunspent(1).pop()
-        tx3 = self.nodes[1].createrawtransaction([txin_spent], {self.nodes[0].getnewaddress(): 500 - tx_fee*2})
+        tx3 = self.nodes[1].createrawtransaction([txin_spent], {self.nodes[0].getnewaddress(): REGTEST_LAUNCH_SUBSIDY - tx_fee*2})
         txid3 = self.nodes[0].sendrawtransaction(self.nodes[1].signrawtransactionwithwallet(tx3)["hex"])
         self.nodes[0].generate(1)
         self.sync_all()
