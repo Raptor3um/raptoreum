@@ -8,7 +8,7 @@
 from test_framework.mininode import *
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-from test_framework.blocktools import create_block, create_coinbase
+from test_framework.blocktools import REGTEST_LLMQS, create_block, create_coinbase
 from test_framework.script import CScript, OP_TRUE
 
 # TestP2PConn: A peer we use to send messages to raptoreumd, and store responses.
@@ -93,11 +93,30 @@ class CompactBlocksTest(BitcoinTestFramework):
         self.extra_args = [["-txindex"]] * 2
         self.utxos = []
 
-    def build_block_on_tip(self, node):
+    @staticmethod
+    def in_dkg_window(height):
+        """Whether a block at `height` must carry quorum commitments."""
+        return any(start <= height % interval <= end
+                   for _, _, interval, start, end in REGTEST_LLMQS.values())
+
+    def build_block_on_tip(self, node, in_dkg_window=False):
+        """Build a block on the tip, mining forward first if the next height is
+        not the kind this caller wants.
+
+        A block inside a DKG mining window has to carry a quorum commitment,
+        and a commitment can only reach a compact-block peer through
+        getblocktxn. It has no inputs and no outputs, so CTransaction::IsNull()
+        is true and PartiallyDownloadedBlock::InitData bans (score 100) a peer
+        that prefills one; and AcceptToMemoryPool refuses it with
+        "qc-not-allowed", so it is never in the peer's mempool either. Every
+        test here but test_compactblock_requests wants the ordinary case, where
+        the block is a coinbase followed by the test's own transactions."""
+        while self.in_dkg_window(node.getblockcount() + 1) != in_dkg_window:
+            node.generate(1)
         height = node.getblockcount()
         tip = node.getbestblockhash()
         mtp = node.getblockheader(tip)['mediantime']
-        block = create_block(int(tip, 16), create_coinbase(height + 1), mtp + 1)
+        block = create_block(int(tip, 16), create_coinbase(height + 1), mtp + 1, node=node)
         block.solve()
         return block
 
@@ -227,7 +246,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         cmpct_block.header = CBlockHeader(block)
         cmpct_block.prefilled_txn_length = 1
         # This index will be too high
-        prefilled_txn = PrefilledTransaction(1, block.vtx[0])
+        prefilled_txn = PrefilledTransaction(len(block.vtx), block.vtx[0])
         cmpct_block.prefilled_txn = [prefilled_txn]
         self.test_node.send_await_disconnect(msg_cmpctblock(cmpct_block))
         assert_equal(int(self.nodes[0].getbestblockhash(), 16), block.hashPrevBlock)
@@ -331,7 +350,10 @@ class CompactBlocksTest(BitcoinTestFramework):
         # Try announcing a block with an inv or header, expect a compactblock
         # request
         for announce in ["inv", "header"]:
-            block = self.build_block_on_tip(node)
+            # A block that has to carry quorum commitments: the peer cannot
+            # prefill them and the node cannot have them in its mempool, so
+            # every transaction in the block has to come back over getblocktxn.
+            block = self.build_block_on_tip(node, in_dkg_window=True)
             with mininode_lock:
                 test_node.last_message.pop("getdata", None)
 
@@ -346,25 +368,25 @@ class CompactBlocksTest(BitcoinTestFramework):
             assert_equal(test_node.last_message["getdata"].inv[0].type, 20)
             assert_equal(test_node.last_message["getdata"].inv[0].hash, block.sha256)
 
-            # Send back a compactblock message that omits the coinbase
+            # Send back a compactblock message that prefills nothing
             comp_block = HeaderAndShortIDs()
             comp_block.header = CBlockHeader(block)
             comp_block.nonce = 0
             [k0, k1] = comp_block.get_siphash_keys()
-            comp_block.shortids = [
-                    calculate_shortid(k0, k1, block.vtx[0].sha256) ]
+            comp_block.shortids = [calculate_shortid(k0, k1, tx.sha256) for tx in block.vtx]
             test_node.send_and_ping(msg_cmpctblock(comp_block.to_p2p()))
             assert_equal(int(node.getbestblockhash(), 16), block.hashPrevBlock)
-            # Expect a getblocktxn message.
+            # Expect a getblocktxn message for the coinbase and every commitment.
+            assert len(block.vtx) > 1
             with mininode_lock:
                 assert("getblocktxn" in test_node.last_message)
                 absolute_indexes = test_node.last_message["getblocktxn"].block_txn_request.to_absolute()
-            assert_equal(absolute_indexes, [0])  # should be a coinbase request
+            assert_equal(absolute_indexes, list(range(len(block.vtx))))
 
-            # Send the coinbase, and verify that the tip advances.
+            # Send them, and verify that the tip advances.
             msg = msg_blocktxn()
             msg.block_transactions.blockhash = block.sha256
-            msg.block_transactions.transactions = [block.vtx[0]]
+            msg.block_transactions.transactions = block.vtx
             test_node.send_and_ping(msg)
             assert_equal(int(node.getbestblockhash(), 16), block.sha256)
 

@@ -17,9 +17,14 @@ from test_framework.mininode import (
 from test_framework.mininode import network_thread_start, P2PDataStore, network_thread_join
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    REGTEST_LAUNCH_SUBSIDY_SAT,
     assert_equal,
     wait_until,
 )
+
+# The chain never leaves the launch window here, so a coinbase pays 4 RTM. The
+# orphan chain splits that into three, which is what SPLIT names.
+SPLIT = COIN
 
 
 class InvalidTxRequestTest(BitcoinTestFramework):
@@ -58,7 +63,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
 
         self.log.info("Create a new block with an anyone-can-spend coinbase.")
         height = 1
-        block = create_block(tip, create_coinbase(height), block_time)
+        block = create_block(tip, create_coinbase(height), block_time, node=self.nodes[0])
         block.solve()
         # Save the coinbase for later
         block1 = block
@@ -67,7 +72,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         # Create a second one to test orphan resolution via block receival
         height += 1
         block_time += 1
-        block = create_block(tip, create_coinbase(height), block_time)
+        block = create_block(tip, create_coinbase(height), block_time, node=self.nodes[0])
         block.solve()
         # Save the coinbase for later
         block2 = block
@@ -81,7 +86,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         # Transaction will be rejected with code 16 (REJECT_INVALID)
         # and we get disconnected immediately
         self.log.info('Test a transaction that is rejected')
-        tx1 = create_transaction(block1.vtx[0], 0, b'\x64', 50 * COIN)
+        tx1 = create_transaction(block1.vtx[0], 0, b'\x64', REGTEST_LAUNCH_SUBSIDY_SAT - 12000)
         node.p2p.send_txs_and_test([tx1], node, success=False, expect_disconnect=True)
 
         # Make two p2p connections to provide the node with orphans
@@ -116,30 +121,30 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         # are sent out and in the orphan cache
         tx_withhold = CTransaction()
         tx_withhold.vin.append(CTxIn(outpoint=COutPoint(base_tx, 0)))
-        tx_withhold.vout.append(CTxOut(nValue=50 * COIN - 12000, scriptPubKey=b'\x51'))
+        tx_withhold.vout.append(CTxOut(nValue=REGTEST_LAUNCH_SUBSIDY_SAT - 12000, scriptPubKey=b'\x51'))
         tx_withhold.calc_sha256()
 
         # Our first orphan tx with some outputs to create further orphan txs
         tx_orphan_1 = CTransaction()
         tx_orphan_1.vin.append(CTxIn(outpoint=COutPoint(tx_withhold.sha256, 0)))
-        tx_orphan_1.vout = [CTxOut(nValue=10 * COIN, scriptPubKey=b'\x51')] * 3
+        tx_orphan_1.vout = [CTxOut(nValue=SPLIT, scriptPubKey=b'\x51')] * 3
         tx_orphan_1.calc_sha256()
 
         # A valid transaction with low fee
         tx_orphan_2_no_fee = CTransaction()
         tx_orphan_2_no_fee.vin.append(CTxIn(outpoint=COutPoint(tx_orphan_1.sha256, 0)))
-        tx_orphan_2_no_fee.vout.append(CTxOut(nValue=10 * COIN, scriptPubKey=b'\x51'))
+        tx_orphan_2_no_fee.vout.append(CTxOut(nValue=SPLIT, scriptPubKey=b'\x51'))
 
         # A valid transaction with sufficient fee
         tx_orphan_2_valid = CTransaction()
         tx_orphan_2_valid.vin.append(CTxIn(outpoint=COutPoint(tx_orphan_1.sha256, 1)))
-        tx_orphan_2_valid.vout.append(CTxOut(nValue=10 * COIN - 12000, scriptPubKey=b'\x51'))
+        tx_orphan_2_valid.vout.append(CTxOut(nValue=SPLIT - 12000, scriptPubKey=b'\x51'))
         tx_orphan_2_valid.calc_sha256()
 
         # An invalid transaction with negative fee
         tx_orphan_2_invalid = CTransaction()
         tx_orphan_2_invalid.vin.append(CTxIn(outpoint=COutPoint(tx_orphan_1.sha256, 2)))
-        tx_orphan_2_invalid.vout.append(CTxOut(nValue=11 * COIN, scriptPubKey=b'\x51'))
+        tx_orphan_2_invalid.vout.append(CTxOut(nValue=SPLIT * 2, scriptPubKey=b'\x51'))
 
         self.log.info('Send the orphans ... ')
         # Send valid orphan txs from p2ps[0]
@@ -154,7 +159,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         if resolve_via_block:
             # Test orphan handling/resolution by publishing the withhold TX via a mined block
             prev_block = node.getblockheader(node.getbestblockhash())
-            block = create_block(int(prev_block['hash'], 16), create_coinbase(prev_block['height'] + 1), prev_block["time"] + 1)
+            block = create_block(int(prev_block['hash'], 16), create_coinbase(prev_block['height'] + 1), prev_block["time"] + 1, node=self.nodes[0])
             block.vtx.append(tx_withhold)
             block.hashMerkleRoot = block.calc_merkle_root()
             block.solve()
