@@ -30,6 +30,9 @@ void SetupChainParamsBaseOptions() {
     gArgs.AddArg("-llmqchainlocks=<quorum name>",
                  "Override the default LLMQ type used for ChainLocks. Allows using ChainLocks with smaller LLMQs. (default: llmq_50_60, devnet-only)",
                  ArgsManager::ALLOW_ANY, OptionsCategory::CHAINPARAMS);
+    gArgs.AddArg("-llmqtestparams=<size>:<threshold>",
+                 "Override the size and threshold of both test LLMQ types, llmq_test and llmq_test_v17. (default: 3:2, regtest-only)",
+                 ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::CHAINPARAMS);
     gArgs.AddArg("-llmqinstantsend=<quorum name>",
                  "Override the default LLMQ type used for InstantSend. Allows using InstantSend with smaller LLMQs. (default: llmq_50_60, devnet-only)",
                  ArgsManager::ALLOW_ANY, OptionsCategory::CHAINPARAMS);
