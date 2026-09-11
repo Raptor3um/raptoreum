@@ -2,12 +2,7 @@
 # Copyright (c) 2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test RPC misc output.
-
-The CHECK_NONFATAL section is left out: echo declares no arguments in its
-RPCHelpMan, so Check() rejects every non-empty argument list before the body
-runs and the 100-argument case its help describes is unreachable.
-"""
+"""Test RPC misc output."""
 import xml.etree.ElementTree as ET
 
 from test_framework.test_framework import BitcoinTestFramework
@@ -27,6 +22,13 @@ class RpcMiscTest(BitcoinTestFramework):
 
     def run_test(self):
         node = self.nodes[0]
+
+        self.log.info("test CHECK_NONFATAL")
+        assert_raises_rpc_error(
+            -1,
+            "Internal bug detected: 'request.params.size() != 100'",
+            lambda: node.echo(*[0] * 100),
+        )
 
         self.log.info("test getmemoryinfo")
         memory = node.getmemoryinfo()['locked']
