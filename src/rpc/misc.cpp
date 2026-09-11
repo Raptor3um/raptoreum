@@ -323,7 +323,7 @@ static UniValue deriveaddresses(const JSONRPCRequest &request) {
                {
                        {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor"},
                        {"range", RPCArg::Type::RANGE, RPCArg::Optional::OMITTED_NAMED_ARG,
-                        "If a ranged descriptor is used, this specifies the beginning of the range (in [begin,end] notation) to derive."},
+                        "If a ranged descriptor is used, this specifies the end or the range (in [begin,end] notation) to derive."},
                },
                RPCResult{
                        RPCResult::Type::ARR, "", "",
@@ -338,7 +338,7 @@ static UniValue deriveaddresses(const JSONRPCRequest &request) {
                }
     }.Check(request);
 
-    RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VNUM, UniValue::VNUM});
+    RPCTypeCheck(request.params, {UniValue::VSTR, UniValueType()}); // Range argument is checked later
     const std::string desc_str = request.params[0].get_str();
 
     int64_t range_begin = 0;
