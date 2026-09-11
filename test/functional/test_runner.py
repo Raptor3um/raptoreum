@@ -147,6 +147,7 @@ BASE_SCRIPTS = [
     'p2p_addr_relay.py',
     'rpc_net.py',
     'wallet_coinbase_category.py',
+    'wallet_fallbackfee.py',
     'wallet_import_with_label.py',
     'wallet_keypool.py',
     'wallet_keypool_hd.py',
