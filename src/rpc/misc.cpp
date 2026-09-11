@@ -1513,15 +1513,20 @@ UniValue logging(const JSONRPCRequest &request) {
 }
 
 UniValue echo(const JSONRPCRequest &request) {
-    RPCHelpMan{"echo|echojson ...",
-               "\nSimply echo back the input arguments. This command is for testing.\n"
-               "\nIt will return an internal bug report when exactly 100 arguments are passed.\n"
-               "\nThe difference between echo and echojson is that echojson has argument conversion enabled in the client-side table in "
-               "raptoreum-cli and the GUI. There is no server-side difference.",
-               {},
-               RPCResult{RPCResult::Type::NONE, "", "Returns whatever was passed in"},
-               RPCExamples{""},
-    }.Check(request);
+    if (request.fHelp)
+        throw std::runtime_error(
+                RPCHelpMan{"echo|echojson ...",
+                           "\nSimply echo back the input arguments. This command is for testing.\n"
+                           "\nIt will return an internal bug report when exactly 100 arguments are passed.\n"
+                           "\nThe difference between echo and echojson is that echojson has argument conversion enabled in the client-side table in "
+                           "raptoreum-cli and the GUI. There is no server-side difference.",
+                           {},
+                           RPCResult{RPCResult::Type::NONE, "", "Returns whatever was passed in"},
+                           RPCExamples{""},
+                }.ToString()
+        );
+
+    CHECK_NONFATAL(request.params.size() != 100);
 
     return request.params;
 }
