@@ -8,6 +8,7 @@
 
 import configparser
 import copy
+from decimal import Decimal
 from enum import Enum
 import logging
 import optparse
@@ -34,6 +35,9 @@ from .test_node import TestNode
 from .util import (
     PortSeed,
     MAX_NODES,
+    CACHE_HEIGHT,
+    CACHE_WARMUP_ADDRESS,
+    CACHE_WARMUP_BLOCKS,
     assert_equal,
     check_json_precision,
     connect_nodes_bi,
@@ -63,7 +67,7 @@ TEST_EXIT_PASSED = 0
 TEST_EXIT_FAILED = 1
 TEST_EXIT_SKIPPED = 77
 
-GENESISTIME = 1417713337
+GENESISTIME = 1614369600  # RTM regtest genesis (src/chainparams.cpp CRegTestParams)
 
 class BitcoinTestFramework():
     """Base class for a bitcoin test script.
@@ -317,9 +321,9 @@ class BitcoinTestFramework():
             for node in self.nodes:
                 coverage.write_all_rpc_commands(self.options.coveragedir, node.rpc)
 
-    def stop_node(self, i, wait=0):
+    def stop_node(self, i, wait=0, expected_stderr=''):
         """Stop a raptoreumd test node"""
-        self.nodes[i].stop_node(wait=wait)
+        self.nodes[i].stop_node(wait=wait, expected_stderr=expected_stderr)
         self.nodes[i].wait_until_stopped()
 
     def stop_nodes(self, wait=0):
@@ -356,6 +360,21 @@ class BitcoinTestFramework():
         connect_nodes_bi(self.nodes, 1, 2)
         self.sync_all()
 
+    def activate_v17(self):
+        """Mine until the v17 deployment reports active.
+
+        Regtest votes v17 in by block version rather than pinning a height: it
+        locks in at 110 and activates at 210 (see the Update entries in
+        CRegTestParams). LLMQ_TEST_V17 is gated on it
+        (CLLMQUtils::IsQuorumTypeEnabled), so a test that needs the second
+        quorum type has to climb past that before mining one, or the type is
+        simply disabled and no quorum of it can exist.
+        """
+        while self.nodes[0].getblockchaininfo()["rip1_softforks"]["v17"]["status"] != "active":
+            self.bump_mocktime(1)
+            self.nodes[0].generate(10)
+        self.sync_blocks(self.nodes, timeout=60 * 5)
+
     def sync_blocks(self, nodes=None, **kwargs):
         sync_blocks(nodes or self.nodes, **kwargs)
 
@@ -382,11 +401,48 @@ class BitcoinTestFramework():
         if update_nodes:
             set_node_times(nodes or self.nodes, self.mocktime)
 
+    def mine_past_launch_window(self, node=None):
+        """Mine past Raptoreum's 4 RTM launch window so a clean-chain test can
+        actually be funded.
+
+        The blocks go to CACHE_WARMUP_ADDRESS, which no test wallet holds a key
+        for, so they add no spendable balance and every coin the test goes on to
+        mine is worth REGTEST_SUBSIDY. Mining over RPC is safe where building
+        blocks by hand is not: the node's own miner adds the founder payment and
+        any quorum commitments the height requires.
+        """
+        node = self.nodes[0] if node is None else node
+        # In chunks: one generatetoaddress call for all of them takes longer than
+        # the RPC timeout once the machine is busy running the suite in parallel,
+        # which showed up as tests that passed alone and failed under -j20.
+        remaining = CACHE_WARMUP_BLOCKS
+        while remaining > 0:
+            batch = min(100, remaining)
+            node.generatetoaddress(batch, CACHE_WARMUP_ADDRESS)
+            remaining -= batch
+
+    def _component_enabled(self, name):
+        config = configparser.ConfigParser()
+        config.read_file(open(self.options.configfile))
+        return config["components"].getboolean(name)
+
+    def is_wallet_compiled(self):
+        """Whether raptoreumd was built with wallet support."""
+        return self._component_enabled("ENABLE_WALLET")
+
+    def is_cli_compiled(self):
+        """Whether raptoreum-cli was built."""
+        return self._component_enabled("ENABLE_CLI")
+
+    def is_zmq_compiled(self):
+        """Whether raptoreumd was built with ZMQ support."""
+        return self._component_enabled("ENABLE_ZMQ")
+
     def set_cache_mocktime(self):
         # For backwared compatibility of the python scripts
         # with previous versions of the cache, set MOCKTIME
-        # to regtest genesis time + (201 * 156)
-        self.mocktime = GENESISTIME + (201 * 156)
+        # to regtest genesis time + one block past the cached chain
+        self.mocktime = GENESISTIME + ((CACHE_HEIGHT + 1) * 156)
         for node in self.nodes:
             node.mocktime = self.mocktime
 
@@ -428,7 +484,7 @@ class BitcoinTestFramework():
     def _initialize_chain(self, extra_args=None, stderr=None):
         """Initialize a pre-mined blockchain for use by the test.
 
-        Create a cache of a 200-block-long chain (with wallet) for MAX_NODES
+        Create a cache of a CACHE_HEIGHT-block chain (with wallet) for MAX_NODES
         Afterward, create num_nodes copies from the cache."""
 
         assert self.num_nodes <= MAX_NODES
@@ -463,6 +519,18 @@ class BitcoinTestFramework():
             for node in self.nodes:
                 node.wait_for_rpc_connection()
 
+            # Raptoreum pays 4 RTM through height 720 (src/validation.cpp
+            # GetBlockSubsidy), which cannot fund the inherited tests. Clear that
+            # window first, mining to an address no test wallet holds a key for,
+            # so the four funded nodes stay symmetric and every coin they mine
+            # below is a 5000 one.
+            remaining = CACHE_WARMUP_BLOCKS
+            while remaining > 0:
+                batch = min(100, remaining)
+                self.nodes[0].generatetoaddress(batch, CACHE_WARMUP_ADDRESS)
+                remaining -= batch
+            self.sync_blocks()
+
             # Create a 200-block-long chain; each of the 4 first nodes
             # gets 25 mature blocks and 25 immature.
             # Note: To preserve compatibility with older versions of
@@ -470,7 +538,7 @@ class BitcoinTestFramework():
             #
             # blocks are created with timestamps 10 minutes apart
             # starting from 2010 minutes in the past
-            block_time = GENESISTIME
+            block_time = GENESISTIME + CACHE_WARMUP_BLOCKS * 156
             for i in range(2):
                 for peer in range(4):
                     for j in range(25):
@@ -491,7 +559,7 @@ class BitcoinTestFramework():
 
             for i in range(MAX_NODES):
                 for entry in os.listdir(cache_path(i)):
-                    if entry not in ['wallets', 'chainstate', 'blocks', 'indexes', 'evodb', 'llmq', 'backups']:
+                    if entry not in ['wallets', 'chainstate', 'blocks', 'indexes', 'evodb', 'llmq', 'backups', 'assets']:
                         os.remove(cache_path(i, entry))
 
         for i in range(self.num_nodes):
@@ -508,7 +576,24 @@ class BitcoinTestFramework():
         for i in range(self.num_nodes):
             initialize_datadir(self.options.tmpdir, i, self.chain)
 
-SMARTNODE_COLLATERAL = 1000
+# Raptoreum regtest smartnode collateral: consensus.nCollaterals in
+# CRegTestParams is {{INT_MAX, 10 * COIN}}. Dash's value is 1000, which
+# protx rejects here with "invalid collateral amount".
+SMARTNODE_COLLATERAL = 10
+
+# Name of the quorum type regtest uses for ChainLocks/InstantSend. Regtest registers
+# only the two test-only types (see CRegTestParams in src/chainparams.cpp), so this is
+# llmq_test rather than any production type.
+LLMQ_TEST_NAME = "llmq_test"
+
+# dkgInterval of that quorum type (llmq/quorums_parameters.h). Dash's test quorum
+# uses 24; mining alignment must follow the chain's real interval or the quorum
+# hash is sampled at the wrong height and never matches.
+LLMQ_TEST_DKG_INTERVAL = 30
+
+# llmqType of that quorum. LLMQ_5_60 is 100, the same slot Dash calls LLMQ_TEST, and
+# is the type CDKGSession::ShouldSimulateError injects DKG errors for.
+LLMQ_TEST_TYPE = 100
 
 
 class SmartnodeInfo:
@@ -527,6 +612,9 @@ class RaptoreumTestFramework(BitcoinTestFramework):
     def set_raptoreum_test_params(self, num_nodes, masterodes_count, extra_args=None, fast_dip3_enforcement=False):
         self.mn_count = masterodes_count
         self.num_nodes = num_nodes
+        # Raptoreum's protx register_fund takes an explicit collateralAmount,
+        # which Dash's signature does not have (RTM collateral is tiered).
+        self.smartnode_collateral = SMARTNODE_COLLATERAL
         self.mninfo = []
         self.setup_clean_chain = True
         self.is_network_split = False
@@ -535,11 +623,13 @@ class RaptoreumTestFramework(BitcoinTestFramework):
             extra_args = [[]] * num_nodes
         assert_equal(len(extra_args), num_nodes)
         self.extra_args = [copy.deepcopy(a) for a in extra_args]
-        self.extra_args[0] += ["-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"]
+        self.extra_args[0] += ["-sporkkey=cVpnZj4dZvRXmBf7Jze1GjpLQb25iKP92GDXUsKdUJTXhXRo2RFA"]
         self.fast_dip3_enforcement = fast_dip3_enforcement
-        if fast_dip3_enforcement:
-            for i in range(0, num_nodes):
-                self.extra_args[i].append("-dip3params=30:50")
+        # NOTE: Dash gates DIP3 on a height and exposes -dip3params to move it.
+        # Raptoreum enables it unconditionally in regtest (consensus.DIP0003Enabled
+        # = true, src/chainparams.cpp CRegTestParams) and never wired up the
+        # argument, so passing it makes raptoreumd exit with
+        # "Invalid parameter -dip3params". DIP3 is already active here.
 
         # LLMQ default test params (no need to pass -llmqtestparams)
         self.llmq_size = 3
@@ -550,23 +640,28 @@ class RaptoreumTestFramework(BitcoinTestFramework):
         # This is EXPIRATION_TIMEOUT in CQuorumDataRequest
         self.quorum_data_request_expiration_timeout = 300
 
-    def set_dash_dip8_activation(self, activate_after_block):
-        self.dip8_activation_height = activate_after_block
-        for i in range(0, self.num_nodes):
-            self.extra_args[i].append("-dip8params=%d" % (activate_after_block))
+    def wait_for_dip8_activation(self):
+        """No-op on Raptoreum.
+
+        Dash gates DIP0008 behind a versionbits deployment and tests spin until it
+        reports active. Raptoreum sets consensus.DIP0008Enabled unconditionally in
+        CRegTestParams, so there is no such deployment to wait for and
+        getblockchaininfo has no "dip0008" entry.
+        """
+        return
 
     def activate_dip8(self, slow_mode=False):
-        # NOTE: set slow_mode=True if you are activating dip8 after a huge reorg
-        # or nodes might fail to catch up otherwise due to a large
-        # (MAX_BLOCKS_IN_TRANSIT_PER_PEER = 16 blocks) reorg error.
-        self.log.info("Wait for dip0008 activation")
-        while self.nodes[0].getblockcount() < self.dip8_activation_height:
-            self.nodes[0].generate(10)
-            if slow_mode:
-                self.sync_blocks()
-        self.sync_blocks()
+        """No-op on Raptoreum, like wait_for_dip8_activation above.
 
-    def set_dash_llmq_test_params(self, llmq_size, llmq_threshold):
+        Dash mines up to a -dip8params activation height. This tree has no such
+        argument and enables DIP0008 unconditionally in CRegTestParams, so there
+        is nothing to mine towards. The height came from set_dash_dip8_activation,
+        which nothing called and which would have passed an argument raptoreumd
+        does not accept; it has been removed with this.
+        """
+        return
+
+    def set_raptoreum_llmq_test_params(self, llmq_size, llmq_threshold):
         self.llmq_size = llmq_size
         self.llmq_threshold = llmq_threshold
         for i in range(0, self.num_nodes):
@@ -613,7 +708,7 @@ class RaptoreumTestFramework(BitcoinTestFramework):
 
         if (idx % 2) == 0 :
             self.nodes[0].lockunspent(True, [{'txid': txid, 'vout': collateral_vout}])
-            protx_result = self.nodes[0].protx('register_fund', address, ipAndPort, ownerAddr, bls['public'], votingAddr, operatorReward, rewardsAddr, address, submit)
+            protx_result = self.nodes[0].protx('register_fund', address, self.smartnode_collateral, ipAndPort, ownerAddr, bls['public'], votingAddr, operatorReward, rewardsAddr, address, submit)
         else:
             self.nodes[0].generate(1)
             protx_result = self.nodes[0].protx('register', txid, collateral_vout, ipAndPort, ownerAddr, bls['public'], votingAddr, operatorReward, rewardsAddr, address, submit)
@@ -628,17 +723,35 @@ class RaptoreumTestFramework(BitcoinTestFramework):
         if operatorReward > 0:
             self.nodes[0].protx('update_service', proTxHash, ipAndPort, bls['secret'], operatorPayoutAddress, address)
 
-        self.mninfo.append(MasternodeInfo(proTxHash, ownerAddr, votingAddr, bls['public'], bls['secret'], address, txid, collateral_vout))
+        # register_fund creates the collateral inside the ProRegTx, so the real
+        # outpoint is not the sendtoaddress output. Anything that later spends the
+        # collateral needs the outpoint the MN list keys on.
+        protx_info = self.nodes[0].protx('info', proTxHash)
+        collateral_txid = protx_info['collateralHash']
+        collateral_vout = protx_info['collateralIndex']
+
+        self.mninfo.append(SmartnodeInfo(proTxHash, ownerAddr, votingAddr, bls['public'], bls['secret'], address, collateral_txid, collateral_vout))
         self.sync_all()
 
-        self.log.info("Prepared smartnode %d: collateral_txid=%s, collateral_vout=%d, protxHash=%s" % (idx, txid, collateral_vout, proTxHash))
+        self.log.info("Prepared smartnode %d: collateral_txid=%s, collateral_vout=%d, protxHash=%s" % (idx, collateral_txid, collateral_vout, proTxHash))
 
-    def remove_masternode(self, idx):
+    def remove_smartnode(self, idx):
         mn = self.mninfo[idx]
-        rawtx = self.nodes[0].createrawtransaction([{"txid": mn.collateral_txid, "vout": mn.collateral_vout}], {self.nodes[0].getnewaddress(): 999.9999})
+        # Spend the collateral, less a fee. Dash's 1000 collateral is 10 here
+        # (SMARTNODE_COLLATERAL), so the hardcoded 999.9999 output was a hundred
+        # times the input and every removal failed with bad-txns-in-belowout.
+        rawtx = self.nodes[0].createrawtransaction([{"txid": mn.collateral_txid, "vout": mn.collateral_vout}],
+                                                   {self.nodes[0].getnewaddress(): SMARTNODE_COLLATERAL - Decimal("0.0001")})
         rawtx = self.nodes[0].signrawtransactionwithwallet(rawtx)
-        self.nodes[0].sendrawtransaction(rawtx["hex"])
+        rmtxid = self.nodes[0].sendrawtransaction(rawtx["hex"])
+        # A miner will not include a transaction that is neither
+        # InstantSend-locked nor WAIT_FOR_ISLOCK_TIMEOUT (10 minutes) old while
+        # ChainLocks and InstantSend are both on, which setup_network sporks
+        # them to be (CChainLocksHandler::IsTxSafeForMining). Age it rather than
+        # wait for a lock -- the collateral spend is not going to get one.
+        self.bump_mocktime(int(60 * 11))
         self.nodes[0].generate(1)
+        assert_equal(self.nodes[0].getrawtransaction(rmtxid, True)["confirmations"], 1)
         self.sync_all()
         self.mninfo.remove(mn)
 
@@ -673,7 +786,7 @@ class RaptoreumTestFramework(BitcoinTestFramework):
         # start up nodes in parallel
         for idx in range(0, self.mn_count):
             self.mninfo[idx].nodeIdx = idx + start_idx
-            jobs.append(executor.submit(self.start_masternode, self.mninfo[idx]))
+            jobs.append(executor.submit(self.start_smartnode, self.mninfo[idx]))
 
         # wait for all nodes to start up
         for job in jobs:
@@ -691,7 +804,7 @@ class RaptoreumTestFramework(BitcoinTestFramework):
 
         executor.shutdown()
 
-    def start_masternode(self, mninfo, extra_args=None):
+    def start_smartnode(self, mninfo, extra_args=None):
         args = ['-smartnodeblsprivkey=%s' % mninfo.keyOperator] + self.extra_args[mninfo.nodeIdx]
         if extra_args is not None:
             args += extra_args
@@ -739,6 +852,14 @@ class RaptoreumTestFramework(BitcoinTestFramework):
         self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
         self.wait_for_sporks_same()
         self.bump_mocktime(1)
+
+        # start_smartnode forces each smartnode's sync, but CConnman resets it
+        # again on the 0 -> N connection edge (net.cpp:1275) -- which the wiring
+        # above takes. A smartnode refuses every inbound connection while
+        # !IsSynced (net.cpp:1126) and opens none while !IsBlockchainSynced
+        # (net.cpp:2309), so leave them synced now that they have their peers.
+        for mn in self.mninfo:
+            force_finish_mnsync(mn.node)
 
         mn_info = self.nodes[0].smartnodelist("status")
         assert (len(mn_info) == self.mn_count)
@@ -815,7 +936,7 @@ class RaptoreumTestFramework(BitcoinTestFramework):
 
         quorum_member = None
         for mn in self.mninfo:
-            res = mn.node.quorum('sign', 100, request_id, message_hash)
+            res = mn.node.quorum('sign', LLMQ_TEST_TYPE, request_id, message_hash)
             if (res and quorum_member is None):
                 quorum_member = mn
 
@@ -823,7 +944,7 @@ class RaptoreumTestFramework(BitcoinTestFramework):
 
         if deterministic:
             block_count = quorum_member.node.getblockcount()
-            cycle_hash = int(quorum_member.node.getblockhash(block_count - (block_count % 24)), 16)
+            cycle_hash = int(quorum_member.node.getblockhash(block_count - (block_count % LLMQ_TEST_DKG_INTERVAL)), 16)
             islock = msg_isdlock(1, inputs, tx.sha256, cycle_hash, hex_str_to_bytes(rec_sig['sig']))
         else:
             islock = msg_islock(inputs, tx.sha256, hex_str_to_bytes(rec_sig['sig']))
@@ -832,6 +953,11 @@ class RaptoreumTestFramework(BitcoinTestFramework):
 
     def wait_for_instantlock(self, txid, node, expected=True, timeout=15):
         def check_instantlock():
+            # Relay runs on the mocked clock, so a tx only reaches the signing
+            # smartnodes once mocktime moves. Not when no lock is expected: that
+            # wait asserts nothing happens, and moving the clock would break it.
+            if expected:
+                self.bump_mocktime(3)
             try:
                 return node.getrawtransaction(txid, True)["instantlock"]
             except:
@@ -841,6 +967,11 @@ class RaptoreumTestFramework(BitcoinTestFramework):
 
     def wait_for_chainlocked_block(self, node, block_hash, expected=True, timeout=15):
         def check_chainlocked_block():
+            # The clsig inv is requested on the mocked clock, so a wall-clock poll
+            # never reaches it. Not when no lock is expected: that wait asserts
+            # nothing happens.
+            if expected:
+                self.bump_mocktime(1)
             try:
                 block = node.getblock(block_hash)
                 return block["confirmations"] > 0 and block["chainlock"]
@@ -867,17 +998,17 @@ class RaptoreumTestFramework(BitcoinTestFramework):
             all_ok = True
             for node in nodes:
                 s = node.quorum("dkgstatus")
-                if 'llmq_test' not in s["session"]:
+                if LLMQ_TEST_NAME not in s["session"]:
                     continue
                 if "quorumConnections" not in s:
                     all_ok = False
                     break
                 s = s["quorumConnections"]
-                if "llmq_test" not in s:
+                if LLMQ_TEST_NAME not in s:
                     all_ok = False
                     break
                 cnt = 0
-                for c in s["llmq_test"]:
+                for c in s[LLMQ_TEST_NAME]:
                     if c["connected"]:
                         cnt += 1
                 if cnt < expected_connections:
@@ -888,7 +1019,7 @@ class RaptoreumTestFramework(BitcoinTestFramework):
             return all_ok
         wait_until(check_quorum_connections, timeout=timeout, sleep=1)
 
-    def wait_for_masternode_probes(self, mninfos, timeout = 30, wait_proc=None):
+    def wait_for_smartnode_probes(self, mninfos, timeout = 30, wait_proc=None):
         def check_probes():
             def ret():
                 if wait_proc is not None:
@@ -897,15 +1028,15 @@ class RaptoreumTestFramework(BitcoinTestFramework):
 
             for mn in mninfos:
                 s = mn.node.quorum('dkgstatus')
-                if 'llmq_test' not in s["session"]:
+                if LLMQ_TEST_NAME not in s["session"]:
                     continue
                 if "quorumConnections" not in s:
                     return ret()
                 s = s["quorumConnections"]
-                if "llmq_test" not in s:
+                if LLMQ_TEST_NAME not in s:
                     return ret()
 
-                for c in s["llmq_test"]:
+                for c in s[LLMQ_TEST_NAME]:
                     if c["proTxHash"] == mn.proTxHash:
                         continue
                     if not c["outbound"]:
@@ -930,10 +1061,10 @@ class RaptoreumTestFramework(BitcoinTestFramework):
             member_count = 0
             for mn in mninfos:
                 s = mn.node.quorum("dkgstatus")["session"]
-                if "llmq_test" not in s:
+                if LLMQ_TEST_NAME not in s:
                     continue
                 member_count += 1
-                s = s["llmq_test"]
+                s = s[LLMQ_TEST_NAME]
                 if s["quorumHash"] != quorum_hash:
                     all_ok = False
                     break
@@ -957,14 +1088,14 @@ class RaptoreumTestFramework(BitcoinTestFramework):
             all_ok = True
             for node in nodes:
                 s = node.quorum("dkgstatus")
-                if "minableCommitments" not in s:
+                if "mineableCommitments" not in s:
                     all_ok = False
                     break
-                s = s["minableCommitments"]
-                if "llmq_test" not in s:
+                s = s["mineableCommitments"]
+                if LLMQ_TEST_NAME not in s:
                     all_ok = False
                     break
-                s = s["llmq_test"]
+                s = s[LLMQ_TEST_NAME]
                 if s["quorumHash"] != quorum_hash:
                     all_ok = False
                     break
@@ -973,7 +1104,7 @@ class RaptoreumTestFramework(BitcoinTestFramework):
 
     def wait_for_quorum_list(self, quorum_hash, nodes, timeout=15, sleep=2):
         def wait_func():
-            if quorum_hash in self.nodes[0].quorum("list")["llmq_test"]:
+            if quorum_hash in self.nodes[0].quorum("list")[LLMQ_TEST_NAME]:
                 return True
             self.bump_mocktime(sleep, nodes=nodes)
             self.nodes[0].generate(1)
@@ -1005,7 +1136,7 @@ class RaptoreumTestFramework(BitcoinTestFramework):
         nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
 
         # move forward to next DKG
-        skip_count = 24 - (self.nodes[0].getblockcount() % 24)
+        skip_count = LLMQ_TEST_DKG_INTERVAL - (self.nodes[0].getblockcount() % LLMQ_TEST_DKG_INTERVAL)
         if skip_count != 0:
             self.bump_mocktime(1, nodes=nodes)
             self.nodes[0].generate(skip_count)
@@ -1061,9 +1192,9 @@ class RaptoreumTestFramework(BitcoinTestFramework):
         self.log.info("Waiting for quorum to appear in the list")
         self.wait_for_quorum_list(q, nodes)
 
-        new_quorum = self.nodes[0].quorum("list", 1)["llmq_test"][0]
+        new_quorum = self.nodes[0].quorum("list", 1)[LLMQ_TEST_NAME][0]
         assert_equal(q, new_quorum)
-        quorum_info = self.nodes[0].quorum("info", 100, new_quorum)
+        quorum_info = self.nodes[0].quorum("info", LLMQ_TEST_TYPE, new_quorum)
 
         # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligable for signing sessions
         self.nodes[0].generate(8)
@@ -1074,7 +1205,7 @@ class RaptoreumTestFramework(BitcoinTestFramework):
 
         return new_quorum
 
-    def get_recovered_sig(self, rec_sig_id, rec_sig_msg_hash, llmq_type=100, node=None):
+    def get_recovered_sig(self, rec_sig_id, rec_sig_msg_hash, llmq_type=LLMQ_TEST_TYPE, node=None):
         # Note: recsigs aren't relayed to regular nodes by default,
         # make sure to pick a mn as a node to query for recsigs.
         node = self.mninfo[0].node if node is None else node
@@ -1083,11 +1214,15 @@ class RaptoreumTestFramework(BitcoinTestFramework):
             try:
                 return node.quorum('getrecsig', llmq_type, rec_sig_id, rec_sig_msg_hash)
             except JSONRPCException:
+                # Signature-share relay is on the mocked clock like every other
+                # inv, so polling wall-clock time alone never lets the session
+                # finish.
+                self.bump_mocktime(1)
                 time.sleep(0.1)
         assert False
 
     def get_quorum_smartnodes(self, q):
-        qi = self.nodes[0].quorum('info', 100, q)
+        qi = self.nodes[0].quorum('info', LLMQ_TEST_TYPE, q)
         result = []
         for m in qi['members']:
             result.append(self.get_mninfo(m['proTxHash']))

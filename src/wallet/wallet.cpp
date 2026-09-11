@@ -1798,6 +1798,10 @@ CAmount CWallet::GetCredit(const CTxOut &txout, const isminefilter &filter, ismi
 }
 
 bool CWallet::IsChange(const CTxOut &txout) const {
+    return IsChange(txout.scriptPubKey);
+}
+
+bool CWallet::IsChange(const CScript &script) const {
     // TODO: fix handling of 'change' outputs. The assumption is that any
     // payment to a script that is ours, but is not in the address book
     // is change. That assumption is likely to break when we implement multisignature
@@ -1805,9 +1809,9 @@ bool CWallet::IsChange(const CTxOut &txout) const {
     // a better way of identifying which outputs are 'the send' and which are
     // 'the change' will need to be implemented (maybe extend CWalletTx to remember
     // which output, if any, was change).
-    if (::IsMine(*this, txout.scriptPubKey)) {
+    if (::IsMine(*this, script)) {
         CTxDestination address;
-        if (!ExtractDestination(txout.scriptPubKey, address))
+        if (!ExtractDestination(script, address))
             return true;
 
         LOCK(cs_wallet);
@@ -3298,12 +3302,13 @@ std::map <CTxDestination, std::vector<COutput>> CWallet::ListAssets() const {
     // postponed until after https://github.com/bitcoin/bitcoin/pull/10244 to
     // avoid adding some extra complexity to the Qt code.
 
+    AssertLockHeld(cs_wallet);
+
     std::map <CTxDestination, std::vector<COutput>> result;
 
     std::map <std::string, std::vector<COutput>> mapAssets;
     AvailableAssets(mapAssets);
 
-    LOCK2(cs_main, cs_wallet);
     for (auto asset: mapAssets) {
         for (auto &coin: asset.second) {
             CTxDestination address;
@@ -4611,6 +4616,12 @@ bool CWallet::CreateTransaction(const std::vector <CRecipient> &vecSend, CTransa
                     }
 
                     nFee = GetMinimumFee(*this, nBytes, coin_control, &feeCalc);
+
+                    if (feeCalc.reason == FeeReason::FALLBACK && !m_allow_fallback_fee) {
+                        strFailReason = _(
+                                "Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.");
+                        return false;
+                    }
 
                     // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
                     // because we must be at the maximum allowed fee.

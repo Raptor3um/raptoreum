@@ -1902,7 +1902,7 @@ UniValue listsinceblock(const JSONRPCRequest &request) {
     for (const std::pair<const uint256, CWalletTx> &pairWtx: pwallet->mapWallet) {
         CWalletTx tx = pairWtx.second;
 
-        if (depth == -1 || tx.GetDepthInMainChain() < depth) {
+        if (depth == -1 || abs(tx.GetDepthInMainChain()) < depth) {
             ListTransactions(pwallet, tx, 0, true, transactions, filter, nullptr /* filter_label */);
         }
     }
@@ -3884,6 +3884,7 @@ UniValue getaddressinfo(const JSONRPCRequest &request) {
         ret.pushKV("desc", InferDescriptor(scriptPubKey, *pwallet)->ToString());
     }
     ret.pushKV("iswatchonly", bool(mine & ISMINE_WATCH_ONLY));
+    ret.pushKV("ischange", pwallet->IsChange(scriptPubKey));
     ret.pushKV("solvable", IsSolvable(*pwallet, scriptPubKey));
     UniValue detail = DescribeWalletAddress(pwallet, dest);
     ret.pushKVs(detail);

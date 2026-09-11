@@ -71,13 +71,12 @@ TEST_EXIT_SKIPPED = 77
 BASE_SCRIPTS = [
     # Scripts that are run by default.
     # Longest test should go first, to favor running tests in parallel
-    'feature_dip3_deterministicmns.py', # NOTE: needs dash_hash to pass
-    'feature_block_reward_reallocation.py',
+    'feature_dip3_deterministicmns.py',
     'feature_llmq_data_recovery.py',
     'wallet_hd.py',
     'wallet_backup.py',
     # vv Tests less than 5m vv
-    'feature_block.py', # NOTE: needs dash_hash to pass
+    'feature_block.py',
     'rpc_fundrawtransaction.py',
     'rpc_fundrawtransaction_hd.py',
     'wallet_multiwallet.py --usecli',
@@ -89,17 +88,17 @@ BASE_SCRIPTS = [
     'wallet_dump.py',
     'wallet_listtransactions.py',
     'feature_multikeysporks.py',
-    'feature_llmq_signing.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_signing.py --spork21', # NOTE: needs dash_hash to pass
-    'feature_llmq_chainlocks.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_connections.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_simplepose.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_is_cl_conflicts.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_is_retroactive.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_dkgerrors.py', # NOTE: needs dash_hash to pass
-    'feature_dip4_coinbasemerkleroots.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_signing.py',
+    'feature_llmq_signing.py --spork21',
+    'feature_llmq_chainlocks.py',
+    'feature_llmq_connections.py',
+    'feature_llmq_simplepose.py',
+    'feature_llmq_is_cl_conflicts.py',
+    'feature_llmq_is_retroactive.py',
+    'feature_llmq_dkgerrors.py',
+    'feature_dip4_coinbasemerkleroots.py',
     # vv Tests less than 60s vv
-    'p2p_sendheaders.py', # NOTE: needs dash_hash to pass
+    'p2p_sendheaders.py',
     'wallet_importmulti.py',
     'mempool_limit.py',
     'rpc_txoutproof.py',
@@ -109,6 +108,16 @@ BASE_SCRIPTS = [
     'rpc_rawtransaction.py',
     'feature_reindex.py',
     # vv Tests less than 30s vv
+    'feature_fee_estimation.py',
+    'mining_getblocktemplate_longpoll.py',
+    'example_test.py',
+    'wallet_txn_doublespend.py',
+    'wallet_txn_clone.py --mineblock',
+    'feature_txindex.py',
+    'mempool_packages.py',
+    'rpc_invalidateblock.py',
+    'rpc_blockchain_queries.py',
+    'wallet_address_queries.py',
     'wallet_keypool_topup.py',
     'interface_zmq_dash.py',
     'interface_zmq.py',
@@ -121,6 +130,7 @@ BASE_SCRIPTS = [
     'interface_rest.py',
     'mempool_spend_coinbase.py',
     'mempool_reorg.py',
+    'mempool_expiry.py',
     'mempool_persist.py',
     'wallet_multiwallet.py',
     'wallet_disableprivatekeys.py',
@@ -137,22 +147,29 @@ BASE_SCRIPTS = [
     'feature_addressindex.py',
     'feature_timestampindex.py',
     'feature_spentindex.py',
+    'rpc_dumptxoutset.py',
     'rpc_decodescript.py',
     'rpc_blockchain.py',
     'rpc_deprecated.py',
     'wallet_disable.py',
     'p2p_addr_relay.py',
     'rpc_net.py',
+    'wallet_coinbase_category.py',
+    'wallet_fallbackfee.py',
+    'wallet_import_with_label.py',
     'wallet_keypool.py',
     'wallet_keypool_hd.py',
     'p2p_mempool.py',
     'mining_prioritisetransaction.py',
     'p2p_invalid_block.py',
+    'p2p_invalid_locator.py',
+    'p2p_invalid_messages.py',
     'p2p_invalid_tx.py',
     'feature_versionbits_warning.py',
     'rpc_preciousblock.py',
     'wallet_importprunedfunds.py',
     'rpc_zmq.py',
+    'rpc_setban.py',
     'rpc_signmessage.py',
     'feature_nulldummy.py',
     'wallet_import_rescan.py',
@@ -160,11 +177,20 @@ BASE_SCRIPTS = [
     'rpc_bind.py --ipv6',
     'rpc_bind.py --nonloopback',
     'mining_basic.py',
+    'rpc_help.py',
+    'rpc_misc.py',
+    'interface_rpc.py',
     'rpc_named_arguments.py',
     'wallet_listsinceblock.py',
     'p2p_leak.py',
+    'p2p_leak_tx.py',
+    'p2p_blocksonly.py',
     'p2p_compactblocks.py',
     'p2p_connect_to_devnet.py',
+    'feature_futures.py',
+    'feature_assets.py',
+    'feature_founder_payment.py',
+    'feature_assets_rules.py',
     'feature_sporks.py',
     'rpc_getblockstats.py',
     'wallet_encryption.py',
@@ -172,12 +198,12 @@ BASE_SCRIPTS = [
     'feature_dersig.py',
     'feature_cltv.py',
     'feature_new_quorum_type_activation.py',
-    'feature_governance_objects.py',
+    # 'feature_governance_objects.py',  # Raptoreum does not use governance
     'rpc_uptime.py',
     'wallet_resendwallettransactions.py',
     'feature_minchainwork.py',
     'feature_filelock.py',
-    'p2p_unrequested_blocks.py', # NOTE: needs dash_hash to pass
+    'p2p_unrequested_blocks.py',
     'feature_shutdown.py',
     'rpc_coinjoin.py',
     'rpc_masternode.py',
@@ -188,8 +214,8 @@ BASE_SCRIPTS = [
     'rpc_platform_filter.py',
     'feature_dip0020_activation.py',
     'feature_uacomment.py',
-    'p2p_unrequested_blocks.py',
     'feature_includeconf.py',
+    'feature_abortnode.py',
     'feature_asmap.py',
     'rpc_deriveaddresses.py',
     'rpc_deriveaddresses.py --usecli',
@@ -208,24 +234,16 @@ EXTENDED_SCRIPTS = [
     # Longest test should go first, to favor running tests in parallel
     'feature_pruning.py', # NOTE: Prune mode is incompatible with -txindex, should work with governance validation disabled though.
     # vv Tests less than 20m vv
-    'feature_fee_estimation.py',
     # vv Tests less than 5m vv
     'feature_maxuploadtarget.py',
-    'mempool_packages.py',
     'feature_dbcrash.py',
     # vv Tests less than 2m vv
     'feature_bip68_sequence.py',
-    'mining_getblocktemplate_longpoll.py',  # FIXME: "socket.error: [Errno 54] Connection reset by peer" on my Mac, same as  https://github.com/bitcoin/bitcoin/issues/6651
     'p2p_timeouts.py',
     # vv Tests less than 60s vv
     # vv Tests less than 30s vv
     'feature_assumevalid.py',
-    'example_test.py',
-    'wallet_txn_doublespend.py',
-    'wallet_txn_clone.py --mineblock',
-    'feature_txindex.py',
     'feature_notifications.py',
-    'rpc_invalidateblock.py',
 ]
 
 # Place EXTENDED_SCRIPTS first since it has the 3 longest running tests
@@ -282,7 +300,6 @@ def main():
     logging.debug("Temporary test directory at %s" % tmpdir)
 
     enable_wallet = config["components"].getboolean("ENABLE_WALLET")
-    enable_utils = config["components"].getboolean("ENABLE_UTILS")
     enable_bitcoind = config["components"].getboolean("ENABLE_BITCOIND")
 
     if config["environment"]["EXEEXT"] == ".exe" and not args.force:
@@ -291,9 +308,9 @@ def main():
         print("Tests currently disabled on Windows by default. Use --force option to enable")
         sys.exit(0)
 
-    if not (enable_wallet and enable_utils and enable_bitcoind):
-        print("No functional tests to run. Wallet, utils, and raptoreumd must all be enabled")
-        print("Rerun `configure` with -enable-wallet, -with-utils and -with-daemon and rerun make")
+    if not (enable_wallet and enable_bitcoind):
+        print("No functional tests to run. Wallet and raptoreumd must both be enabled")
+        print("Rerun `configure` with -enable-wallet and -with-daemon and rerun make")
         sys.exit(0)
 
     # Build list of tests

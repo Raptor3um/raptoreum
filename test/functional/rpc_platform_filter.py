@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test that commands submitted by the platform user are filtered."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitcoinTestFramework, LLMQ_TEST_TYPE
 from test_framework.util import str_to_b64str, assert_equal
 
 import http.client
@@ -27,9 +27,12 @@ class HTTPBasicsTest(BitcoinTestFramework):
         # rpcuser : operator
         # rpcpassword : otherpassword
 
-        masternodeblskey="masternodeblsprivkey=58af6e39bb4d86b22bda1a02b134c2f5b71caffa1377540b02f7f1ad122f59e0"
+        # -smartnodeblsprivkey, not Dash's -masternodeblsprivkey. The old name
+        # is an unknown key, which raptoreumd ignores, so fSmartnodeMode stayed
+        # false and the platform-user filter never ran at all.
+        masternodeblskey="smartnodeblsprivkey=58af6e39bb4d86b22bda1a02b134c2f5b71caffa1377540b02f7f1ad122f59e0"
 
-        with open(os.path.join(self.options.tmpdir+"/node0", "dash.conf"), 'a', encoding='utf8') as f:
+        with open(os.path.join(self.options.tmpdir+"/node0", "raptoreum.conf"), 'a', encoding='utf8') as f:
             f.write(masternodeblskey+"\n")
             f.write(rpcauthplatform+"\n")
             f.write(rpcauthoperator+"\n")
@@ -83,8 +86,12 @@ class HTTPBasicsTest(BitcoinTestFramework):
         test_command("getblockhash", [0], rpcuser_authpair_platform, 200)
         test_command("getblockcount", [], rpcuser_authpair_platform, 200)
         test_command("getbestchainlock", [], rpcuser_authpair_platform, 500)
-        test_command("quorum", ["sign", 100], rpcuser_authpair_platform, 500)
-        test_command("quorum", ["sign", 100, "0000000000000000000000000000000000000000000000000000000000000000",
+        # The filter whitelists `quorum sign <llmqTypePlatform>` (src/rpc/server.cpp
+        # :148). Regtest points that at the test type, so it is LLMQ_TEST_TYPE
+        # here, the same slot Dash calls LLMQ_TEST.
+        test_command("quorum", ["sign", LLMQ_TEST_TYPE], rpcuser_authpair_platform, 500)
+        test_command("quorum", ["sign", LLMQ_TEST_TYPE,
+                                "0000000000000000000000000000000000000000000000000000000000000000",
                                 "0000000000000000000000000000000000000000000000000000000000000001"],
                                 rpcuser_authpair_platform, 200)
         test_command("quorum", ["verify"], rpcuser_authpair_platform, 500)
@@ -105,7 +112,8 @@ class HTTPBasicsTest(BitcoinTestFramework):
                 test_command(command, [], rpcuser_authpair_operator, 403, True)
 
         self.log.info('Try running a not whitelisted command as the operator...')
-        test_command("debug", ["1"], rpcuser_authpair_operator, 200)
+        # Dash's `debug` RPC; the equivalent here is `logging`.
+        test_command("logging", [], rpcuser_authpair_operator, 200)
 
 
 if __name__ == '__main__':

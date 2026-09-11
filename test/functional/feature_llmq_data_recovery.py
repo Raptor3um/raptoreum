@@ -5,7 +5,7 @@
 
 import time
 from test_framework.mininode import logger
-from test_framework.test_framework import DashTestFramework
+from test_framework.test_framework import RaptoreumTestFramework
 from test_framework.util import force_finish_mnsync, connect_nodes
 
 '''
@@ -16,20 +16,22 @@ Tests automated recovery of DKG data and the related command line parameters:
  -llmq-qvvec-sync
 '''
 
-# LLMQ types available in regtest
+# LLMQ types available in regtest. Dash numbers its second test type 102; Raptoreum
+# numbers LLMQ_TEST_V17 as 101 (llmq/quorums_parameters.h).
 llmq_test = 100
-llmq_test_v17 = 102
+llmq_test_v17 = 101
 llmq_type_strings = {llmq_test: 'llmq_test', llmq_test_v17: 'llmq_test_v17'}
 
 
-class QuorumDataRecoveryTest(DashTestFramework):
+class QuorumDataRecoveryTest(RaptoreumTestFramework):
     def set_test_params(self):
-        extra_args = [["-vbparams=dip0020:0:999999999999:10:8:6:5"] for _ in range(9)]
-        self.set_dash_test_params(9, 7, fast_dip3_enforcement=True, extra_args=extra_args)
-        self.set_dash_llmq_test_params(4, 3)
+        # RTM has no versionbits deployments; -vbparams is inert here.
+        extra_args = [[] for _ in range(9)]
+        self.set_raptoreum_test_params(9, 7, fast_dip3_enforcement=True, extra_args=extra_args)
+        self.set_raptoreum_llmq_test_params(4, 3)
 
     def restart_mn(self, mn, reindex=False, qvvec_sync=[], qdata_recovery_enabled=True):
-        args = self.extra_args[mn.nodeIdx] + ['-masternodeblsprivkey=%s' % mn.keyOperator,
+        args = self.extra_args[mn.nodeIdx] + ['-smartnodeblsprivkey=%s' % mn.keyOperator,
                                               '-llmq-data-recovery=%d' % qdata_recovery_enabled]
         if reindex:
             args.append('-reindex')
@@ -122,9 +124,12 @@ class QuorumDataRecoveryTest(DashTestFramework):
 
         node = self.nodes[0]
         node.spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
-        node.spork("SPORK_21_QUORUM_ALL_CONNECTED", 0)
+        node.spork("SPORK_23_QUORUM_ALL_CONNECTED", 0)
         self.wait_for_sporks_same()
         self.activate_dip8()
+        # The recovery test needs both quorum types, and llmq_test_v17 is gated
+        # on the v17 deployment, which regtest votes in at height 210.
+        self.activate_v17()
 
         logger.info("Test automated DGK data recovery")
         # This two nodes will remain the only ones with valid DKG data

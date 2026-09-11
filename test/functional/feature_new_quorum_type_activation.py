@@ -3,13 +3,20 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, get_bip9_status
+from test_framework.util import assert_equal
 
 '''
 feature_new_quorum_type_activation.py
 
-Tests the activation of a new quorum type in v17 via a bip9-like hardfork
+Tests the activation of a new quorum type at the v17 deployment.
 
+Upstream drives this with a BIP9 versionbits deployment and -vbparams.
+Raptoreum deleted versionbits and uses its own miner-voted update instead, so
+the deployment state is read from getblockchaininfo's rip1_softforks and the
+chain is simply mined past the activation height (210 on regtest, locked in at
+110). The substance is unchanged: llmq_test_v17 must be absent from
+quorum list while the deployment is inactive and present once it activates,
+which is what CLLMQUtils::IsQuorumTypeEnabled gates.
 '''
 
 
@@ -17,25 +24,30 @@ class NewQuorumTypeActivationTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
-        self.extra_args = [["-vbparams=dip0020:0:999999999999:10:8:6:5"]]
 
     def run_test(self):
-        assert_equal(get_bip9_status(self.nodes[0], 'dip0020')['status'], 'defined')
-        self.nodes[0].generate(9)
-        assert_equal(get_bip9_status(self.nodes[0], 'dip0020')['status'], 'started')
-        ql = self.nodes[0].quorum("list")
+        node = self.nodes[0]
+
+        def status():
+            return node.getblockchaininfo()["rip1_softforks"]["v17"]["status"]
+
+        assert status() != "active"
+        ql = node.quorum("list")
         assert_equal(len(ql), 1)
-        assert("llmq_test_v17" not in ql)
-        self.nodes[0].generate(10)
-        assert_equal(get_bip9_status(self.nodes[0], 'dip0020')['status'], 'locked_in')
-        ql = self.nodes[0].quorum("list")
+        assert ("llmq_test_v17" not in ql)
+
+        # Still inactive partway up, and the type is still hidden
+        node.generate(100)
+        assert status() != "active"
+        ql = node.quorum("list")
         assert_equal(len(ql), 1)
-        assert("llmq_test_v17" not in ql)
-        self.nodes[0].generate(10)
-        assert_equal(get_bip9_status(self.nodes[0], 'dip0020')['status'], 'active')
-        ql = self.nodes[0].quorum("list")
+        assert ("llmq_test_v17" not in ql)
+
+        self.activate_v17()
+        assert_equal(status(), "active")
+        ql = node.quorum("list")
         assert_equal(len(ql), 2)
-        assert("llmq_test_v17" in ql)
+        assert ("llmq_test_v17" in ql)
 
 
 if __name__ == '__main__':

@@ -56,12 +56,17 @@ class RESTTest (BitcoinTestFramework):
         url = urllib.parse.urlparse(self.nodes[0].url)
         self.log.info("Mining blocks...")
 
+        # Clear the 4 RTM launch window: the transfers later in this test are
+        # larger than a launch-window block pays.
+        self.mine_past_launch_window()
+        self.sync_all()
+
         self.nodes[0].generate(1)
         self.sync_all()
         self.nodes[2].generate(100)
         self.sync_all()
 
-        assert_equal(self.nodes[0].getbalance(), 500)
+        assert_equal(self.nodes[0].getbalance(), REGTEST_SUBSIDY)
 
         txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)
         self.sync_all()
@@ -140,7 +145,8 @@ class RESTTest (BitcoinTestFramework):
         hashFromBinResponse = hex(deser_uint256(output))[2:].zfill(64)
 
         assert_equal(bb_hash, hashFromBinResponse) #check if getutxo's chaintip during calculation was fine
-        assert_equal(chainHeight, 102) #chain height must be 102
+        # 102 upstream; here the launch-window warm-up sits underneath it.
+        assert_equal(chainHeight, self.nodes[0].getblockcount())
 
 
         ############################
@@ -334,8 +340,12 @@ class RESTTest (BitcoinTestFramework):
         json_string = http_get_call(url.hostname, url.port, '/rest/block/'+newblockhash[0]+self.FORMAT_SEPARATOR+'json')
         json_obj = json.loads(json_string)
         for tx in json_obj['tx']:
-            if not 'coinbase' in tx['vin'][0]: #exclude coinbase
-                assert_equal(tx['txid'] in txs, True)
+            # Skip the coinbase, and any special transaction with no inputs at
+            # all: a block in a DKG mining window carries a quorum commitment,
+            # whose vin is empty, so tx['vin'][0] would be an IndexError.
+            if not tx['vin'] or 'coinbase' in tx['vin'][0]:
+                continue
+            assert_equal(tx['txid'] in txs, True)
 
         #check the same but without tx details
         json_string = http_get_call(url.hostname, url.port, '/rest/block/notxdetails/'+newblockhash[0]+self.FORMAT_SEPARATOR+'json')

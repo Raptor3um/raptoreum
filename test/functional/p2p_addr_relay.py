@@ -6,65 +6,81 @@
 Test addr relay
 """
 
+import time
+
 from test_framework.messages import (
     CAddress,
     NODE_NETWORK,
-    NODE_WITNESS,
     msg_addr,
 )
 from test_framework.mininode import (
     P2PInterface,
+    network_thread_start,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
 )
-import time
-
-ADDRS = []
-for i in range(10):
-    addr = CAddress()
-    addr.time = int(time.time()) + i
-    addr.nServices = NODE_NETWORK
-    addr.ip = "123.123.123.{}".format(i % 256)
-    addr.port = 8333 + i
-    ADDRS.append(addr)
-
-
-class AddrReceiver(P2PInterface):
-    def on_addr(self, message):
-        for addr in message.addrs:
-            assert_equal(addr.nServices, 9)
-            assert addr.ip.startswith('123.123.123.')
-            assert (8333 <= addr.port < 8343)
 
 
 class AddrTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = False
         self.num_nodes = 1
+        # CNode starts with a single address-processing token and refills at
+        # MAX_ADDR_RATE_PER_SECOND (0.1/s), so an unwhitelisted peer would get
+        # one address out of the ten through. Whitelisting skips the limiter.
+        self.extra_args = [['-whitelist=127.0.0.1']]
 
     def run_test(self):
+        node = self.nodes[0]
+
+        # The node runs on a mocked clock, so the addresses have to be
+        # timestamped against that rather than the wall clock: ProcessMessage
+        # rewrites an address more than ten minutes in the node's future to
+        # five days in its past, and an address that old is dropped rather than
+        # stored.
+        now = int(time.time())
+        node.setmocktime(now)
+        addrs = []
+        for i in range(10):
+            addr = CAddress()
+            addr.time = now + i
+            addr.nServices = NODE_NETWORK
+            addr.ip = "123.123.123.{}".format(i)
+            addr.port = 8333 + i
+            addrs.append(addr)
+
         self.log.info('Create connection that sends addr messages')
-        addr_source = self.nodes[0].add_p2p_connection(P2PInterface())
+        addr_source = node.add_p2p_connection(P2PInterface())
+        network_thread_start()
+        addr_source.wait_for_verack()
         msg = msg_addr()
 
         self.log.info('Send too large addr message')
-        msg.addrs = ADDRS * 101
-        with self.nodes[0].assert_debug_log(['message addr size() = 1010']):
+        msg.addrs = addrs * 101
+        with node.assert_debug_log(['message addr size() = 1010']):
             addr_source.send_and_ping(msg)
 
-        self.log.info('Check that addr message content is relayed and added to addrman')
-        addr_receiver = self.nodes[0].add_p2p_connection(AddrReceiver())
-        msg.addrs = ADDRS
-        with self.nodes[0].assert_debug_log([
-                'Added 10 addresses from 127.0.0.1: 0 tried',
+        self.log.info('Check that addr message content is added to addrman')
+        msg.addrs = addrs
+        with node.assert_debug_log([
                 'received: addr (301 bytes) peer=0',
-                'sending addr (301 bytes) peer=1',
+                'Added 10 addresses from 127.0.0.1: 0 tried',
         ]):
             addr_source.send_and_ping(msg)
-            self.nodes[0].setmocktime(int(time.time()) + 30 * 60)
-            addr_receiver.sync_with_ping()
+
+        self.log.info('Check that the node will serve them back')
+        # Onward relay is not assertable: SendMessages gates the addr flush on
+        # GetTimeMicros(), a real clock setmocktime does not move. What is
+        # deterministic is that the addresses reached addrman. getnodeaddresses
+        # serves a 23% sample, so this checks what comes back is ours, not all ten.
+        served = node.getnodeaddresses(len(addrs))
+        assert len(served) > 0
+        expected = {(a.ip, a.port) for a in addrs}
+        for a in served:
+            assert (a['address'], a['port']) in expected, "unexpected address {}".format(a)
+            assert_equal(a['services'], NODE_NETWORK)
 
 
 if __name__ == '__main__':

@@ -11,7 +11,7 @@
 """
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, CACHE_HEIGHT
 
 class GetChainTipsTest (BitcoinTestFramework):
     def set_test_params(self):
@@ -21,7 +21,7 @@ class GetChainTipsTest (BitcoinTestFramework):
         tips = self.nodes[0].getchaintips ()
         assert_equal (len (tips), 1)
         assert_equal (tips[0]['branchlen'], 0)
-        assert_equal (tips[0]['height'], 200)
+        assert_equal (tips[0]['height'], CACHE_HEIGHT)
         assert_equal (tips[0]['status'], 'active')
 
         # Split the network and build two chains of different lengths.
@@ -35,14 +35,14 @@ class GetChainTipsTest (BitcoinTestFramework):
         assert_equal (len (tips), 1)
         shortTip = tips[0]
         assert_equal (shortTip['branchlen'], 0)
-        assert_equal (shortTip['height'], 210)
+        assert_equal (shortTip['height'], CACHE_HEIGHT + 10)
         assert_equal (tips[0]['status'], 'active')
 
         tips = self.nodes[3].getchaintips ()
         assert_equal (len (tips), 1)
         longTip = tips[0]
         assert_equal (longTip['branchlen'], 0)
-        assert_equal (longTip['height'], 220)
+        assert_equal (longTip['height'], CACHE_HEIGHT + 20)
         assert_equal (tips[0]['status'], 'active')
 
         # Join the network halves and check that we now have two tips
