@@ -71,12 +71,12 @@ TEST_EXIT_SKIPPED = 77
 BASE_SCRIPTS = [
     # Scripts that are run by default.
     # Longest test should go first, to favor running tests in parallel
-    'feature_dip3_deterministicmns.py', # NOTE: needs dash_hash to pass
+    'feature_dip3_deterministicmns.py',
     'feature_llmq_data_recovery.py',
     'wallet_hd.py',
     'wallet_backup.py',
     # vv Tests less than 5m vv
-    'feature_block.py', # NOTE: needs dash_hash to pass
+    'feature_block.py',
     'rpc_fundrawtransaction.py',
     'rpc_fundrawtransaction_hd.py',
     'wallet_multiwallet.py --usecli',
@@ -88,17 +88,17 @@ BASE_SCRIPTS = [
     'wallet_dump.py',
     'wallet_listtransactions.py',
     'feature_multikeysporks.py',
-    'feature_llmq_signing.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_signing.py --spork21', # NOTE: needs dash_hash to pass
-    'feature_llmq_chainlocks.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_connections.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_simplepose.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_is_cl_conflicts.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_is_retroactive.py', # NOTE: needs dash_hash to pass
-    'feature_llmq_dkgerrors.py', # NOTE: needs dash_hash to pass
-    'feature_dip4_coinbasemerkleroots.py', # NOTE: needs dash_hash to pass
+    'feature_llmq_signing.py',
+    'feature_llmq_signing.py --spork21',
+    'feature_llmq_chainlocks.py',
+    'feature_llmq_connections.py',
+    'feature_llmq_simplepose.py',
+    'feature_llmq_is_cl_conflicts.py',
+    'feature_llmq_is_retroactive.py',
+    'feature_llmq_dkgerrors.py',
+    'feature_dip4_coinbasemerkleroots.py',
     # vv Tests less than 60s vv
-    'p2p_sendheaders.py', # NOTE: needs dash_hash to pass
+    'p2p_sendheaders.py',
     'wallet_importmulti.py',
     'mempool_limit.py',
     'rpc_txoutproof.py',
@@ -108,6 +108,14 @@ BASE_SCRIPTS = [
     'rpc_rawtransaction.py',
     'feature_reindex.py',
     # vv Tests less than 30s vv
+    'feature_fee_estimation.py',
+    'mining_getblocktemplate_longpoll.py',
+    'example_test.py',
+    'wallet_txn_doublespend.py',
+    'wallet_txn_clone.py --mineblock',
+    'feature_txindex.py',
+    'mempool_packages.py',
+    'rpc_invalidateblock.py',
     'rpc_blockchain_queries.py',
     'wallet_address_queries.py',
     'wallet_keypool_topup.py',
@@ -195,7 +203,7 @@ BASE_SCRIPTS = [
     'wallet_resendwallettransactions.py',
     'feature_minchainwork.py',
     'feature_filelock.py',
-    'p2p_unrequested_blocks.py', # NOTE: needs dash_hash to pass
+    'p2p_unrequested_blocks.py',
     'feature_shutdown.py',
     'rpc_coinjoin.py',
     'rpc_masternode.py',
@@ -206,7 +214,6 @@ BASE_SCRIPTS = [
     'rpc_platform_filter.py',
     'feature_dip0020_activation.py',
     'feature_uacomment.py',
-    'p2p_unrequested_blocks.py',
     'feature_includeconf.py',
     'feature_abortnode.py',
     'feature_asmap.py',
@@ -227,24 +234,16 @@ EXTENDED_SCRIPTS = [
     # Longest test should go first, to favor running tests in parallel
     'feature_pruning.py', # NOTE: Prune mode is incompatible with -txindex, should work with governance validation disabled though.
     # vv Tests less than 20m vv
-    'feature_fee_estimation.py',
     # vv Tests less than 5m vv
     'feature_maxuploadtarget.py',
-    'mempool_packages.py',
     'feature_dbcrash.py',
     # vv Tests less than 2m vv
     'feature_bip68_sequence.py',
-    'mining_getblocktemplate_longpoll.py',  # FIXME: "socket.error: [Errno 54] Connection reset by peer" on my Mac, same as  https://github.com/bitcoin/bitcoin/issues/6651
     'p2p_timeouts.py',
     # vv Tests less than 60s vv
     # vv Tests less than 30s vv
     'feature_assumevalid.py',
-    'example_test.py',
-    'wallet_txn_doublespend.py',
-    'wallet_txn_clone.py --mineblock',
-    'feature_txindex.py',
     'feature_notifications.py',
-    'rpc_invalidateblock.py',
 ]
 
 # Place EXTENDED_SCRIPTS first since it has the 3 longest running tests
