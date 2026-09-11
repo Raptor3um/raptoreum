@@ -32,11 +32,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         assert_raises_process_error(1, "Incorrect rpcuser or rpcpassword", self.nodes[0].cli('-rpcuser=%s' % user, '-stdinrpcpass', input="foo").echo)
 
         self.log.info("Test -stdin and -stdinrpcpass")
-        # echo takes no arguments here: registered with arg0..arg9
-        # (misc.cpp:1556) but RPCHelpMan declares none (:1516). Restore once they
-        # agree.
-        #
-        # assert_equal(["foo", "bar"], self.nodes[0].cli('-rpcuser=%s' % user, '-stdin', '-stdinrpcpass', input=password + "\nfoo\nbar").echo())
+        assert_equal(["foo", "bar"], self.nodes[0].cli('-rpcuser=%s' % user, '-stdin', '-stdinrpcpass', input=password + "\nfoo\nbar").echo())
         assert_raises_process_error(1, "Incorrect rpcuser or rpcpassword", self.nodes[0].cli('-rpcuser=%s' % user, '-stdin', '-stdinrpcpass', input="foo").echo)
 
         self.log.info("Test connecting to a non-existing server")
