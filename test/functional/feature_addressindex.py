@@ -133,7 +133,10 @@ class AddressIndexTest(BitcoinTestFramework):
         self.log.info("Testing for txid uniqueness...")
         addressHash = binascii.unhexlify("FE30B718DCF0BF8A2A686BF1820C073F8B2C3B37")
         scriptPubKey = CScript([OP_HASH160, addressHash, OP_EQUAL])
-        unspent = self.nodes[0].listunspent()
+        # listunspent's order follows the wallet map, which is keyed by txid, so
+        # it differs every run. Take the largest output: the change outputs left
+        # by the sends above are too small for the spends below.
+        unspent = sorted(self.nodes[0].listunspent(), key=lambda u: u["amount"], reverse=True)
         tx = CTransaction()
         tx.vin = [CTxIn(COutPoint(int(unspent[0]["txid"], 16), unspent[0]["vout"]))]
         tx.vout = [CTxOut(10, scriptPubKey), CTxOut(11, scriptPubKey)]
@@ -162,7 +165,7 @@ class AddressIndexTest(BitcoinTestFramework):
         scriptPubKey2 = CScript([OP_DUP, OP_HASH160, addressHash2, OP_EQUALVERIFY, OP_CHECKSIG])
         self.nodes[0].importprivkey(privkey2)
 
-        unspent = self.nodes[0].listunspent()
+        unspent = sorted(self.nodes[0].listunspent(), key=lambda u: u["amount"], reverse=True)
         tx = CTransaction()
         tx_fee_sat = 1000
         tx.vin = [CTxIn(COutPoint(int(unspent[0]["txid"], 16), unspent[0]["vout"]))]
