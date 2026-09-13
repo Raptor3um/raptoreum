@@ -88,6 +88,13 @@ class WalletAddressQueriesTest(BitcoinTestFramework):
                                 node.importelectrumwallet,
                                 os.path.join(self.options.tmpdir, "export.txt"))
 
+        self.log.info("A dot in a directory name does not supply an extension")
+        dotted = os.path.join(self.options.tmpdir, "2.0.3")
+        os.makedirs(dotted, exist_ok=True)
+        assert_raises_rpc_error(-8, "File has no extension",
+                                node.importelectrumwallet,
+                                os.path.join(dotted, "export"))
+
         # Past those checks the parser is lenient: it walks the file and skips
         # what it cannot read, so a well-named file of nonsense imports nothing
         # and reports nothing.
