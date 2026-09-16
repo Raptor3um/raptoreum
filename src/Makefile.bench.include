@@ -16,6 +16,7 @@ bench_bench_raptoreum_SOURCES = \
   $(RAW_BENCH_FILES) \
   bench/bench_raptoreum.cpp \
   bench/bench.cpp \
+  bench/assets_cache_copy.cpp \
   bench/bench.h \
   bench/bls.cpp \
   bench/bls_dkg.cpp \

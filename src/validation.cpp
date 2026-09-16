@@ -665,7 +665,18 @@ static bool AcceptToMemoryPoolWorker(const CChainParams &chainparams, CTxMemPool
         CCoinsViewMemPool viewMemPool(&coins_cache, pool);
         view.SetBackend(viewMemPool);
 
-        CAssetsCache assetsCache = *passetsCache.get();
+        // The asset cache is consulted only by CheckSpecialTx, and only for the
+        // three asset transaction types. Copying the whole cache -- O(confirmed
+        // assets), a few ms at mainnet's asset count -- for every other
+        // transaction is pure overhead on the payment path, so pay it only when
+        // the transaction is actually an asset op. For all other transactions
+        // CheckSpecialTx returns before it would dereference the (null) pointer.
+        std::unique_ptr<CAssetsCache> assetsCache;
+        if (tx.nVersion == 3 && (tx.nType == TRANSACTION_NEW_ASSET ||
+                                 tx.nType == TRANSACTION_UPDATE_ASSET ||
+                                 tx.nType == TRANSACTION_MINT_ASSET)) {
+            assetsCache = std::make_unique<CAssetsCache>(*passetsCache.get());
+        }
 
         // do all inputs exist?
         for (const CTxIn &txin: tx.vin) {
@@ -775,7 +786,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams &chainparams, CTxMemPool
         // DoS scoring a node for non-critical errors, e.g. duplicate keys because a TX is received that was already
         // mined
         // NOTE: we use UTXO here and do NOT allow mempool txes as smartnode collaterals
-        if (!CheckSpecialTx(tx, ::ChainActive().Tip(), state, ::ChainstateActive().CoinsTip(), &assetsCache, true))
+        if (!CheckSpecialTx(tx, ::ChainActive().Tip(), state, ::ChainstateActive().CoinsTip(), assetsCache.get(), true))
             return false;
         if (pool.existsProviderTxConflict(tx)) {
             return state.DoS(0, false, REJECT_DUPLICATE, "protx-dup");
