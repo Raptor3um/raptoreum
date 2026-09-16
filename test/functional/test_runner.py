@@ -83,6 +83,7 @@ BASE_SCRIPTS = [
     'wallet_multiwallet.py --usecli',
     'p2p_quorum_data.py',
     # vv Tests less than 2m vv
+    'feature_assets_cache_copy_atmp.py',
     'p2p_instantsend.py',
     'wallet_basic.py',
     'wallet_labels.py',
