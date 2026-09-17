@@ -78,8 +78,14 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
         // some more integer checks
         BOOST_CHECK(CFeeRate(CAmount(26), 789) == CFeeRate(32));
         BOOST_CHECK(CFeeRate(CAmount(27), 789) == CFeeRate(34));
-        // Maximum size in bytes, should not crash
-        CFeeRate(MAX_MONEY, std::numeric_limits<size_t>::max() >> 1).GetFeePerK();
+        // Maximum size in bytes, should not crash.
+        // NB: use OLD_MAX_MONEY (== Bitcoin's MAX_MONEY) rather than Raptoreum's
+        // MAX_MONEY (1000x larger). With Raptoreum's 21B-coin cap, MAX_MONEY * 1000
+        // overflows int64_t inside CFeeRate's constructor (2.1e21 > int64_t::max).
+        // The overflow is undefined behaviour and aborts under signed-overflow
+        // sanitizers / -ftrapv builds, which in turn skips the fixture destructor
+        // and cascades into the rest of the suite (ECC_Start assertion).
+        CFeeRate(OLD_MAX_MONEY, std::numeric_limits<size_t>::max() >> 1).GetFeePerK();
         }
 
 BOOST_AUTO_TEST_CASE(BinaryOperatorTest)
