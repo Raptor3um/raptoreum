@@ -197,7 +197,7 @@ class BitcoinTestFramework():
                 if self.nodes:
                     self.stop_nodes()
             except BaseException:
-                success = False
+                success = TestStatus.FAILED
                 self.log.exception("Unexpected exception caught during shutdown")
         else:
             for node in self.nodes:

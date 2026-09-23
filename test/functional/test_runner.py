@@ -196,6 +196,7 @@ BASE_SCRIPTS = [
     'p2p_connect_to_devnet.py',
     'feature_futures.py',
     'feature_assets.py',
+    'feature_asset_cache_acceptance.py',
     'feature_founder_payment.py',
     'feature_assets_rules.py',
     'feature_sporks.py',
@@ -214,6 +215,7 @@ BASE_SCRIPTS = [
     'feature_filelock.py',
     'p2p_unrequested_blocks.py',
     'feature_shutdown.py',
+    'feature_framework.py',
     'rpc_coinjoin.py',
     'rpc_masternode.py',
     'rpc_mnauth.py',
@@ -343,7 +345,7 @@ def main():
     if tests:
         # Individual tests have been specified. Run specified tests that exist
         # in the ALL_SCRIPTS list. Accept the name with or without .py extension.
-        tests = [re.sub("\.py$", "", test) + ".py" for test in tests]
+        tests = [re.sub(r"\.py$", "", test) + ".py" for test in tests]
         for test in tests:
             if test in ALL_SCRIPTS:
                 test_list.append(test)
@@ -358,7 +360,7 @@ def main():
 
     # Remove the test cases that the user has explicitly asked to exclude.
     if args.exclude:
-        exclude_tests = [re.sub("\.py$", "", test) + ".py" for test in args.exclude.split(',')]
+        exclude_tests = [re.sub(r"\.py$", "", test) + ".py" for test in args.exclude.split(',')]
         for exclude_test in exclude_tests:
             if exclude_test in test_list:
                 test_list.remove(exclude_test)

@@ -25,6 +25,18 @@ from test_framework.util import (
 )
 
 
+class AddrReceiver(P2PInterface):
+    """Accumulates relayed addresses: one addr message need not carry all ten."""
+
+    def __init__(self):
+        super().__init__()
+        self.received = {}
+
+    def on_addr(self, message):
+        for addr in message.addrs:
+            self.received[(addr.ip, addr.port)] = addr.nServices
+
+
 class AddrTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = False
@@ -65,7 +77,7 @@ class AddrTest(BitcoinTestFramework):
         # RelayAddress (which fans out to peers connected at that instant)
         # has this connection to pick from.
         self.log.info('Create connection that receives relayed addr messages')
-        addr_receiver = node.add_p2p_connection(P2PInterface())
+        addr_receiver = node.add_p2p_connection(AddrReceiver())
         addr_receiver.wait_for_verack()
 
         self.log.info('Send too large addr message')
@@ -89,20 +101,13 @@ class AddrTest(BitcoinTestFramework):
         # clock setmocktime does not move, and missing the first (near-
         # instant) flush means waiting out a PoissonNextSend(30s) interval --
         # exponential, so a long tail. 180s keeps the miss probability low
-        # (e^(-180/30) ~ 0.25%). The predicate checks for one of our own
-        # addresses, not just any 'addr' message, since AdvertiseLocal can
-        # also flush the node's own address to a fresh connection.
-        def relayed_to_receiver():
-            msg = addr_receiver.last_message.get('addr')
-            return msg is not None and any((a.ip, a.port) in expected for a in msg.addrs)
-
-        wait_until(relayed_to_receiver, timeout=180, lock=mininode_lock)
+        # (e^(-180/30) ~ 0.25%). The receiver accumulates every addr message,
+        # since AdvertiseLocal can also flush the node's own address to a fresh
+        # connection, and all ten of ours must arrive.
+        wait_until(lambda: expected <= addr_receiver.received.keys(), timeout=180, lock=mininode_lock)
         with mininode_lock:
-            relayed = addr_receiver.last_message['addr'].addrs
-        assert len(relayed) > 0
-        for a in relayed:
-            assert (a.ip, a.port) in expected, "unexpected address {}".format(a)
-            assert_equal(a.nServices, NODE_NETWORK)
+            for address in expected:
+                assert_equal(addr_receiver.received[address], NODE_NETWORK)
 
         self.log.info('Check that the node will serve them back')
         # getnodeaddresses serves a 23% sample, so this checks what comes back

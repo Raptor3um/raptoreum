@@ -213,6 +213,9 @@ class FuturesTest(BitcoinTestFramework):
         # counts unless abandoned, which would hide `locked` from
         # listunspent below and let the actual assertion go unchecked.
         node.abandontransaction(spent)
+        # Abandoning the rejected spend must not release the future early.
+        entry = {(u["txid"], u["vout"]): u for u in node.listunspent(0)}[locked]
+        assert_equal(entry["futureSpendable"], False)
         node.generate(5)
         entry = {(u["txid"], u["vout"]): u for u in node.listunspent(0)}[locked]
         assert_equal(entry["futureSpendable"], True)

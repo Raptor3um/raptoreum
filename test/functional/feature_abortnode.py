@@ -34,6 +34,8 @@ class AbortNodeTest(BitcoinTestFramework):
 
         # Connecting to a node with a longer chain triggers a reorg attempt
         self.nodes[1].generate(3)
+        # AbortNode stops itself, so declare its expected diagnostic before waiting.
+        self.nodes[0]._expected_stderr = "Error: A fatal internal error occurred, see debug.log for details"
         with self.nodes[0].assert_debug_log(["Failed to disconnect block"]):
             connect_nodes(self.nodes[0], 1)
             self.nodes[1].generate(1)

@@ -20,6 +20,11 @@ class RPCMasternodeTest(RaptoreumTestFramework):
         self.set_raptoreum_test_params(11, 10, fast_dip3_enforcement=True)
 
     def run_test(self):
+        node = self.nodes[0]
+        registered = node.protx('list', 'registered', True)
+        assert_equal(len(registered), self.mn_count)
+        known_protx = {entry['proTxHash'] for entry in registered}
+
         self.log.info("test that results from `winners` and `payments` RPCs match")
         blockhash = ""
         payments = []
@@ -44,6 +49,8 @@ class RPCMasternodeTest(RaptoreumTestFramework):
             payments = self.nodes[0].smartnode("payments", blockhash)
             assert_equal(len(payments), 1)
             payments_block = payments[0]
+            assert_equal(len(payments_block["smartnodes"]), 1)
+            assert payments_block["smartnodes"][0]["proTxHash"] in known_protx
             payments_block_payees = payments_block["smartnodes"][0]["payees"]
             payments_payee = ""
             for i in range(0, len(payments_block_payees)):
@@ -106,6 +113,27 @@ class RPCMasternodeTest(RaptoreumTestFramework):
             assert_equal(gbt_smartnode[i]["payee"], payments_smartnode["payees"][i]["address"])
             assert_equal(gbt_smartnode[i]["script"], payments_smartnode["payees"][i]["script"])
             assert_equal(gbt_smartnode[i]["amount"], payments_smartnode["payees"][i]["amount"])
+
+        self.log.info("test default block selection and unknown-block rejection")
+        assert_equal(node.smartnode('payments'), node.smartnode('payments', node.getbestblockhash()))
+        assert_raises_rpc_error(-5, "Block not found", node.smartnode, 'payments', '00' * 32)
+
+        self.log.info("test winners history, projection, rotation, and filtering")
+        tip_height = node.getblockcount()
+        winners = node.smartnode('winners', '10')
+        for height in range(tip_height - 9, tip_height + 2):
+            assert str(height) in winners, "height {} missing from winners".format(height)
+            assert winners[str(height)].strip() not in ('', 'Unknown')
+        payout_addresses = {entry['state']['payoutAddress'] for entry in registered}
+        recent = [winners[str(height)].split(',')[0].strip()
+                  for height in range(tip_height - 4, tip_height + 1)]
+        assert set(recent) <= payout_addresses
+        assert len(set(recent)) > 1, "the payee should rotate between smartnodes"
+        one_payee = recent[0]
+        expected = {height: payee for height, payee in winners.items() if one_payee in payee}
+        assert expected
+        assert_equal(node.smartnode('winners', '10', one_payee), expected)
+        assert_equal(node.smartnode('winners', '10', 'not-a-payee'), {})
 
 
 if __name__ == '__main__':

@@ -107,6 +107,8 @@ class TestNode():
         # back a proxy rather than None and .close() would go to the node.
         self._stderr_file = None
         self._stderr_pos = 0
+        # What a node that exits on its own should have written; see is_node_stopped().
+        self._expected_stderr = ''
         self.coverage_dir = coverage_dir
         self.mocktime = mocktime
         if extra_conf != None:
@@ -187,6 +189,7 @@ class TestNode():
             # only what this run wrote.
             self._stderr_pos = self._stderr_file.tell()
             stderr = self._stderr_file
+        self._expected_stderr = ''
         all_args = self.args + self.extra_args_from_options + extra_args
         if self.mocktime != 0:
             all_args = all_args + ["-mocktime=%d" % self.mocktime]
@@ -316,7 +319,8 @@ class TestNode():
                     stderr = '\n'.join(
                         line for line in stderr.splitlines()
                         if line not in KNOWN_STARTUP_WARNINGS)
-                    if stderr != expected_stderr.strip():
+                    # Compare lines: an expectation written with CRLF still matches.
+                    if stderr.splitlines() != expected_stderr.strip().splitlines():
                         raise AssertionError(
                             "Unexpected stderr {} != {}".format(stderr, expected_stderr))
         finally:
@@ -338,10 +342,17 @@ class TestNode():
         # process has stopped. Assert that it didn't return an error code.
         assert return_code == 0, self._node_msg(
             "Node returned non-zero exit code (%d) when stopping" % return_code)
-        self.running = False
-        self.process = None
-        self.rpc_connected = False
-        self.rpc = None
+        # A node that exits on its own (AbortNode, -stopatheight, a stop RPC
+        # sent directly) never goes through stop_node(), so check its stderr
+        # here, against what the test declared in _expected_stderr beforehand.
+        # A no-op after stop_node(), which has already checked and closed it.
+        try:
+            self._wait_and_check_stderr(self._expected_stderr)
+        finally:
+            self.running = False
+            self.process = None
+            self.rpc_connected = False
+            self.rpc = None
         self.log.debug("Node stopped")
         return True
 
@@ -383,7 +394,7 @@ class TestNode():
                     perc_increase_memory_usage * 100))
 
     @contextlib.contextmanager
-    def assert_debug_log(self, expected_msgs):
+    def assert_debug_log(self, expected_msgs, timeout=2):
         chain = get_chain_folder(self.datadir, self.chain)
         debug_log = os.path.join(self.datadir, chain, 'debug.log')
         with open(debug_log, encoding='utf-8') as dl:
@@ -392,13 +403,20 @@ class TestNode():
         try:
             yield
         finally:
-            with open(debug_log, encoding='utf-8') as dl:
-                dl.seek(prev_size)
-                log = dl.read()
-            print_log = " - " + "\n - ".join(log.splitlines())
-            for expected_msg in expected_msgs:
-                if re.search(re.escape(expected_msg), log, flags=re.MULTILINE) is None:
-                    self._raise_assertion_error('Expected message "{}" does not partially match log:\n\n{}\n\n'.format(expected_msg, print_log))
+            log = ''
+
+            def messages_found():
+                nonlocal log
+                with open(debug_log, encoding='utf-8') as dl:
+                    dl.seek(prev_size)
+                    log = dl.read()
+                return all(expected_msg in log for expected_msg in expected_msgs)
+
+            if not wait_until(messages_found, timeout=timeout, do_assert=False):
+                print_log = " - " + "\n - ".join(log.splitlines())
+                for expected_msg in expected_msgs:
+                    if re.search(re.escape(expected_msg), log, flags=re.MULTILINE) is None:
+                        self._raise_assertion_error('Expected message "{}" does not partially match log:\n\n{}\n\n'.format(expected_msg, print_log))
 
     def assert_start_raises_init_error(self, extra_args=None, expected_msg=None, partial_match=False, *args, **kwargs):
         """Attempt to start the node and expect it to raise an error.

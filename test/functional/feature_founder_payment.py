@@ -44,7 +44,9 @@ class FounderPaymentTest(BitcoinTestFramework):
         self.address = node.getnewaddress()
 
         self.log.info("Mining up to the founder start height")
-        node.generatetoaddress(FOUNDER_START_HEIGHT, self.address)
+        # Keep each RPC below its timeout when the suite shares CPU with other nodes.
+        while node.getblockcount() < FOUNDER_START_HEIGHT:
+            node.generatetoaddress(min(10, FOUNDER_START_HEIGHT - node.getblockcount()), self.address)
         assert_equal(node.getblockcount(), FOUNDER_START_HEIGHT)
 
         self.test_nothing_before_the_start_height()
