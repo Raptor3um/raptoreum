@@ -426,6 +426,9 @@ namespace Consensus {
             .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
 
             .keepOldConnections = 3,
+            .keepOldKeys = 4, // matches llmq_test_v17 -- omitting this makes max_store_depth()
+                              // zero, so CleanupOldContributions() deletes DKG contributions
+                              // one block after formation, active quorum or not.
             .recoveryMembers = 3,
     };
 
