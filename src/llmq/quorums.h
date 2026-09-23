@@ -259,17 +259,16 @@ namespace llmq {
         bool RequestQuorumData(CNode *pFrom, Consensus::LLMQType llmqType, const CBlockIndex *pQuorumBaseBlockIndex,
                                uint16_t nDataMask, const uint256 &proTxHash = uint256()) const;
 
-        // all these methods will lock cs_main for a short period of time
+        // Quorum lookup and construction can acquire cs_main.
         CQuorumCPtr GetQuorum(Consensus::LLMQType llmqType, const uint256 &quorumHash) const;
 
         std::vector <CQuorumCPtr> ScanQuorums(Consensus::LLMQType llmqType, size_t nCountRequested) const;
 
-        // this one is cs_main-free
+        // This overload can also acquire cs_main when resolving quorums.
         std::vector <CQuorumCPtr>
         ScanQuorums(Consensus::LLMQType llmqType, const CBlockIndex *pindexStart, size_t nCountRequested) const;
 
     private:
-        // all private methods here are cs_main-free
         void EnsureQuorumConnections(const Consensus::LLMQParams &llmqParams, const CBlockIndex *pindexNew) const;
 
         CQuorumPtr

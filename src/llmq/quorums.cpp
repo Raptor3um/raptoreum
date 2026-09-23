@@ -524,7 +524,9 @@ namespace llmq {
             return nullptr;
         }
 
-        LOCK(cs_map_quorums);
+        // Building a quorum reads activation state under cs_main. Keep the same
+        // lock order as callers that already hold cs_main, including GETDATA.
+        LOCK2(cs_main, cs_map_quorums);
         CQuorumPtr pQuorum;
         if (mapQuorumsCache[llmqType].get(quorumHash, pQuorum)) {
             return pQuorum;
@@ -870,7 +872,8 @@ namespace llmq {
 
                 auto proTxHash = WITH_LOCK(activeSmartnodeInfoCs,
                 return activeSmartnodeInfo.proTxHash);
-                connman.ForEachNode([&](CNode *pNode) {
+                // RequestQuorumData can take cs_main, so acquire it before cs_vNodes.
+                WITH_LOCK(cs_main, connman.ForEachNode([&](CNode *pNode) {
                     auto verifiedProRegTxHash = pNode->GetVerifiedProRegTxHash();
                     if (pCurrentMemberHash == nullptr || verifiedProRegTxHash != *pCurrentMemberHash) {
                         return;
@@ -903,7 +906,7 @@ namespace llmq {
                             return;
                         }
                     }
-                });
+                }));
                 quorumThreadInterrupt.sleep_for(std::chrono::seconds(1));
             }
             pQuorum->fQuorumDataRecoveryThreadRunning = false;

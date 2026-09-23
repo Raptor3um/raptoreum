@@ -599,8 +599,9 @@ UniValue quorum_getdata(const JSONRPCRequest &request) {
         }
     }
 
-    const CBlockIndex *pQuorumBaseBlockIndex = WITH_LOCK(cs_main,
-    return LookupBlockIndex(quorumHash));
+    // ForNode holds cs_vNodes while RequestQuorumData can acquire cs_main.
+    LOCK(cs_main);
+    const CBlockIndex *pQuorumBaseBlockIndex = LookupBlockIndex(quorumHash);
 
     NodeContext &node = EnsureNodeContext(request.context);
     return node.connman->ForNode(nodeId, [&](CNode *pNode) {

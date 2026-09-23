@@ -156,6 +156,13 @@ class QuorumDataRecoveryTest(RaptoreumTestFramework):
         # works as expected
         recover_members = member_mns_recover_test + member_mns_recover_v17
         exclude_members = [last_resort_test, last_resort_v17]
+        self.log.info("Run DKG cleanup before relying on the remaining recovery sources")
+        for mn in exclude_members:
+            with mn.node.assert_debug_log(["entries for llmq type 101, old:"], timeout=30):
+                # Each scheduler advance must be strictly less than one hour.
+                mn.node.mockscheduler(1800)
+                mn.node.mockscheduler(1800)
+            assert mn.node.getbestblockhash() == node.getbestblockhash()
         # Reindex all masternodes but exclude the last_resort for both testing quorums
         self.restart_mns(exclude=exclude_members, reindex=True, qdata_recovery_enabled=False)
         # Validate all but one are invalid members now
