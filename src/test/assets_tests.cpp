@@ -7,6 +7,7 @@
 
 #include <base58.h>
 #include <chainparams.h>
+#include <consensus/validation.h>
 #include <index/txindex.h>
 #include <keystore.h>
 #include <messagesigner.h>
@@ -24,6 +25,7 @@
 #include <core_io.h>
 #include <evo/providertx.h>
 #include <evo/specialtx.h>
+#include <hash.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -228,6 +230,25 @@ static CScript GenerateRandomAddress()
 
 BOOST_AUTO_TEST_SUITE(assets_creation_tests)
 
+static void CheckAssetDryRun(CTxMemPool& pool, const CMutableTransaction& tx, bool expected)
+{
+    LOCK(cs_main);
+    const auto cacheHash = [] {
+        CHashWriter hash(SER_GETHASH, 0);
+        hash << passetsCache->mapAsset << passetsCache->mapAssetId
+             << passetsCache->NewAssetsToAdd << passetsCache->NewAssetsToRemove;
+        return hash.GetHash();
+    };
+    const auto before = cacheHash();
+    const auto poolSize = pool.size();
+    CValidationState state;
+    // Dry runs check special payloads, but return before input script verification.
+    BOOST_REQUIRE_EQUAL(AcceptToMemoryPool(pool, state, MakeTransactionRef(tx),
+                                          nullptr, true, 0, true), expected);
+    BOOST_CHECK_EQUAL(pool.size(), poolSize);
+    BOOST_CHECK(cacheHash() == before);
+}
+
 BOOST_FIXTURE_TEST_CASE(assets_creation, TestChainDIP3BeforeActivationSetup)
 {
     CKey sporkKey;
@@ -239,6 +260,7 @@ BOOST_FIXTURE_TEST_CASE(assets_creation, TestChainDIP3BeforeActivationSetup)
     auto utxos = BuildSimpleUtxoMap(m_coinbase_txns);
 
     auto tx = CreateNewAssetTx(*m_node.mempool, utxos, coinbaseKey, "TEST_ASSET", true, false, 0, 8, 1000);
+    CheckAssetDryRun(*m_node.mempool, tx, true);
     std::vector<CMutableTransaction> txns = {tx};
 
     int nHeight = ::ChainActive().Height();
@@ -252,6 +274,7 @@ BOOST_FIXTURE_TEST_CASE(assets_creation, TestChainDIP3BeforeActivationSetup)
 
     //invalid asset name
     tx = CreateNewAssetTx(*m_node.mempool, utxos, coinbaseKey, "*Test_Asset*", true, false, 0, 8, 1000);
+    CheckAssetDryRun(*m_node.mempool, tx, false);
     txns = {tx};
     block = std::make_shared<CBlock>(CreateBlock(txns, coinbaseKey));
     //block should be rejected
@@ -311,6 +334,7 @@ BOOST_FIXTURE_TEST_CASE(assets_update, TestChainDIP3BeforeActivationSetup)
     key.MakeNewKey(false);
     std::string assetId = tx.GetHash().ToString();
     tx = CreateUpdateAssetTx(*m_node.mempool, utxos, coinbaseKey, key, assetId, true, 0, 1000);
+    CheckAssetDryRun(*m_node.mempool, tx, true);
     {
         auto block = std::make_shared<CBlock>(CreateBlock({tx}, coinbaseKey));
         EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
@@ -324,6 +348,7 @@ BOOST_FIXTURE_TEST_CASE(assets_update, TestChainDIP3BeforeActivationSetup)
 
     //any atemp to update with the coinbaseKey should fail
     tx = CreateUpdateAssetTx(*m_node.mempool, utxos, coinbaseKey, coinbaseKey, assetId, true, 0, 10000);
+    CheckAssetDryRun(*m_node.mempool, tx, false);
     {
         auto block = std::make_shared<CBlock>(CreateBlock({tx}, coinbaseKey));
         EnsureChainman(m_node).ProcessNewBlock(Params(), block, true, nullptr);
@@ -359,6 +384,7 @@ BOOST_FIXTURE_TEST_CASE(assets_mint, TestChainDIP3BeforeActivationSetup)
 
     std::string assetId = tx.GetHash().ToString();
     tx = CreateMintAssetTx(*m_node.mempool, utxos, coinbaseKey, assetId);
+    CheckAssetDryRun(*m_node.mempool, tx, true);
 
     {
         auto block = std::make_shared<CBlock>(CreateBlock({tx}, coinbaseKey));

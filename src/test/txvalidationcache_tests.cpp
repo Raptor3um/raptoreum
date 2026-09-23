@@ -17,6 +17,8 @@
 #include <keystore.h>
 #include <policy/policy.h>
 #include <chainparams.h>
+#include <assets/assets.h>
+#include <hash.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -25,6 +27,57 @@ bool CheckInputs(const CTransaction &tx, CValidationState &state, const CCoinsVi
                  std::vector <CScriptCheck> *pvChecks);
 
 BOOST_AUTO_TEST_SUITE(tx_validationcache_tests)
+
+BOOST_FIXTURE_TEST_CASE(populated_asset_cache_payment_acceptance, TestChain100Setup)
+{
+    LOCK(cs_main);
+    // Synthetic metadata exercises the populated-cache path, not asset consensus.
+    for (int i = 0; i < 25; ++i) {
+        CDatabaseAssetData data;
+        data.asset.assetId = std::to_string(i);
+        data.asset.name = "CACHE" + std::to_string(i);
+        passetsCache->mapAsset.emplace(data.asset.assetId, data);
+        passetsCache->mapAssetId.emplace(data.asset.name, data.asset.assetId);
+        passetsCache->NewAssetsToAdd.insert(data);
+    }
+    const auto cacheHash = [] {
+        CHashWriter hash(SER_GETHASH, 0);
+        hash << passetsCache->mapAsset << passetsCache->mapAssetId
+             << passetsCache->NewAssetsToAdd << passetsCache->NewAssetsToRemove;
+        return hash.GetHash();
+    };
+    const uint256 before = cacheHash();
+    const CScript script = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
+    CMutableTransaction tx;
+    tx.nVersion = 3;
+    tx.vin.emplace_back(m_coinbase_txns[0]->GetHash(), 0);
+    tx.vout.emplace_back(11 * CENT, script);
+    std::vector<unsigned char> signature;
+    BOOST_REQUIRE(coinbaseKey.Sign(SignatureHash(script, tx, 0, SIGHASH_ALL, 0, SigVersion::BASE), signature));
+    signature.push_back(SIGHASH_ALL);
+    tx.vin[0].scriptSig << signature;
+
+    CValidationState dryRunState;
+    BOOST_REQUIRE(AcceptToMemoryPool(*m_node.mempool, dryRunState, MakeTransactionRef(tx),
+                                    nullptr, true, 0, true));
+    BOOST_CHECK_EQUAL(m_node.mempool->size(), 0U);
+    BOOST_CHECK(cacheHash() == before);
+
+    CMutableTransaction invalid = tx;
+    invalid.vin[0].scriptSig.clear();
+    CValidationState invalidState;
+    BOOST_CHECK(!AcceptToMemoryPool(*m_node.mempool, invalidState, MakeTransactionRef(invalid),
+                                   nullptr, true, 0));
+    BOOST_CHECK(invalidState.IsInvalid());
+    BOOST_CHECK_EQUAL(m_node.mempool->size(), 0U);
+    BOOST_CHECK(cacheHash() == before);
+
+    CValidationState validState;
+    BOOST_REQUIRE(AcceptToMemoryPool(*m_node.mempool, validState, MakeTransactionRef(tx),
+                                    nullptr, true, 0));
+    BOOST_CHECK(m_node.mempool->exists(tx.GetHash()));
+    BOOST_CHECK(cacheHash() == before);
+}
 
 BOOST_FIXTURE_TEST_CASE(tx_mempool_block_doublespend, TestChain100Setup
 )
