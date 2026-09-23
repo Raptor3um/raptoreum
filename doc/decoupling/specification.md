@@ -51,7 +51,11 @@ signatureHash = existing BuildSignHash(type, quorumHash, requestId, messageHash)
 
 The receiver recomputes the prevout digest from its own coins view. Commit to each ordered outpoint and the complete effective coin: amount, script, height, coinbase and future/context fields. Do not trust peer-supplied prevout contents. A positive certificate is valid only for the named parent and its immediate successor under those exact flags.
 
-Select the quorum deterministically from the public commitments visible at that parent. Historical verification must use that same anchored selection, not current-tip activity, local recovered-signature history or retained private shares. Keep the effective quorum size/threshold in the evidence; do not claim that “60%+” alone establishes Byzantine safety.
+Version 1 permits only the regtest quorum type `LLMQ_5_60` (100). The selection anchor is the exact parent's ancestor at `parent.height - 8`; no ancestor means no eligible quorum. Take the two most recently mined non-null commitments of that type at or before that anchor. Score each with `H(type, quorumHash, requestId)`, using existing `uint256` ordering; choose the smallest score, breaking a score tie by quorum hash. Fewer than two available commitments use the available set; an empty set means abstention. The quorum size/threshold remain the configured regtest DKG parameters and must be recorded in evidence.
+
+Selection and verification require the public EvoDB state corresponding to the exact parent, as already required at block connection. Check that state before special-transaction processing mutates it, verify every commitment's mined block and quorum-base block are ancestors of the anchor, and use its committed public key directly. Do not use current-tip quorum caches, local recovered-signature history or retained private shares for historical acceptance. A caller with another branch's state must first establish the correct connected state; it cannot declare a certificate invalid from unrelated state. Test competing branches at equal height, alternative validly signed quorums and the disallowed second test type.
+
+Certificate v1 freezes its policy flags as the explicit script-flag bit set in this base revision, not a future value of `STANDARD_SCRIPT_VERIFY_FLAGS`. Its consensus flags are those of the parent's immediate successor. Calculate them with the same rule helper used for block connection and compare them with the actual block's flags. Predict successor activation from the parent's ancestry without leaving temporary block-index pointers in update caches. For time-dependent BIP16 flags, require the parent's median time plus one already to be past the historical switch; otherwise omit delegation. Cover the V17 transition and reorg in tests.
 
 The signer verifies transaction structure, contextual eligibility, inputs, amounts, finality/sequence constraints and both script-flag sets before a positive vote. Existing ATMP `fDryRun` returns before scripts and cannot be used for this purpose. A deterministic script/consensus failure can produce a negative result for the same statement; missing bodies, missing context or unavailable quorums mean abstention. A negative vote/certificate is diagnostic: it cannot permanently invalidate a transaction or block on peers, because full validation remains authoritative outside a positive delegated statement. Request-ID vote persistence prevents signing both results for one context.
 
@@ -67,7 +71,7 @@ At block connection:
 
 ```text
 no certificate for position -> existing script checks
-certificate present but invalid -> reject the block
+certificate present but invalid or negative -> reject the block
 valid eligible positive certificate -> omit only that transaction's scripts
 ```
 
@@ -80,6 +84,7 @@ Persist the full reconstructed `CBlock`, including the certificate-bearing coinb
 Introduce an explicitly versioned `CDecoupledBlock` transport/RPC object. Keep `CBlock` serialization unchanged.
 
 ```text
+version: uint16, exactly 1
 header: ordinary CBlockHeader
 vtx: full transaction bodies in their canonical relative order
 vtxids: sorted (uint16 canonicalIndex, full txid) pairs
@@ -106,6 +111,8 @@ Keep historical download/IBD on full canonical blocks. When all sources withhold
 GBT opt-in capability is `decoupled-v1`. Without it, or when the selected template has no references, return the existing schema and all transaction bodies.
 
 For a mixed template, return ordinary bodies in `transactions`, full buspool IDs in `vtxids`, and corresponding `vtxidmetadata` with canonical `index`, `depends`, fee, special fee, sigops and serialized size. All indexes/dependencies use the complete block order, coinbase zero. Never reinterpret dependency indexes as positions in a reduced vector.
+
+An experimental response containing a certificate manifest must not advertise transaction-list mutation: its `mutable` contract permits only changes that preserve canonical transaction positions and the manifest (for example permitted time/nonce and coinbase extranonce changes). Removing or reordering a certified position requires rebuilding the manifest and revalidating, not merely changing the merkle root. Without opt-in, return complete bodies and the ordinary schema, but include a candidate admitted through delegation only after local script validation; otherwise omit it from that ordinary template.
 
 The block assembler selects the shared graph and first produces a complete valid template. Classification, certification and payload capacity determine its reference presentation. Promotions/demotions update the existing template-change counter so caching/longpoll cannot serve stale eligibility.
 
