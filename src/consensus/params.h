@@ -33,6 +33,8 @@ namespace Consensus {
  */
     struct Params {
         uint256 hashGenesisBlock;
+        bool fTxDecouplingAllowed{false};
+        int nTxDecouplingHeight{-1};
         uint256 hashDevnetGenesisBlock;
         int nSubsidyHalvingInterval;
         int nSmartnodePaymentsStartBlock;

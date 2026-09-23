@@ -248,6 +248,7 @@ BITCOIN_CORE_H = \
   policy/policy.h \
   policy/settings.h \
   pow.h \
+  primitives/txcertificate.h \
   protocol.h \
   random.h \
   randomenv.h \
@@ -366,6 +367,7 @@ libraptoreum_server_a_SOURCES = \
   consensus/tx_verify.cpp \
   dbwrapper.cpp \
   dsnotificationinterface.cpp \
+  txdecoupling.cpp \
   evo/cbtx.cpp \
   evo/deterministicmns.cpp \
   evo/evodb.cpp \
@@ -645,6 +647,7 @@ libraptoreum_consensus_a_SOURCES = \
   primitives/powcache.cpp \
   primitives/powcache.h \
   primitives/transaction.cpp \
+  txdecoupling.h \
   primitives/transaction.h \
   pubkey.cpp \
   pubkey.h \

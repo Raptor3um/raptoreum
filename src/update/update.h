@@ -345,6 +345,7 @@ public:
     const Update *GetUpdate(enum EUpdate eUpdate) const;
 
     bool IsActive(enum EUpdate eUpdate, const CBlockIndex *blockIndex);
+    bool IsActiveForNextBlock(enum EUpdate eUpdate, const CBlockIndex *parent);
 
     bool IsAssetsActive(const CBlockIndex *blockIndex);
 

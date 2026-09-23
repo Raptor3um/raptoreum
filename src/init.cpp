@@ -465,6 +465,11 @@ void SetupServerArgs() {
     const auto testnetChainParams = CreateChainParams(CBaseChainParams::TESTNET);
     const auto regtestChainParams = CreateChainParams(CBaseChainParams::REGTEST);
 
+    gArgs.AddArg("-txdecoupling", "Enable experimental transaction decoupling on regtest (default: 0)",
+                 ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
+    gArgs.AddArg("-txdecouplingheight=<n>", "Activate experimental script certificates at this regtest height (default: disabled; requires -txdecoupling=1)",
+                 ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
+
     // Hidden Options
     std::vector <std::string> hidden_args = {"-h", "-help", "-dbcrashratio", "-forcecompactdb", "-printcrashinfo",
             // GUI Args. These will be overwritten by SetupUIArgs for the GUI

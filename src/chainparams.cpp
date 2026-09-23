@@ -668,6 +668,17 @@ class CRegTestParams : public CChainParams {
 public:
     explicit CRegTestParams(const ArgsManager &args) {
         strNetworkID = CBaseChainParams::REGTEST;
+        consensus.fTxDecouplingAllowed = true;
+        if (args.IsArgSet("-txdecouplingheight")) {
+            if (!args.GetBoolArg("-txdecoupling", false))
+                throw std::runtime_error("-txdecouplingheight requires -txdecoupling=1");
+            if (args.GetArg("-prune", 0) != 0)
+                throw std::runtime_error("Delegated transaction validation requires unpruned voting history");
+            int height;
+            if (!ParseInt32(args.GetArg("-txdecouplingheight", ""), &height) || height < 0)
+                throw std::runtime_error("-txdecouplingheight requires a non-negative 32-bit height");
+            consensus.nTxDecouplingHeight = height;
+        }
         consensus.nSubsidyHalvingInterval = 150;
         consensus.nSmartnodePaymentsStartBlock = 240;
         consensus.nSmartnodePaymentsIncreaseBlock = 350;
@@ -1038,6 +1049,9 @@ std::unique_ptr <CChainParams> CreateChainParams(const std::string &chain) {
 
 void SelectParams(const std::string &network) {
     SelectBaseParams(network);
+    if (network != CBaseChainParams::REGTEST &&
+        (gArgs.IsArgSet("-txdecoupling") || gArgs.IsArgSet("-txdecouplingheight")))
+        throw std::runtime_error("Transaction decoupling options are supported only on regtest");
     globalChainParams = CreateChainParams(network);
 }
 

@@ -6,6 +6,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <validation.h>
+#include <txdecoupling.h>
 
 #include <arith_uint256.h>
 #include <chain.h>
@@ -2016,14 +2017,8 @@ bool GetBlockHash(uint256 &hashRet, int nBlockHeight) {
     return true;
 }
 
-static unsigned int GetBlockScriptFlags(const CBlockIndex *pindex, const Consensus::Params &consensusparams) {
-    AssertLockHeld(cs_main);
-
-    // BIP16 didn't become active until Apr 1 2012
-    int64_t nBIP16SwitchTime = 1333238400;
-    bool fStrictPayToScriptHash = (pindex->GetBlockTime() >= nBIP16SwitchTime);
-
-    unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
+static unsigned int ScriptFlagsForRules(bool p2sh, bool dip0020, const Consensus::Params& consensusparams) {
+    unsigned int flags = p2sh ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
 
     // Start enforcing the DERSIG (BIP66) rule
     if (consensusparams.BIP66Enabled) {
@@ -2045,13 +2040,29 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex *pindex, const Consens
         flags |= SCRIPT_VERIFY_NULLDUMMY;
     }
 
-    if (Updates().IsActive(EUpdate::DEPLOYMENT_V17, pindex)) {
+    if (dip0020) {
         flags |= SCRIPT_ENABLE_DIP0020_OPCODES;
     }
 
     return flags;
 }
 
+
+static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consensus::Params& consensusparams) {
+    AssertLockHeld(cs_main);
+    const bool dip0020 = IsTxDecouplingActive(pindex->pprev, consensusparams)
+        ? Updates().IsActiveForNextBlock(EUpdate::DEPLOYMENT_V17, pindex->pprev)
+        : Updates().IsActive(EUpdate::DEPLOYMENT_V17, pindex);
+    return ScriptFlagsForRules(pindex->GetBlockTime() >= 1333238400, dip0020, consensusparams);
+}
+
+bool GetTxValidationNextScriptFlags(const CBlockIndex* parent, const Consensus::Params& consensus, uint32_t& flags) {
+    AssertLockHeld(cs_main);
+    // Every valid successor must use the same time-dependent BIP16 rule.
+    if (!parent || parent->GetMedianTimePast() < 1333238399) return false;
+    flags = ScriptFlagsForRules(true, Updates().IsActiveForNextBlock(EUpdate::DEPLOYMENT_V17, parent), consensus);
+    return true;
+}
 
 static int64_t nTimeCheck = 0;
 static int64_t nTimeForks = 0;
@@ -2231,6 +2242,12 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
 
     bool fDIP0001Active_context = Params().GetConsensus().DIP0001Enabled;
 
+    // Verify against the parent's public commitments before special transactions update EvoDB.
+    std::set<uint16_t> certifiedTransactions;
+    if (IsTxDecouplingActive(pindex->pprev, chainparams.GetConsensus()) &&
+        !CheckBlockTxCertificates(block, view, pindex->pprev, chainparams.GetConsensus(), flags,
+                                   certifiedTransactions, state)) return false;
+
     // MUST process special txes before updating UTXO to ensure consistency between mempool and block processing
     if (!ProcessSpecialTxsInBlock(block, pindex, state, view, assetsCache, fJustCheck, fScriptChecks)) {
         return error("ConnectBlock(RAPTOREUM): ProcessSpecialTxsInBlock for block %s failed with %s",
@@ -2366,7 +2383,9 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
 
             std::vector <CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-            if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, fCacheResults, txdata[i],
+            const bool checkScripts = fScriptChecks &&
+                (i > std::numeric_limits<uint16_t>::max() || certifiedTransactions.count(uint16_t(i)) == 0);
+            if (!CheckInputs(tx, state, view, checkScripts, flags, fCacheResults, fCacheResults, txdata[i],
                              g_parallel_script_checks ? &vChecks : nullptr))
                 return error("ConnectBlock(): CheckInputs on %s failed with %s",
                              tx.GetHash().ToString(), FormatStateMessage(state));

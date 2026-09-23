@@ -4,6 +4,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <evo/cbtx.h>
+#include <consensus/consensus.h>
+#include <txdecoupling.h>
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_commitment.h>
@@ -33,7 +35,22 @@ bool CheckCbTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidatio
         return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-payload");
     }
 
-    if (cbTx.nVersion == 0 || cbTx.nVersion > CCbTx::CURRENT_VERSION) {
+    const bool experimental = cbTx.nVersion == CCbTx::TX_CERTIFICATE_VERSION;
+    if (experimental) {
+        if (!IsTxDecouplingActive(pindexPrev, Params().GetConsensus()))
+            return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-version");
+        if (tx.vExtraPayload.size() > MAX_TX_EXTRA_PAYLOAD)
+            return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-payload-size");
+        uint16_t previous = 0;
+        for (const auto& entry : cbTx.txCertificates) {
+            if (entry.index <= previous || entry.certificate.version != CTxValidationCertificate::CURRENT_VERSION ||
+                entry.certificate.result != CTxValidationCertificate::POSITIVE ||
+                entry.certificate.quorumType != Consensus::LLMQ_5_60)
+                return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-certificates");
+            previous = entry.index;
+        }
+    }
+    if (cbTx.nVersion == 0 || (!experimental && cbTx.nVersion > CCbTx::CURRENT_VERSION)) {
         LogPrintf("CheckCbTx: cbTx.nVersion=%d\n", cbTx.nVersion);
         return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-version");
     }

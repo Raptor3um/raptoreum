@@ -12,6 +12,7 @@
 #include <iostream>
 #include <iomanip>
 #include <map>
+#include <limits>
 #include <cmath>
 
 // Round voting example - RoundSize = 100
@@ -277,6 +278,22 @@ const Update *UpdateManager::GetUpdate(enum EUpdate eUpdate) const {
 
 bool UpdateManager::IsActive(enum EUpdate eUpdate, const CBlockIndex *blockIndex) {
     return State(eUpdate, blockIndex).State == EUpdateState::Active;
+}
+
+bool UpdateManager::IsActiveForNextBlock(enum EUpdate eUpdate, const CBlockIndex *parent) {
+    const Update* update = GetUpdate(eUpdate);
+    if (!update || !parent || parent->nHeight == std::numeric_limits<int>::max()) return false;
+    if (update->HeightActivated() >= 0)
+        return !update->Failed() && int64_t(parent->nHeight) + 1 >= update->HeightActivated();
+    CBlockIndex next;
+    next.pprev = const_cast<CBlockIndex*>(parent);
+    next.nHeight = parent->nHeight + 1;
+    next.BuildSkip();
+    // The local manager is destroyed first, including every cached pointer to next.
+    // Existing global final-state caches cannot determine another branch's rules.
+    UpdateManager isolated;
+    isolated.Add(*update);
+    return isolated.IsActive(eUpdate, &next);
 }
 
 bool UpdateManager::IsAssetsActive(const CBlockIndex *blockIndex) {
