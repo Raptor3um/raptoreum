@@ -1374,7 +1374,8 @@ UpdateCoins(const CTransaction &tx, CCoinsViewCache &inputs, CTxUndo &txundo, in
     if (!tx.IsCoinBase()) {
         txundo.vprevout.reserve(tx.vin.size());
         for (const CTxIn &txin: tx.vin) {
-            if (fAssetIndex) {
+            // UTXO-only callers, including mempool consistency checks, have no asset index cache.
+            if (fAssetIndex && assetCache != nullptr) {
                 const Coin &coin = inputs.AccessCoin(txin.prevout);
                 if (coin.out.scriptPubKey.IsAssetScript()) {
                 assetCache->RemoveAddressBalance(coin.out.scriptPubKey, txin.prevout);

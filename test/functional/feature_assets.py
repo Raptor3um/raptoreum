@@ -176,7 +176,10 @@ class AssetsTest(BitcoinTestFramework):
 
         self.log.info("Sending part of the balance to the second wallet")
         recipient = other.getnewaddress()
-        node.sendasset(asset_id, 25, recipient)
+        transfer_id = node.sendasset(asset_id, 25, recipient)["txid"]
+        # Check the unmined relay path as well as canonical block processing.
+        self.sync_mempools()
+        assert all(transfer_id in peer.getrawmempool() for peer in self.nodes)
         self.mine()
 
         assert_equal(node.listassetsbalance()["LIFECYCLE"]["Balance"], MINTED - 25)
