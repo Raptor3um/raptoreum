@@ -81,7 +81,6 @@ class LLMQConnections(RaptoreumTestFramework):
             wait_until(lambda: len(mn.node.getpeerinfo()) == 0)
         for mn in self.mninfo:
             mn.node.setnetworkactive(True)
-        self.bump_mocktime(60)
 
         # Reconnect before forcing the sync: connecting resets it, and an
         # unsynced smartnode opens no quorum connections.
@@ -89,6 +88,9 @@ class LLMQConnections(RaptoreumTestFramework):
             connect_nodes(self.nodes[i], 0)
         for mn in self.mninfo:
             force_finish_mnsync(mn.node)
+
+        # Retry attempts rejected while other smartnodes were still syncing.
+        self.bump_mocktime(60)
 
         self.log.info("verify that all masternodes re-connected")
         for q in self.nodes[0].quorum('list')[LLMQ_TEST_NAME]:
