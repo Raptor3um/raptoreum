@@ -193,6 +193,8 @@ check-local:
 	$(PYTHON) $(top_builddir)/test/util/rpcauth-test.py
 	@echo "Running test/util/test_runner-test.py..."
 	$(PYTHON) $(top_builddir)/test/util/test_runner-test.py
+	@echo "Running test/util/test_node-test.py..."
+	$(PYTHON) $(top_builddir)/test/util/test_node-test.py
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
 
 UNIVALUE_TESTS = univalue/test/object univalue/test/unitester univalue/test/no_nul

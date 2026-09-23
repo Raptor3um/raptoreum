@@ -36,6 +36,16 @@ JSONDecodeError = getattr(json, "JSONDecodeError", ValueError)
 
 BITCOIND_PROC_WAIT_TIMEOUT = 60
 
+# Fires on every load of an unlocked (unencrypted) HD wallet, i.e. -usehd=1
+# without also encrypting it -- see the InitWarning() call in
+# src/wallet/wallet.cpp. Benign and unrelated to whatever a test is actually
+# checking, so it's filtered out of captured stderr before the comparison in
+# stop_node() rather than forcing every -usehd=1 test to declare it.
+KNOWN_STARTUP_WARNINGS = (
+    "WarningMake sure to encrypt your wallet and delete all non-encrypted "
+    "backups after you have verified that the wallet works!",
+)
+
 
 class FailedToStartError(Exception):
     """Raised when a node fails to start correctly."""
@@ -170,8 +180,8 @@ class TestNode():
             # Send the node's own stderr to a file rather than letting it be
             # inherited by the test process. test_runner marks a test failed if
             # it writes anything at all to stderr, so a node-level warning --
-            # Raptoreum emits one for every non-HD wallet -- fails a test that
-            # otherwise passed. The output is still on disk to be read.
+            # see KNOWN_STARTUP_WARNINGS below -- fails a test that otherwise
+            # passed. The output is still on disk to be read.
             self._stderr_file = open(os.path.join(self.datadir, "node_stderr.log"), "a")
             # Remember where this run's output starts, so stop_node can check
             # only what this run wrote.
@@ -264,23 +274,28 @@ class TestNode():
             self.stop(wait=wait)
         except http.client.CannotSendRequest:
             self.log.exception("Unable to stop node.")
-        if expected_stderr is not None and expected_stderr != '':
-            # Let the process finish writing before reading what it wrote.
-            try:
-                self.process.wait(timeout=self.rpc_timeout)
-            except subprocess.TimeoutExpired:
-                pass
+        try:
+            if expected_stderr is not None:
+                # Let the process finish writing before reading what it wrote.
+                try:
+                    self.process.wait(timeout=self.rpc_timeout)
+                except subprocess.TimeoutExpired:
+                    pass
+                if self._stderr_file is not None:
+                    self._stderr_file.flush()
+                    with open(self._stderr_file.name, 'r', encoding='utf-8') as f:
+                        f.seek(self._stderr_pos)
+                        stderr = f.read().strip()
+                    stderr = '\n'.join(
+                        line for line in stderr.splitlines()
+                        if line not in KNOWN_STARTUP_WARNINGS)
+                    if stderr != expected_stderr.strip():
+                        raise AssertionError(
+                            "Unexpected stderr {} != {}".format(stderr, expected_stderr))
+        finally:
             if self._stderr_file is not None:
-                self._stderr_file.flush()
-                with open(self._stderr_file.name, 'r', encoding='utf-8') as f:
-                    f.seek(self._stderr_pos)
-                    stderr = f.read().strip()
-                if stderr != expected_stderr.strip():
-                    raise AssertionError(
-                        "Unexpected stderr {} != {}".format(stderr, expected_stderr))
-        if self._stderr_file is not None:
-            self._stderr_file.close()
-            self._stderr_file = None
+                self._stderr_file.close()
+                self._stderr_file = None
         del self.p2ps[:]
 
     def is_node_stopped(self):
@@ -333,7 +348,7 @@ class TestNode():
             self.log.warning("Unable to detect memory usage (RSS) - skipping memory check.")
             return
 
-        perc_increase_memory_usage = 1 - (float(before_memory_usage) / after_memory_usage)
+        perc_increase_memory_usage = (float(after_memory_usage) - before_memory_usage) / before_memory_usage
 
         if perc_increase_memory_usage > increase_allowed:
             self._raise_assertion_error(
