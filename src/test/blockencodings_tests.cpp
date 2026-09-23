@@ -6,6 +6,10 @@
 #include <decoupledblock.h>
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
+#include <consensus/tx_check.h>
+#include <consensus/validation.h>
+#include <evo/specialtx.h>
+#include <llmq/quorums_commitment.h>
 #include <chainparams.h>
 #include <pow.h>
 #include <random.h>
@@ -551,9 +555,6 @@ BOOST_AUTO_TEST_CASE(DecoupledInvalidLayout)
     bad.vtx[1].reset();
     invalid(bad);
     bad = CDecoupledBlock(block, {});
-    bad.vtx[1] = MakeTransactionRef();
-    invalid(bad);
-    bad = CDecoupledBlock(block, {});
     bad.vtx[1] = block.vtx[0];
     invalid(bad);
     bad = valid;
@@ -665,6 +666,69 @@ BOOST_AUTO_TEST_CASE(DecoupledChecksBytesAndMerkleWithoutContextualValidation)
     block.hashMerkleRoot = BlockMerkleRoot(block);
     BOOST_REQUIRE(partial.InitData(CDecoupledBlock(block, {block.vtx[1]->GetHash()}), {}) == READ_STATUS_OK);
     BOOST_CHECK(partial.FillBlock(rebuilt, {block.vtx[1]}) == READ_STATUS_FAILED);
+}
+
+
+BOOST_AUTO_TEST_CASE(DecoupledQuorumCommitmentRoundTrip)
+{
+    CBlock block(BuildBlockTestCase());
+    llmq::CFinalCommitmentTxPayload payload;
+    payload.nHeight = 1;
+    payload.commitment = llmq::CFinalCommitment(
+        Params().GetConsensus().llmqs.at(Consensus::LLMQ_5_60), Params().GenesisBlock().GetHash());
+    BOOST_REQUIRE(payload.commitment.VerifyNull());
+    CMutableTransaction commitment;
+    commitment.nVersion = 3;
+    commitment.nType = TRANSACTION_QUORUM_COMMITMENT;
+    SetTxPayload(commitment, payload);
+    block.vtx[1] = MakeTransactionRef(commitment);
+    block.hashMerkleRoot = BlockMerkleRoot(block);
+    BOOST_REQUIRE(block.vtx[1]->IsNull());
+    CValidationState state;
+    BOOST_REQUIRE(CheckTransaction(*block.vtx[1], state, payload.nHeight, 0));
+
+    CDecoupledBlock encoded(block, {block.vtx[2]->GetHash()});
+    BOOST_REQUIRE_EQUAL(encoded.vtx.size(), 2U);
+    BOOST_CHECK(encoded.vtx[1] == block.vtx[1]);
+    BOOST_REQUIRE_EQUAL(encoded.vtxids.size(), 1U);
+    BOOST_CHECK_EQUAL(encoded.vtxids[0].index, 2);
+    CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+    stream << encoded;
+    CDecoupledBlock decoded;
+    stream >> decoded;
+    BOOST_CHECK(stream.empty());
+    PartiallyDownloadedDecoupledBlock partial;
+    BOOST_REQUIRE(partial.InitData(decoded, {}) == READ_STATUS_OK);
+    const std::vector<uint16_t> missing{2};
+    BOOST_CHECK(partial.GetMissingIndexes() == missing);
+    CBlock rebuilt;
+    BOOST_REQUIRE(partial.FillBlock(rebuilt, {block.vtx[2]}) == READ_STATUS_OK);
+    BOOST_CHECK(!rebuilt.fChecked);
+    CDataStream originalBytes(SER_NETWORK, PROTOCOL_VERSION), rebuiltBytes(SER_NETWORK, PROTOCOL_VERSION);
+    originalBytes << block;
+    rebuiltBytes << rebuilt;
+    BOOST_CHECK_EQUAL_COLLECTIONS(originalBytes.begin(), originalBytes.end(), rebuiltBytes.begin(), rebuiltBytes.end());
+}
+
+BOOST_AUTO_TEST_CASE(DecoupledDefersEmptyTransactionConsensus)
+{
+    CBlock block(BuildBlockTestCase());
+    block.vtx[1] = MakeTransactionRef(CMutableTransaction());
+    BOOST_REQUIRE(block.vtx[1]->IsNull());
+    block.hashMerkleRoot = BlockMerkleRoot(block);
+    CDecoupledBlock encoded(block, {block.vtx[2]->GetHash()});
+    CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+    stream << encoded;
+    CDecoupledBlock decoded;
+    stream >> decoded;
+    PartiallyDownloadedDecoupledBlock partial;
+    BOOST_REQUIRE(partial.InitData(decoded, {}) == READ_STATUS_OK);
+    CBlock rebuilt;
+    BOOST_REQUIRE(partial.FillBlock(rebuilt, {block.vtx[2]}) == READ_STATUS_OK);
+    BOOST_CHECK(!rebuilt.fChecked);
+    CValidationState state;
+    BOOST_CHECK(!CheckTransaction(*rebuilt.vtx[1], state, 1, 0));
+    BOOST_CHECK_EQUAL(state.GetRejectReason(), "bad-txns-vin-empty");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

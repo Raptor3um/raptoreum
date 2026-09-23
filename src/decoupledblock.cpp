@@ -37,7 +37,7 @@ bool CDecoupledBlock::IsValidLayout() const
     std::set<uint256> txids;
     for (size_t i = 0; i < vtx.size(); ++i) {
         const auto& tx = vtx[i];
-        if (!tx || tx->IsNull() || (i != 0 && tx->IsCoinBase()) || !txids.insert(tx->GetHash()).second) {
+        if (!tx || (i != 0 && tx->IsCoinBase()) || !txids.insert(tx->GetHash()).second) {
             return false;
         }
     }
