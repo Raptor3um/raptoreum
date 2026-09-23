@@ -77,6 +77,33 @@ def version_payload():
             + struct.pack("<Q", 0) + b"\x00" + struct.pack("<i", 0) + b"\x00")
 
 
+def read_message(sock, net):
+    """Read and validate one handshake message, including fragmented reads."""
+    def read_exact(size):
+        data = bytearray()
+        while len(data) < size:
+            chunk = sock.recv(size - len(data))
+            if not chunk:
+                raise ConnectionError("peer disconnected during handshake")
+            data.extend(chunk)
+        return bytes(data)
+
+    header = read_exact(24)
+    size = struct.unpack("<I", header[16:20])[0]
+    if header[:4] != MAGIC[net] or size > 4_000_000:
+        raise ValueError("invalid handshake message header")
+    payload = read_exact(size)
+    if header[20:] != hashlib.sha256(hashlib.sha256(payload).digest()).digest()[:4]:
+        raise ValueError("invalid handshake message checksum")
+    return header[4:16].rstrip(b"\x00")
+
+
+def invalid(reason):
+    """Report a run that tested nothing; exit code 1 is reserved for the busy-loop."""
+    print("invalid test: %s" % reason, file=sys.stderr)
+    return 2
+
+
 def thread_cpu(pid, comm):
     # Linux-only: reads /proc directly rather than shelling out, to keep this script
     # standard-library-only and dependency-free. There is no equivalent of a per-thread
@@ -93,11 +120,17 @@ def thread_cpu(pid, comm):
         sys.exit("thread_cpu() reads /proc and only works on Linux; "
                  "not implemented for sys.platform=%r. See this function's own comment." % sys.platform)
     base = "/proc/%d/task" % pid
-    for tid in os.listdir(base):
+    try:
+        tids = os.listdir(base)
+    except OSError:
+        return None
+    for tid in tids:
         try:
-            if open(os.path.join(base, tid, "comm")).read().strip() != comm:
-                continue
-            fields = open(os.path.join(base, tid, "stat")).read()
+            with open(os.path.join(base, tid, "comm"), encoding="utf8") as source:
+                if source.read().strip() != comm:
+                    continue
+            with open(os.path.join(base, tid, "stat"), encoding="utf8") as source:
+                fields = source.read()
         except OSError:
             continue
         rest = fields[fields.rfind(")") + 2:].split()
@@ -142,6 +175,7 @@ def flood_pause(sock, stop, net, written):
         except OSError as e:
             if not stop.is_set():
                 written.error = e
+                stop.set()
             return
 
 
@@ -162,6 +196,7 @@ def flood_sendqueue(sock, stop, net, written):
         except OSError as e:
             if not stop.is_set():
                 written.error = e
+                stop.set()
             return
 
 
@@ -176,17 +211,25 @@ def main():
     ap.add_argument("--mode", default="sendqueue", choices=("pause", "sendqueue"),
                     help="how to make the peer undrainable; sendqueue needs no node options")
     a = ap.parse_args()
+    if a.seconds <= 0:
+        ap.error("--seconds must be positive")
 
     if thread_cpu(a.pid, a.thread) is None:
-        sys.exit("no thread named %s in pid %d" % (a.thread, a.pid))
+        return invalid("no thread named %s in pid %d" % (a.thread, a.pid))
 
-    sock = socket.create_connection((a.host, a.port), timeout=20)
-    sock.sendall(frame(b"version", version_payload(), a.net))
-    reply = sock.recv(65536)
-    if not reply:
-        sys.exit("handshake failed: peer closed the connection before replying to "
-                  "version (wrong --net for this node?)")
-    sock.sendall(frame(b"verack", b"", a.net))
+    sock = None
+    try:
+        sock = socket.create_connection((a.host, a.port), timeout=20)
+        sock.sendall(frame(b"version", version_payload(), a.net))
+        if read_message(sock, a.net) != b"version":
+            raise ValueError("expected version message")
+        sock.sendall(frame(b"verack", b"", a.net))
+        while read_message(sock, a.net) != b"verack":
+            pass
+    except (OSError, ValueError) as error:
+        if sock is not None:
+            sock.close()
+        return invalid("handshake failed: %s (wrong --net for this node?)" % (error,))
     # The handshake is done; sendqueue mode now blocks in sendall() by design (the node
     # never reads), which the 20s connect timeout would otherwise cut short and misreport
     # as a failure partway through an entirely successful run.
@@ -194,14 +237,14 @@ def main():
 
     stop = threading.Event()
     before = thread_cpu(a.pid, a.thread)
-    t0 = time.time()
+    t0 = time.monotonic()
     written = Written()
     worker = flood_pause if a.mode == "pause" else flood_sendqueue
     thread = threading.Thread(target=worker, args=(sock, stop, a.net, written), daemon=True)
     thread.start()
-    time.sleep(a.seconds)
-    elapsed = time.time() - t0
-    pct = (thread_cpu(a.pid, a.thread) - before) / elapsed * 100
+    stop.wait(a.seconds)
+    elapsed = time.monotonic() - t0
+    after = thread_cpu(a.pid, a.thread)
     stop.set()
     # The worker is likely blocked in sendall(); interrupt it so the join below doesn't
     # just wait out its own timeout. The resulting OSError is discarded (stop is already set).
@@ -213,8 +256,11 @@ def main():
     sock.close()
 
     if written.error is not None:
-        sys.exit("workload interrupted (%s) -- this run tested nothing, it is not "
-                  "evidence the bug is fixed" % (written.error,))
+        return invalid("workload interrupted (%s) -- this run tested nothing, it is not "
+                       "evidence the bug is fixed" % (written.error,))
+    if written.n == 0 or before is None or after is None or thread.is_alive():
+        return invalid("no workload or CPU observation -- this run tested nothing")
+    pct = (after - before) / elapsed * 100
 
     print("%s CPU over %.1fs with one undrainable peer (%s): %.1f%% of a core"
           % (a.thread, elapsed, a.mode, pct))
