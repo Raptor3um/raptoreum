@@ -3,6 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blockencodings.h>
+#include <decoupledblock.h>
+#include <consensus/consensus.h>
 #include <consensus/merkle.h>
 #include <chainparams.h>
 #include <pow.h>
@@ -11,6 +13,9 @@
 #include <test/test_raptoreum.h>
 
 #include <boost/test/unit_test.hpp>
+
+#include <algorithm>
+#include <map>
 
 std::vector <std::pair<uint256, CTransactionRef>> extra_txn;
 
@@ -380,6 +385,286 @@ BOOST_AUTO_TEST_CASE(TransactionsRequestDeserializationOverflowTest) {
         } catch(std::ios_base::failure &) {
             // deserialize should fail
         }
+}
+
+
+BOOST_AUTO_TEST_CASE(DecoupledMixedRoundTrip)
+{
+    CBlock block(BuildBlockTestCase());
+    CMutableTransaction child(*block.vtx[2]);
+    child.vin.resize(1);
+    child.vin[0].prevout = COutPoint(block.vtx[1]->GetHash(), 0);
+    block.vtx[2] = MakeTransactionRef(child);
+    child.vin[0].prevout = COutPoint(block.vtx[2]->GetHash(), 0);
+    block.vtx.push_back(MakeTransactionRef(child));
+    child.vin[0].prevout = COutPoint(block.vtx[3]->GetHash(), 0);
+    block.vtx.push_back(MakeTransactionRef(child));
+    block.hashMerkleRoot = BlockMerkleRoot(block);
+    block.fChecked = true;
+
+    CDecoupledBlock encoded(block, {block.vtx[0]->GetHash(), block.vtx[1]->GetHash(), block.vtx[3]->GetHash()});
+    BOOST_REQUIRE_EQUAL(encoded.vtx.size(), 3U);
+    BOOST_REQUIRE_EQUAL(encoded.vtxids.size(), 2U);
+    BOOST_CHECK(encoded.vtx[0] == block.vtx[0]);
+    BOOST_CHECK(encoded.vtx[1] == block.vtx[2]);
+    BOOST_CHECK(encoded.vtx[2] == block.vtx[4]);
+    BOOST_CHECK_EQUAL(encoded.vtxids[0].index, 1);
+    BOOST_CHECK_EQUAL(encoded.vtxids[1].index, 3);
+    BOOST_CHECK(encoded.vtxids[0].txid == block.vtx[1]->GetHash());
+    BOOST_CHECK(encoded.vtxids[1].txid == block.vtx[3]->GetHash());
+
+    CDataStream stream(SER_NETWORK, PROTOCOL_VERSION), expected(SER_NETWORK, PROTOCOL_VERSION);
+    stream << encoded;
+    expected << uint16_t(1) << block.GetBlockHeader();
+    expected << std::vector<CTransactionRef>{block.vtx[0], block.vtx[2], block.vtx[4]};
+    WriteCompactSize(expected, 2);
+    expected << uint16_t(1) << block.vtx[1]->GetHash() << uint16_t(3) << block.vtx[3]->GetHash();
+    BOOST_CHECK_EQUAL_COLLECTIONS(stream.begin(), stream.end(), expected.begin(), expected.end());
+
+    CDecoupledBlock decoded;
+    stream >> decoded;
+    BOOST_CHECK(stream.empty());
+    PartiallyDownloadedDecoupledBlock partial;
+    BOOST_REQUIRE(partial.InitData(decoded, {}) == READ_STATUS_OK);
+    const std::vector<uint16_t> missing{1, 3};
+    BOOST_CHECK(partial.GetMissingIndexes() == missing);
+    CBlock rebuilt;
+    rebuilt.fChecked = true;
+    BOOST_REQUIRE(partial.FillBlock(rebuilt, {block.vtx[1], block.vtx[3]}) == READ_STATUS_OK);
+    BOOST_CHECK(!rebuilt.fChecked);
+    BOOST_REQUIRE_EQUAL(rebuilt.vtx.size(), block.vtx.size());
+    for (size_t i = 0; i < block.vtx.size(); ++i) {
+        BOOST_CHECK(rebuilt.vtx[i]->GetHash() == block.vtx[i]->GetHash());
+    }
+    CDataStream originalBytes(SER_NETWORK, PROTOCOL_VERSION), rebuiltBytes(SER_NETWORK, PROTOCOL_VERSION);
+    originalBytes << block;
+    rebuiltBytes << rebuilt;
+    BOOST_CHECK_EQUAL_COLLECTIONS(originalBytes.begin(), originalBytes.end(), rebuiltBytes.begin(), rebuiltBytes.end());
+}
+
+BOOST_AUTO_TEST_CASE(DecoupledFullAndCoinbaseRoundTrip)
+{
+    CBlock block(BuildBlockTestCase());
+    for (size_t count : {size_t(3), size_t(1)}) {
+        block.vtx.resize(count);
+        block.hashMerkleRoot = BlockMerkleRoot(block);
+        CDecoupledBlock encoded(block, {block.vtx[0]->GetHash()});
+        BOOST_CHECK(encoded.vtxids.empty());
+        CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+        stream << encoded;
+        CDecoupledBlock decoded;
+        stream >> decoded;
+        PartiallyDownloadedDecoupledBlock partial;
+        BOOST_REQUIRE(partial.InitData(decoded, {}) == READ_STATUS_OK);
+        BOOST_CHECK(partial.GetMissingIndexes().empty());
+        CBlock rebuilt;
+        BOOST_REQUIRE(partial.FillBlock(rebuilt, {}) == READ_STATUS_OK);
+        BOOST_CHECK(rebuilt.GetHash() == block.GetHash());
+        BOOST_CHECK(BlockMerkleRoot(rebuilt) == block.hashMerkleRoot);
+        BOOST_CHECK(!rebuilt.fChecked);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(DecoupledCacheEvictionKeepsBodiesAlive)
+{
+    CBlock block(BuildBlockTestCase());
+    const uint256 txid = block.vtx[1]->GetHash();
+    std::weak_ptr<const CTransaction> retained = block.vtx[1];
+    std::map<uint256, CTransactionRef> cache{{txid, block.vtx[1]}};
+    CDecoupledBlock encoded(block, {txid});
+    PartiallyDownloadedDecoupledBlock partial;
+    BOOST_REQUIRE(partial.InitData(encoded, [&cache](const uint256& hash) {
+        auto it = cache.find(hash);
+        return it == cache.end() ? CTransactionRef() : it->second;
+    }) == READ_STATUS_OK);
+    BOOST_CHECK(partial.GetMissingIndexes().empty());
+    cache.clear();
+    block.vtx.clear();
+    BOOST_CHECK(!retained.expired());
+    CBlock rebuilt;
+    BOOST_REQUIRE(partial.FillBlock(rebuilt, {}) == READ_STATUS_OK);
+    BOOST_CHECK(rebuilt.vtx[1]->GetHash() == txid);
+    BOOST_CHECK(rebuilt.vtx[1] == retained.lock());
+    rebuilt.vtx.clear();
+    BOOST_CHECK(retained.expired());
+}
+
+BOOST_AUTO_TEST_CASE(DecoupledInvalidLayout)
+{
+    const CBlock block(BuildBlockTestCase());
+    const CDecoupledBlock valid(block, {block.vtx[1]->GetHash(), block.vtx[2]->GetHash()});
+    const auto invalid = [&valid, &block](const CDecoupledBlock& encoded) {
+        PartiallyDownloadedDecoupledBlock partial;
+        BOOST_REQUIRE(partial.InitData(valid, {}) == READ_STATUS_OK);
+        BOOST_CHECK(partial.InitData(encoded, [](const uint256&) {
+            BOOST_ERROR("Invalid layouts must be rejected before body lookup");
+            return CTransactionRef();
+        }) == READ_STATUS_INVALID);
+        BOOST_CHECK(partial.GetMissingIndexes().empty());
+        CBlock rebuilt;
+        BOOST_CHECK(partial.FillBlock(rebuilt, {block.vtx[1], block.vtx[2]}) == READ_STATUS_FAILED);
+        BOOST_REQUIRE(partial.InitData(valid, {}) == READ_STATUS_OK);
+        BOOST_CHECK(partial.FillBlock(rebuilt, {block.vtx[1], block.vtx[2]}) == READ_STATUS_OK);
+
+        // Bypass the encoder to exercise untrusted wire layouts independently.
+        if (std::all_of(encoded.vtx.begin(), encoded.vtx.end(), [](const CTransactionRef& tx) { return bool(tx); })) {
+            CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+            stream << encoded.version << encoded.header << encoded.vtx << encoded.vtxids;
+            CDecoupledBlock decoded;
+            BOOST_CHECK_THROW(stream >> decoded, std::ios_base::failure);
+        }
+    };
+    CDecoupledBlock bad = valid;
+    bad.header.SetNull();
+    invalid(bad);
+    bad = valid;
+    bad.version = 2;
+    invalid(bad);
+    bad = valid;
+    bad.vtx.clear();
+    invalid(bad);
+    bad = valid;
+    bad.vtxids[0].index = 0;
+    invalid(bad);
+    bad = valid;
+    bad.vtxids[1].index = 1;
+    invalid(bad);
+    bad = valid;
+    std::swap(bad.vtxids[0], bad.vtxids[1]);
+    invalid(bad);
+    bad = valid;
+    bad.vtxids[1].index = 3;
+    invalid(bad);
+    bad = valid;
+    bad.vtxids[1].txid = bad.vtxids[0].txid;
+    invalid(bad);
+    bad = valid;
+    bad.vtxids[0].txid = block.vtx[0]->GetHash();
+    invalid(bad);
+    bad = valid;
+    bad.vtx[0] = block.vtx[1];
+    invalid(bad);
+    bad = valid;
+    bad.vtx[0].reset();
+    invalid(bad);
+    bad = CDecoupledBlock(block, {});
+    bad.vtx[1].reset();
+    invalid(bad);
+    bad = CDecoupledBlock(block, {});
+    bad.vtx[1] = MakeTransactionRef();
+    invalid(bad);
+    bad = CDecoupledBlock(block, {});
+    bad.vtx[1] = block.vtx[0];
+    invalid(bad);
+    bad = valid;
+    bad.vtxids.resize(65535);
+    invalid(bad);
+    CBlock oversized = block;
+    oversized.vtx.resize(65536, block.vtx[1]);
+    BOOST_CHECK_THROW(CDecoupledBlock(oversized, {}), std::invalid_argument);
+    CBlock empty;
+    BOOST_CHECK_THROW(CDecoupledBlock(empty, {}), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(DecoupledCountsCheckedBeforeAllocation)
+{
+    const CBlock block(BuildBlockTestCase());
+    CDataStream bodies(SER_NETWORK, PROTOCOL_VERSION);
+    bodies << uint16_t(1) << block.GetBlockHeader();
+    WriteCompactSize(bodies, 65536);
+    CDecoupledBlock decoded;
+    BOOST_CHECK_THROW(bodies >> decoded, std::ios_base::failure);
+    BOOST_CHECK_EQUAL(decoded.vtx.capacity(), 0U);
+    BOOST_CHECK_EQUAL(decoded.vtxids.capacity(), 0U);
+
+    CDataStream refs(SER_NETWORK, PROTOCOL_VERSION);
+    refs << uint16_t(1) << block.GetBlockHeader() << std::vector<CTransactionRef>{block.vtx[0]};
+    WriteCompactSize(refs, 65535);
+    BOOST_CHECK_THROW(refs >> decoded, std::ios_base::failure);
+    BOOST_CHECK_EQUAL(decoded.vtxids.capacity(), 0U);
+
+    CDataStream unknownVersion(SER_NETWORK, PROTOCOL_VERSION);
+    unknownVersion << uint16_t(2);
+    BOOST_CHECK_THROW(unknownVersion >> decoded, std::ios_base::failure);
+
+    CDecoupledBlock boundary(block, {});
+    boundary.vtx.resize(1);
+    for (uint32_t i = 1; i < 65535; ++i) {
+        boundary.vtxids.push_back({uint16_t(i), uint256S(strprintf("%064x", i))});
+    }
+    CDataStream wire(SER_NETWORK, PROTOCOL_VERSION);
+    wire << boundary;
+    wire >> decoded;
+    PartiallyDownloadedDecoupledBlock partial;
+    BOOST_REQUIRE(partial.InitData(decoded, {}) == READ_STATUS_OK);
+    const auto missing = partial.GetMissingIndexes();
+    BOOST_REQUIRE_EQUAL(missing.size(), 65534U);
+    BOOST_CHECK_EQUAL(missing.front(), 1);
+    BOOST_CHECK_EQUAL(missing.back(), 65534);
+}
+
+BOOST_AUTO_TEST_CASE(DecoupledResponsesRequireExactBodies)
+{
+    const CBlock block(BuildBlockTestCase());
+    const CDecoupledBlock encoded(block, {block.vtx[1]->GetHash(), block.vtx[2]->GetHash()});
+    PartiallyDownloadedDecoupledBlock partial;
+    BOOST_REQUIRE(partial.InitData(encoded, {}) == READ_STATUS_OK);
+    CBlock rebuilt = block;
+    rebuilt.fChecked = true;
+    const std::vector<std::vector<CTransactionRef>> invalidResponses{
+        {}, {block.vtx[1]}, {block.vtx[2], block.vtx[1]},
+        {block.vtx[1], CTransactionRef()}, {block.vtx[1], MakeTransactionRef()},
+        {block.vtx[1], block.vtx[2], block.vtx[2]}
+    };
+    for (const auto& response : invalidResponses) {
+        BOOST_CHECK(partial.FillBlock(rebuilt, response) == READ_STATUS_FAILED);
+        BOOST_CHECK(rebuilt.fChecked);
+        BOOST_CHECK(rebuilt.vtx == block.vtx);
+        const std::vector<uint16_t> missing{1, 2};
+        BOOST_CHECK(partial.GetMissingIndexes() == missing);
+    }
+    BOOST_REQUIRE(partial.FillBlock(rebuilt, {block.vtx[1], block.vtx[2]}) == READ_STATUS_OK);
+    BOOST_CHECK(rebuilt.vtx == block.vtx);
+    BOOST_CHECK(!rebuilt.fChecked);
+    BOOST_CHECK(partial.FillBlock(rebuilt, {}) == READ_STATUS_FAILED);
+}
+
+BOOST_AUTO_TEST_CASE(DecoupledLookupRequiresExactTxid)
+{
+    const CBlock block(BuildBlockTestCase());
+    const CDecoupledBlock encoded(block, {block.vtx[1]->GetHash()});
+    PartiallyDownloadedDecoupledBlock partial;
+    BOOST_REQUIRE(partial.InitData(encoded, {}) == READ_STATUS_OK);
+    BOOST_CHECK(partial.InitData(encoded, [&block](const uint256&) { return block.vtx[2]; }) == READ_STATUS_FAILED);
+    BOOST_CHECK(partial.GetMissingIndexes().empty());
+    CBlock rebuilt;
+    BOOST_CHECK(partial.FillBlock(rebuilt, {block.vtx[1]}) == READ_STATUS_FAILED);
+    BOOST_REQUIRE(partial.InitData(encoded, [&block](const uint256&) { return block.vtx[1]; }) == READ_STATUS_OK);
+    BOOST_REQUIRE(partial.FillBlock(rebuilt, {}) == READ_STATUS_OK);
+    BOOST_CHECK(rebuilt.vtx == block.vtx);
+}
+
+BOOST_AUTO_TEST_CASE(DecoupledChecksBytesAndMerkleWithoutContextualValidation)
+{
+    CBlock block(BuildBlockTestCase());
+    block.nBits = 0x01003456; // Invalid proof-of-work target belongs to normal block validation.
+    PartiallyDownloadedDecoupledBlock partial;
+    CBlock rebuilt;
+    BOOST_REQUIRE(partial.InitData(CDecoupledBlock(block, {}), {}) == READ_STATUS_OK);
+    BOOST_REQUIRE(partial.FillBlock(rebuilt, {}) == READ_STATUS_OK);
+    BOOST_CHECK(!rebuilt.fChecked);
+
+    CDecoupledBlock corrupted(block, {});
+    corrupted.header.hashMerkleRoot.SetNull();
+    BOOST_REQUIRE(partial.InitData(corrupted, {}) == READ_STATUS_OK);
+    BOOST_CHECK(partial.FillBlock(rebuilt, {}) == READ_STATUS_FAILED);
+
+    CMutableTransaction large(*block.vtx[1]);
+    large.vin[0].scriptSig.resize(MaxBlockSize());
+    block.vtx[1] = MakeTransactionRef(large);
+    block.hashMerkleRoot = BlockMerkleRoot(block);
+    BOOST_REQUIRE(partial.InitData(CDecoupledBlock(block, {block.vtx[1]->GetHash()}), {}) == READ_STATUS_OK);
+    BOOST_CHECK(partial.FillBlock(rebuilt, {block.vtx[1]}) == READ_STATUS_FAILED);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -131,6 +131,7 @@ BITCOIN_CORE_H = \
   bip39.h \
   bip39_english.h \
   blockencodings.h \
+  decoupledblock.h \
   bloom.h \
   cachemap.h \
   cachemultimap.h \
@@ -355,6 +356,7 @@ libraptoreum_server_a_SOURCES = \
   assets/assetsdb.cpp \
   batchedlogger.cpp \
   blockencodings.cpp \
+  decoupledblock.cpp \
   blockfilter.cpp \
   chain.cpp \
   checkpoints.cpp \
