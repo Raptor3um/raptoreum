@@ -1331,9 +1331,11 @@ static UniValue ProcessImportDescriptor(ImportData &import_data, std::map <CKeyI
 
     // Expand all descriptors to get public keys and scripts.
     // TODO: get private keys from descriptors too
-    for (int i = range_start; i <= range_end; ++i) {
+    // Same INT_MAX overflow as deriveaddresses (src/rpc/misc.cpp) -- i must
+    // be widened past int to test the loop condition there.
+    for (int64_t i = range_start; i <= range_end; ++i) {
         std::vector <CScript> scripts_temp;
-        parsed_desc->Expand(i, keys, scripts_temp, out_keys);
+        parsed_desc->Expand(static_cast<int>(i), keys, scripts_temp, out_keys);
         std::copy(scripts_temp.begin(), scripts_temp.end(), std::inserter(script_pub_keys, script_pub_keys.end()));
     }
 

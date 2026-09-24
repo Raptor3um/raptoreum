@@ -365,10 +365,15 @@ static UniValue deriveaddresses(const JSONRPCRequest &request) {
 
     UniValue addresses(UniValue::VARR);
 
-    for (int i = range_begin; i <= range_end; ++i) {
+    // range_end can reach INT_MAX (ParseDescriptorRange only rejects it above
+    // that), and an int i here would need to represent INT_MAX + 1 to test
+    // the loop condition one last time -- signed overflow, undefined
+    // behavior. i itself always fits in int by the same bound, checked here
+    // rather than widening Expand()'s own parameter.
+    for (int64_t i = range_begin; i <= range_end; ++i) {
         FlatSigningProvider provider;
         std::vector <CScript> scripts;
-        if (!desc->Expand(i, key_provider, scripts, provider)) {
+        if (!desc->Expand(static_cast<int>(i), key_provider, scripts, provider)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Cannot derive script without private keys"));
         }
 
