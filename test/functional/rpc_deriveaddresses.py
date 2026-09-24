@@ -30,6 +30,14 @@ class DeriveaddressesTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].deriveaddresses(ranged_descriptor, [1, 2]), ["ydccVGNV2EcEouAxbbgdu8pi8gkdaqkiav", "yMENst4XYP3ZSNvsCEm587GbSSXZUfhpWG"])
         assert_equal(self.nodes[0].deriveaddresses(ranged_descriptor, 2), [address, "ydccVGNV2EcEouAxbbgdu8pi8gkdaqkiav", "yMENst4XYP3ZSNvsCEm587GbSSXZUfhpWG"])
 
+        # An end at INT_MAX used to overflow the derivation loop's own `int`
+        # counter (see src/rpc/misc.cpp). Adjacent ordinary range alongside it.
+        assert_equal(
+            self.nodes[0].deriveaddresses(ranged_descriptor, [2147483645, 2147483647]),
+            ["yV3sCTgukGqFvSqRhA2SNcMMocPrgc48TL", "yV5zx46Vu4LgcJYoMLu7XcpRzvRPB7LK2q", "yUQ4ms3snAAXkWF1AzfnYrxAxgmNVhrydU"])
+        assert_equal(self.nodes[0].deriveaddresses(ranged_descriptor, [3, 4]),
+                      ["ycMwdNiwJdWjWSp31WtUBow8SpRcQacpnF", "ySXFnNzQZuXD8GQGky856yVqqBxnVxCJcH"])
+
         assert_raises_rpc_error(-8, "Range should not be specified for an un-ranged descriptor", self.nodes[0].deriveaddresses, descsum_create("pkh(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/1/1/0)"), [0, 2])
 
         assert_raises_rpc_error(-8, "Range must be specified for a ranged descriptor", self.nodes[0].deriveaddresses, descsum_create("pkh(tprv8ZgxMBicQKsPd7Uf69XL1XwhmjHopUGep8GuEiJDZmbQz6o58LninorQAfcKZWARbtRtfnLcJ5MQ2AtHcQJCCRUcMRvmDUjyEmNUWwx8UbK/1/1/*)"))

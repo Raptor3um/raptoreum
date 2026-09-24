@@ -47,6 +47,8 @@ class ImportWithLabel(BitcoinTestFramework):
 
         test_address(self.nodes[1],
                      address,
+                     ismine=True,
+                     iswatchonly=False,
                      label=label)
 
         self.log.info(
@@ -71,6 +73,8 @@ class ImportWithLabel(BitcoinTestFramework):
 
         test_address(self.nodes[1],
                      address2,
+                     ismine=True,
+                     iswatchonly=False,
                      label=label2)
 
         self.log.info("Test importaddress with label and importprivkey with label.")
@@ -94,6 +98,8 @@ class ImportWithLabel(BitcoinTestFramework):
 
         test_address(self.nodes[1],
                      address3,
+                     ismine=True,
+                     iswatchonly=False,
                      label=label3_priv)
 
         self.log.info(
@@ -120,7 +126,49 @@ class ImportWithLabel(BitcoinTestFramework):
         self.nodes[1].importprivkey(priv_key4)
         test_address(self.nodes[1],
                      address4,
+                     ismine=True,
+                     iswatchonly=False,
                      label=label4_addr)
+
+        self.log.info(
+            "Test importprivkey preserves the label and purpose of a "
+            "previously labelled send address (the realistic way this is "
+            "hit: an address the wallet already sent to, whose key it "
+            "later obtains from a backup)."
+        )
+        send_address = self.nodes[0].getnewaddress()
+        send_label = "Send Label"
+        self.nodes[1].setlabel(send_address, send_label)
+        test_address(self.nodes[1],
+                     send_address,
+                     ismine=False,
+                     label=send_label)
+        send_priv_key = self.nodes[0].dumpprivkey(send_address)
+        self.nodes[1].importprivkey(send_priv_key)
+        test_address(self.nodes[1],
+                     send_address,
+                     ismine=True,
+                     iswatchonly=False,
+                     label=send_label,
+                     labels=[{"name": send_label, "purpose": "send"}])
+
+        self.log.info(
+            "Test importprivkey with an explicit empty label clears an "
+            "existing label, unlike omitting the label entirely."
+        )
+        cleared_address = self.nodes[0].getnewaddress()
+        self.nodes[1].setlabel(cleared_address, "Will Be Cleared")
+        test_address(self.nodes[1],
+                     cleared_address,
+                     ismine=False,
+                     label="Will Be Cleared")
+        cleared_priv_key = self.nodes[0].dumpprivkey(cleared_address)
+        self.nodes[1].importprivkey(cleared_priv_key, "")
+        test_address(self.nodes[1],
+                     cleared_address,
+                     ismine=True,
+                     iswatchonly=False,
+                     label="")
 
         self.stop_nodes()
 

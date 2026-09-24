@@ -2722,9 +2722,11 @@ static UniValue scantxoutset(const JSONRPCRequest &request) {
                 range.first = 0;
                 range.second = 0;
             }
-            for (int i = range.first; i <= range.second; ++i) {
+            // Same INT_MAX overflow as deriveaddresses (src/rpc/misc.cpp) --
+            // i must be widened past int to test the loop condition there.
+            for (int64_t i = range.first; i <= range.second; ++i) {
                 std::vector <CScript> scripts;
-                if (!desc->Expand(i, provider, scripts, provider)) {
+                if (!desc->Expand(static_cast<int>(i), provider, scripts, provider)) {
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
                                        strprintf("Cannot derive script without private keys: '%s'", desc_str));
                 }
