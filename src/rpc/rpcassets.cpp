@@ -654,6 +654,7 @@ UniValue sendasset(const JSONRPCRequest &request) {
     CWallet *const pwallet = wallet.get();
 
     LOCK(pwallet->cs_wallet);
+    LOCK(cs_main);
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -830,6 +831,7 @@ UniValue listassetsbalance(const JSONRPCRequest &request) {
     CWallet *const pwallet = wallet.get();
 
     LOCK(pwallet->cs_wallet);
+    LOCK(cs_main);
 
     std::map <std::string, std::vector<COutput>> mapAssetCoins;
     pwallet->AvailableAssets(mapAssetCoins);

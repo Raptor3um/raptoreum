@@ -1895,6 +1895,8 @@ UniValue listsinceblock(const JSONRPCRequest &request) {
     bool include_removed = (request.params[3].isNull() || request.params[3].get_bool());
 
     const Optional<int> tip_height = pwallet->chain().getHeight();
+    // depth filters transactions and comes from blockhash (params[0]);
+    // target_confirms only affects lastblockhash below, per the help text.
     int depth = tip_height && height ? (1 + *tip_height - *height) : -1;
 
     UniValue transactions(UniValue::VARR);

@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 from test_framework.test_framework import RaptoreumTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_raises_rpc_error
 
 '''
 rpc_masternode.py
@@ -67,6 +67,20 @@ class RPCMasternodeTest(RaptoreumTestFramework):
         payments2_2 = self.nodes[0].smartnode("payments", blockhash, -2)
         assert_equal(len(payments2_2), 2)
         assert_equal(payments[0], payments2_2[-1])
+
+        self.log.info("test `payments` boundary counts")
+        assert_equal(self.nodes[0].smartnode("payments", blockhash, 0), [])
+        assert_raises_rpc_error(-8, "count is out of range", self.nodes[0].smartnode,
+                                "payments", blockhash, -9223372036854775808)
+        # A negative count larger than the chain height must walk back through
+        # every real block and then stop cleanly at genesis rather than
+        # dereference past it: genesis pays no smartnode (there was no
+        # smartnode list at height 0) and is skipped, not counted, so height
+        # entries come back (heights height..1), not height + 1.
+        height = self.nodes[0].getblockcount()
+        past_genesis = self.nodes[0].smartnode("payments", blockhash, -(height + 10))
+        assert_equal(len(past_genesis), height)
+        assert_equal(past_genesis[0]["height"], 1)
 
         self.log.info("test that `smartnode payments` results at chaintip match `getblocktemplate` results for that block")
         gbt_smartnode = self.nodes[0].getblocktemplate()["smartnode"]
