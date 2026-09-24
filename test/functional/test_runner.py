@@ -68,6 +68,12 @@ if os.name != 'nt' or sys.getwindowsversion() >= (10, 0, 14393):
 TEST_EXIT_PASSED = 0
 TEST_EXIT_SKIPPED = 77
 
+# 30 minutes represented in seconds. Restores a constant a later backport
+# merge dropped while leaving its one use (in run_tests(), below) referring
+# to the name -- confirmed by finding this exact definition, at this exact
+# value, in this file's own history before that merge removed it.
+TRAVIS_TIMEOUT_DURATION = 30 * 60
+
 BASE_SCRIPTS = [
     # Scripts that are run by default.
     # Longest test should go first, to favor running tests in parallel
@@ -97,6 +103,7 @@ BASE_SCRIPTS = [
     'feature_llmq_is_retroactive.py',
     'feature_llmq_dkgerrors.py',
     'feature_dip4_coinbasemerkleroots.py',
+    'mining_getblocktemplate_longpoll.py',
     # vv Tests less than 60s vv
     'p2p_sendheaders.py',
     'wallet_importmulti.py',
@@ -109,7 +116,6 @@ BASE_SCRIPTS = [
     'feature_reindex.py',
     # vv Tests less than 30s vv
     'feature_fee_estimation.py',
-    'mining_getblocktemplate_longpoll.py',
     'example_test.py',
     'wallet_txn_doublespend.py',
     'wallet_txn_clone.py --mineblock',
@@ -259,6 +265,12 @@ DISABLED_SCRIPTS = [
     # each one as accidentally forgotten (and aborts under --ci) rather
     # than recognising it as a real, intentional exclusion.
     "feature_governance_objects.py",  # governance is not exercised on Raptoreum
+    # Neither implements BIP157/158 compact block filters: -blockfilterindex
+    # is not a recognized startup argument ("Error parsing command line
+    # arguments: Invalid parameter -blockfilterindex", confirmed against a
+    # live node), and there is no getblockfilter RPC registered.
+    "p2p_blockfilters.py",
+    "rpc_getblockfilter.py",
 ]
 
 NON_SCRIPTS = [
