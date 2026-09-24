@@ -7,6 +7,7 @@
 #include <evo/deterministicmns.h>
 #include <governance/governance-classes.h>
 #include <index/txindex.h>
+#include <limits>
 #include <net.h>
 #include <netbase.h>
 #include <node/context.h>
@@ -343,7 +344,7 @@ void smartnode_payments_help(const JSONRPCRequest &request) {
                {
                        {"blockhash", RPCArg::Type::STR_HEX, /* default */ "tip", "The hash of the starting block"},
                        {"count", RPCArg::Type::NUM, /* default */ "1",
-                        "The number of blocks to return. Will return <count> previous blocks if <count> is negative. Both 1 and -1 correspond to the chain tip."},
+                        "The number of blocks to return. Will return <count> previous blocks if <count> is negative. Both 1 and -1 correspond to the chain tip. The genesis block is always skipped and does not count towards this total, since no smartnode network existed to pay at height 0."},
                },
                RPCResult{
                        RPCResult::Type::ARR, "", "Blocks",
@@ -398,11 +399,32 @@ UniValue smartnode_payments(const JSONRPCRequest &request) {
     }
 
     int64_t nCount = request.params.size() > 1 ? ParseInt64V(request.params[1], "count") : 1;
+    if (nCount == std::numeric_limits<int64_t>::min()) {
+        // std::abs(nCount) below is undefined behavior at this one value:
+        // its magnitude has no representation in int64_t to negate into.
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "count is out of range");
+    }
 
     // A temporary vector which is used to sort results properly (there is no "reverse" in/for UniValue)
     std::vector <UniValue> vecPayments;
 
     while (vecPayments.size() < uint64_t(std::abs(nCount)) && pindex != nullptr) {
+        if (pindex->nHeight == 0) {
+            // The genesis block crashes this loop two ways: pindex->pprev is
+            // null, and it's read unconditionally below for the subsidy; and
+            // GetBlockTxOuts()'s own ChainActive()[nHeight - 1] lookup for
+            // height 0 returns nullptr, which GetListForBlock() dereferences
+            // unconditionally too. No smartnode network existed to pay at
+            // height 0 anyway, so there is nothing to report -- skip it
+            // rather than route into either.
+            if (nCount > 0) {
+                LOCK(cs_main);
+                pindex = ::ChainActive().Next(pindex);
+            } else {
+                pindex = pindex->pprev;
+            }
+            continue;
+        }
 
         CBlock block;
         if (!ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
