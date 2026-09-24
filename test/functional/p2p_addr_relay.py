@@ -15,7 +15,9 @@ from test_framework.messages import (
 )
 from test_framework.mininode import (
     P2PInterface,
+    mininode_lock,
     network_thread_start,
+    wait_until,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -51,11 +53,20 @@ class AddrTest(BitcoinTestFramework):
             addr.port = 8333 + i
             addrs.append(addr)
 
+        expected = {(a.ip, a.port) for a in addrs}
+
         self.log.info('Create connection that sends addr messages')
         addr_source = node.add_p2p_connection(P2PInterface())
         network_thread_start()
         addr_source.wait_for_verack()
         msg = msg_addr()
+
+        # Connected before the real addr message below is processed, so
+        # RelayAddress (which fans out to peers connected at that instant)
+        # has this connection to pick from.
+        self.log.info('Create connection that receives relayed addr messages')
+        addr_receiver = node.add_p2p_connection(P2PInterface())
+        addr_receiver.wait_for_verack()
 
         self.log.info('Send too large addr message')
         msg.addrs = addrs * 101
@@ -70,14 +81,34 @@ class AddrTest(BitcoinTestFramework):
         ]):
             addr_source.send_and_ping(msg)
 
+        self.log.info('Check that the node relays the addresses to the other peer')
+        # These are routable IPv4 addresses with exactly two peers connected,
+        # so RelayAddress always selects both; addr_source is filtered out by
+        # its own addrKnown record, not by selection. The only uncertainty is
+        # timing: nNextAddrSend gates the flush on GetTimeMicros(), a real
+        # clock setmocktime does not move, and missing the first (near-
+        # instant) flush means waiting out a PoissonNextSend(30s) interval --
+        # exponential, so a long tail. 180s keeps the miss probability low
+        # (e^(-180/30) ~ 0.25%). The predicate checks for one of our own
+        # addresses, not just any 'addr' message, since AdvertiseLocal can
+        # also flush the node's own address to a fresh connection.
+        def relayed_to_receiver():
+            msg = addr_receiver.last_message.get('addr')
+            return msg is not None and any((a.ip, a.port) in expected for a in msg.addrs)
+
+        wait_until(relayed_to_receiver, timeout=180, lock=mininode_lock)
+        with mininode_lock:
+            relayed = addr_receiver.last_message['addr'].addrs
+        assert len(relayed) > 0
+        for a in relayed:
+            assert (a.ip, a.port) in expected, "unexpected address {}".format(a)
+            assert_equal(a.nServices, NODE_NETWORK)
+
         self.log.info('Check that the node will serve them back')
-        # Onward relay is not assertable: SendMessages gates the addr flush on
-        # GetTimeMicros(), a real clock setmocktime does not move. What is
-        # deterministic is that the addresses reached addrman. getnodeaddresses
-        # serves a 23% sample, so this checks what comes back is ours, not all ten.
+        # getnodeaddresses serves a 23% sample, so this checks what comes back
+        # is ours, not that all ten do.
         served = node.getnodeaddresses(len(addrs))
         assert len(served) > 0
-        expected = {(a.ip, a.port) for a in addrs}
         for a in served:
             assert (a['address'], a['port']) in expected, "unexpected address {}".format(a)
             assert_equal(a['services'], NODE_NETWORK)
