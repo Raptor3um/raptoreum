@@ -103,12 +103,29 @@ class P2PLeakTest(BitcoinTestFramework):
         no_version_bannode = self.nodes[0].add_p2p_connection(CNodeNoVersionBan(), send_version=False)
         no_version_idlenode = self.nodes[0].add_p2p_connection(CNodeNoVersionIdle(), send_version=False)
         no_verack_idlenode = self.nodes[0].add_p2p_connection(CNodeNoVerackIdle())
+        # Connected here, alongside the others, rather than after
+        # network_thread_start(): NetworkThread.run() iterates
+        # mininode_socket_map without a lock, and add_p2p_connection registers
+        # the new connection into that same dict from this (the main) thread,
+        # racing the thread's iteration -- can raise "RuntimeError: dictionary
+        # changed size during iteration". Its own checks stay below, after the
+        # other peers' checks; only the connect is moved.
+        p2p_version_store = self.nodes[0].add_p2p_connection(P2PVersionStore())
+        # ver.nStartingHeight below is fixed at this connection's own version
+        # handshake, which now happens here rather than after the generate(1)
+        # below -- capture the height it will actually carry, rather than
+        # re-querying it later once the chain has moved on.
+        height_at_connect = self.nodes[0].getblockcount()
 
         network_thread_start()
 
         wait_until(lambda: no_version_bannode.ever_connected, timeout=10, lock=mininode_lock)
         wait_until(lambda: no_version_idlenode.ever_connected, timeout=10, lock=mininode_lock)
         wait_until(lambda: no_verack_idlenode.version_received, timeout=10, lock=mininode_lock)
+        # Wait for this handshake too, so height_at_connect above is actually
+        # settled before generate(1) below moves the chain -- otherwise this
+        # is ordered by timing, not synchronized, and can still race it.
+        wait_until(lambda: p2p_version_store.version_received is not None, timeout=10, lock=mininode_lock)
 
         # Mine a block and make sure that it's not sent to the connected nodes
         self.nodes[0].generate(1)
@@ -121,14 +138,12 @@ class P2PLeakTest(BitcoinTestFramework):
 
         self.log.info('Check that the version message does not leak the local address of the node')
         # Upstream bounds nTime by wall time; these nodes run on mocktime, so
-        # the version message carries that instead.
-        p2p_version_store = self.nodes[0].add_p2p_connection(P2PVersionStore())
-        wait_until(lambda: p2p_version_store.version_received is not None, timeout=10, lock=mininode_lock)
+        # the version message carries that instead. Already waited for above.
         ver = p2p_version_store.version_received
         assert_equal(ver.nTime, self.mocktime)
         assert_equal(ver.addrFrom.port, 0)
         assert_equal(ver.addrFrom.ip, '0.0.0.0')
-        assert_equal(ver.nStartingHeight, self.nodes[0].getblockcount())
+        assert_equal(ver.nStartingHeight, height_at_connect)
         assert_equal(ver.nRelay, 1)
 
         self.nodes[0].disconnect_p2ps()
