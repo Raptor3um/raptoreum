@@ -53,6 +53,15 @@ class P2PLeakTxTest(BitcoinTestFramework):
             else:
                 self.log.debug('tx {} was already announced to us. Try test again.'.format(txid))
                 assert int(txid, 16) in [inv.hash for inv in inbound_peer.last_message['inv'].inv]
+        else:
+            # The for loop ran to completion without ever hitting the break
+            # above, i.e. every one of MAX_REPEATS attempts landed after the
+            # tx was already announced. The one thing this test exists to
+            # check -- that an unannounced tx gets a notfound, not a leak --
+            # was never actually observed.
+            raise AssertionError(
+                "tx was announced before getdata could reach it in all {} attempts; "
+                "the notfound precondition was never exercised".format(MAX_REPEATS))
 
 
 if __name__ == '__main__':
