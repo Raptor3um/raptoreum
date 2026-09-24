@@ -42,7 +42,7 @@ BITCOIND_PROC_WAIT_TIMEOUT = 60
 # checking, so it's filtered out of captured stderr before the comparison in
 # stop_node() rather than forcing every -usehd=1 test to declare it.
 KNOWN_STARTUP_WARNINGS = (
-    "WarningMake sure to encrypt your wallet and delete all non-encrypted "
+    "Warning: Make sure to encrypt your wallet and delete all non-encrypted "
     "backups after you have verified that the wallet works!",
 )
 

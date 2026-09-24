@@ -151,12 +151,11 @@ class ImportMultiTest(BitcoinTestFramework):
         self.test_importmulti({"scriptPubKey": {"address": address},
                                "timestamp": "now"},
                               True)
-        # getaddressinfo documents ischange but never returns it in this tree
-        # (nothing calls pushKV("ischange")), so it cannot be asserted here.
         self.test_address(address,
                           iswatchonly=True,
                           ismine=False,
-                          timestamp=timestamp)
+                          timestamp=timestamp,
+                          ischange=False)
         watchonly_address = address
         watchonly_timestamp = timestamp
 
@@ -177,7 +176,8 @@ class ImportMultiTest(BitcoinTestFramework):
         self.test_address(key.p2pkh_addr,
                           iswatchonly=True,
                           ismine=False,
-                          timestamp=timestamp)
+                          timestamp=timestamp,
+                          ischange=True)
 
         # ScriptPubKey + internal + label
         self.log.info("Should not allow a label to be specified when internal is true")
