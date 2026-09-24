@@ -11,6 +11,12 @@ detection in both the chain and the mempool, and the mint ceiling.
 One of these pins behaviour that contradicts the RPC's own help: the unique
 flag is read under a different name than the help documents. It is marked
 where it appears and is meant to fail loudly if the two are reconciled.
+
+These are RPC- and mempool-level barriers: createasset/mintasset refusing or
+accepting a request, and the mempool refusing a duplicate. None of this drives
+a raw or mined transaction crafted to bypass the RPC's own validation, so it
+does not establish that every one of these rules is also enforced in
+consensus (block validation) rather than only at the wallet/RPC layer.
 """
 
 from test_framework.test_framework import BitcoinTestFramework

@@ -208,11 +208,15 @@ class FuturesTest(BitcoinTestFramework):
         assert_equal(node.gettransaction(spent)["confirmations"], 0)
 
         self.log.info("Maturity releases the output and clears the flag")
+        # IsSpent() hides an output the wallet recorded as an input to some
+        # transaction, confirmed or not -- the rejected spend above still
+        # counts unless abandoned, which would hide `locked` from
+        # listunspent below and let the actual assertion go unchecked.
+        node.abandontransaction(spent)
         node.generate(5)
         node.getwalletinfo()
-        entry = {(u["txid"], u["vout"]): u for u in node.listunspent(0)}.get(locked)
-        if entry is not None:
-            assert_equal(entry["futureSpendable"], True)
+        entry = {(u["txid"], u["vout"]): u for u in node.listunspent(0)}[locked]
+        assert_equal(entry["futureSpendable"], True)
 
 
 if __name__ == '__main__':

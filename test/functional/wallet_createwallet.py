@@ -101,9 +101,10 @@ class CreateWalletTest(BitcoinTestFramework):
         assert_equal(w5.getwalletinfo()['keypoolsize'], 0)
         assert_raises_rpc_error(-4, "Error: Private keys are disabled for this wallet", w5.getnewaddress)
         assert_raises_rpc_error(-4, "Error: Private keys are disabled for this wallet", w5.getrawchangeaddress)
-        # Encrypt the wallet
         # Upstream rejects encrypting a keyless wallet; this tree has no such
-        # guard, so the call would succeed and break the assertions below.
+        # guard, and encrypting one changes nothing checked below -- keys stay
+        # disabled either way.
+        w5.encryptwallet('pass')
         assert_raises_rpc_error(-4, "Error: Private keys are disabled for this wallet", w5.getnewaddress)
         assert_raises_rpc_error(-4, "Error: Private keys are disabled for this wallet", w5.getrawchangeaddress)
 
