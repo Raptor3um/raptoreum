@@ -669,7 +669,7 @@ BOOST_AUTO_TEST_CASE(DecoupledChecksBytesAndMerkleWithoutContextualValidation)
 }
 
 
-BOOST_AUTO_TEST_CASE(DecoupledQuorumCommitmentRoundTrip)
+static CBlock BuildQuorumCommitmentBlockTestCase()
 {
     CBlock block(BuildBlockTestCase());
     llmq::CFinalCommitmentTxPayload payload;
@@ -686,7 +686,56 @@ BOOST_AUTO_TEST_CASE(DecoupledQuorumCommitmentRoundTrip)
     BOOST_REQUIRE(block.vtx[1]->IsNull());
     CValidationState state;
     BOOST_REQUIRE(CheckTransaction(*block.vtx[1], state, payload.nHeight, 0));
+    while (!CheckProofOfWork(block.GetPOWHash(), block.nBits, Params().GetConsensus())) ++block.nNonce;
+    return block;
+}
 
+BOOST_AUTO_TEST_CASE(CompactPrefilledQuorumCommitmentRoundTrip)
+{
+    CBlock block(BuildQuorumCommitmentBlockTestCase());
+    TestHeaderAndShortIDs encoded(block);
+    encoded.prefilledtxn = {{0, block.vtx[0]}, {0, block.vtx[1]}};
+    encoded.shorttxids = {encoded.GetShortID(block.vtx[2]->GetHash())};
+    CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
+    stream << encoded;
+    CBlockHeaderAndShortTxIDs decoded;
+    stream >> decoded;
+    BOOST_REQUIRE(stream.empty());
+
+    CTxMemPool pool;
+    PartiallyDownloadedBlock partial(&pool);
+    BOOST_REQUIRE(partial.InitData(decoded, {}) == READ_STATUS_OK);
+    BOOST_CHECK(partial.IsTxAvailable(0));
+    BOOST_CHECK(partial.IsTxAvailable(1));
+    BOOST_CHECK(!partial.IsTxAvailable(2));
+    CBlock rebuilt;
+    BOOST_REQUIRE(partial.FillBlock(rebuilt, {block.vtx[2]}) == READ_STATUS_OK);
+    CDataStream originalBytes(SER_NETWORK, PROTOCOL_VERSION), rebuiltBytes(SER_NETWORK, PROTOCOL_VERSION);
+    originalBytes << block;
+    rebuiltBytes << rebuilt;
+    BOOST_CHECK_EQUAL_COLLECTIONS(originalBytes.begin(), originalBytes.end(), rebuiltBytes.begin(), rebuiltBytes.end());
+}
+
+BOOST_AUTO_TEST_CASE(CompactRejectsEmptyPrefilledTransaction)
+{
+    CBlock block(BuildBlockTestCase());
+    CTxMemPool pool;
+    // Only the version-3 quorum commitment shape may be structurally empty.
+    CMutableTransaction normalV3, commitmentV2;
+    normalV3.nVersion = 3;
+    commitmentV2.nVersion = 2;
+    commitmentV2.nType = TRANSACTION_QUORUM_COMMITMENT;
+    for (const CTransactionRef& tx : {MakeTransactionRef(CMutableTransaction()), MakeTransactionRef(normalV3),
+                                      MakeTransactionRef(commitmentV2), CTransactionRef{}}) {
+        block.vtx[0] = tx;
+        PartiallyDownloadedBlock partial(&pool);
+        BOOST_CHECK(partial.InitData(CBlockHeaderAndShortTxIDs(block), {}) == READ_STATUS_INVALID);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(DecoupledQuorumCommitmentRoundTrip)
+{
+    CBlock block(BuildQuorumCommitmentBlockTestCase());
     CDecoupledBlock encoded(block, {block.vtx[2]->GetHash()});
     BOOST_REQUIRE_EQUAL(encoded.vtx.size(), 2U);
     BOOST_CHECK(encoded.vtx[1] == block.vtx[1]);
