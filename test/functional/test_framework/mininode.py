@@ -98,6 +98,7 @@ class P2PConnection(asyncore.dispatcher):
         super().__init__(map=mininode_socket_map)
 
         self._conn_open = False
+        self.disconnect = False
 
     @property
     def is_connected(self):
@@ -106,8 +107,6 @@ class P2PConnection(asyncore.dispatcher):
     def peer_connect(self, dstaddr, dstport, *, net, devnet_name=None, uacomment=None):
         self.dstaddr = dstaddr
         self.dstport = dstport
-        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         self.sendbuf = b""
         self.recvbuf = b""
         self._asyncore_pre_connection = True
@@ -129,10 +128,16 @@ class P2PConnection(asyncore.dispatcher):
 
         logger.debug('Connecting to Dash Node: %s:%d' % (self.dstaddr, self.dstport))
 
-        try:
-            self.connect((dstaddr, dstport))
-        except:
-            self.handle_close()
+        # A running network thread must not poll the socket before connect():
+        # Linux reports POLLHUP for it and asyncore closes the connection.
+        # writable() takes this lock before the thread registers the socket.
+        with mininode_lock:
+            self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+            try:
+                self.connect((dstaddr, dstport))
+            except:
+                self.handle_close()
 
     def peer_disconnect(self):
         # Connection could have already been closed by other end.
@@ -512,7 +517,7 @@ class NetworkThread(threading.Thread):
             # loop to work around the behavior of asyncore when using
             # select
             disconnected = []
-            for fd, obj in mininode_socket_map.items():
+            for obj in list(mininode_socket_map.values()):
                 if obj.disconnect:
                     disconnected.append(obj)
             [obj.handle_close() for obj in disconnected]
