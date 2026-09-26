@@ -7,7 +7,7 @@
 
 from decimal import Decimal
 
-from feature_decoupled_mining import exercise_certified_mining
+from feature_decoupled_mining import exercise_certified_mining, exercise_transport_mining_limits
 
 from test_framework.messages import CTransaction, FromHex, ToHex, hash256
 from test_framework.test_framework import LLMQ_TEST_TYPE, RaptoreumTestFramework
@@ -278,6 +278,7 @@ class TxValidationTest(RaptoreumTestFramework):
                                   eviction_bodies=[self.payment(coin)[0] for coin in coins[6:12]])
         assert unsigned_id in node.getblock(node.getbestblockhash())["tx"]
         certified_blocks.append(node.getbestblockhash())
+        exercise_transport_mining_limits(self)
         self.check_historical_replay(certified_blocks)
 
 

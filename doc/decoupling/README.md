@@ -20,7 +20,7 @@ The mempool remains the single candidate/dependency graph. The buspool retains s
 
 Canonical full blocks remain stored on disk. Reference transport requires missing bodies to be supplied before normal block processing. Missing data is retryable; it does not make a header consensus-invalid. Cold sync and replay use committed public quorum history and full blocks, without requiring a buspool database or local signing shares. Delegated mode rejects pruning because its rule evaluation requires historical voting data. No snapshot trust model is introduced.
 
-The existing 100,000-byte contextual transaction bound and two-MiB block bound remain. The experimental coinbase payload fits at most 41 certificates. Removing those bounds is outside this experiment.
+The existing 100,000-byte contextual transaction bound and 2,000,000-byte block bound remain. The experimental coinbase payload fits at most 41 certificates. Removing those bounds is outside this experiment.
 
 ## RPC workflow
 

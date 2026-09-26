@@ -11,12 +11,12 @@ import struct
 from feature_llmq_txvalidation import TxValidationTest, statement_with_result
 from test_framework.messages import (
     BlockTransactions, CBlock, CBlockHeader, CDecoupledBlock, CDecoupledTxRef, CInv, CTransaction,
-    CTxValidationCertificate, FromHex, MSG_BLOCK, MSG_DECOUPLED_BLOCK,
-    MSG_TX, MSG_TX_CERTIFICATE, ToHex, msg_block, msg_blocktxn, msg_dblock,
+    CTxValidationCertificate, FromHex, HeaderAndShortIDs, MSG_BLOCK, MSG_DECOUPLED_BLOCK,
+    MSG_TX, MSG_TX_CERTIFICATE, ToHex, msg_block, msg_blocktxn, msg_cmpctblock, msg_dblock,
     msg_getdata, msg_inv, msg_mempool, msg_notfound, msg_senddblock, msg_txcert,
     ser_compact_size,
 )
-from test_framework.mininode import P2PInterface, mininode_lock
+from test_framework.mininode import P2PInterface, mininode_lock, network_thread_start
 from test_framework.test_framework import LLMQ_TEST_TYPE
 from test_framework.util import assert_equal, assert_raises_rpc_error, connect_nodes, wait_until
 
@@ -47,6 +47,7 @@ class TransportPeer(P2PInterface):
         self.missing[request.blockhash] = request.to_absolute()
 
     def negotiate(self, version=1):
+        self.wait_for_verack()
         message = msg_senddblock()
         message.version = version
         message.announce = True
@@ -93,6 +94,11 @@ class DecoupledBlocksTest(TxValidationTest):
     def deliver(self, peer, block, indexes):
         peer.send_and_ping(msg_dblock(CDecoupledBlock(block, indexes)))
 
+    def deliver_compact(self, peer, block):
+        encoded = HeaderAndShortIDs()
+        encoded.initialize_from_block(block, prefill_list=list(range(len(block.vtx))))
+        peer.send_and_ping(msg_cmpctblock(encoded.to_p2p()))
+
     def assert_tip(self, block):
         wait_until(lambda: self.nodes[1].getbestblockhash() == block.hash)
         assert_equal(self.nodes[1].getblock(block.hash, 0), ToHex(block))
@@ -137,6 +143,69 @@ class DecoupledBlocksTest(TxValidationTest):
             peer.peer_disconnect()
         for peer in peers:
             peer.wait_for_disconnect()
+
+    def exercise_alternate_recovery(self, peer, alternate, coin):
+        producer, receiver = self.nodes[:2]
+        source = producer.add_p2p_connection(TransportPeer())
+        source.negotiate()
+        for compact, fallback in ((False, False), (False, True), (True, False), (True, True)):
+            self.log.info("An alternate block recovers a decoupled download (compact=%s, fallback=%s)", compact, fallback)
+            if not compact:
+                alternate.negotiate()
+            raw, txid = self.payment(coin)
+            producer.sendrawtransaction(raw)
+            block = self.mine()
+            index = next(i for i, tx in enumerate(block.vtx) if tx.rehash() == txid)
+            # The canonical body remains retained after leaving the candidate graph.
+            assert not producer.getbuspoolentry(txid)["candidate"]
+            source.request(MSG_DECOUPLED_BLOCK, block.sha256)
+            with mininode_lock:
+                encoded = copy.deepcopy(source.last_message["dblock"].block)
+            assert_equal(encoded.header.rehash(), block.sha256)
+            assert (index, int(txid, 16)) in [(ref.index, ref.txid) for ref in encoded.vtxids]
+            previous_tip = receiver.getbestblockhash()
+            height = receiver.getblockcount() + 1
+            # Forward the actual node-produced encoding, not a Python reconstruction.
+            peer.send_and_ping(msg_dblock(encoded))
+            wait_until(lambda: block.sha256 in peer.missing, lock=mininode_lock)
+            assert_equal(peer.missing[block.sha256], [index])
+            if fallback:
+                peer.reply(block, [])
+                peer.wait_request(MSG_BLOCK, block.sha256)
+            owner = [info["id"] for info in receiver.getpeerinfo() if height in info["inflight"]]
+            assert_equal(len(owner), 1)
+            if not compact:
+                # Another partial encoding must not start a competing download.
+                alternate.send_and_ping(msg_dblock(encoded))
+                assert_equal(receiver.getbestblockhash(), previous_tip)
+                assert_equal([info["id"] for info in receiver.getpeerinfo() if height in info["inflight"]], owner)
+                assert block.sha256 not in alternate.missing
+                assert (MSG_BLOCK, block.sha256) not in alternate.requests
+            # A corrupt alternative must preserve the original pending request.
+            corrupt = copy.deepcopy(block)
+            corrupt.vtx[0].vout[0].nValue -= 1
+            corrupt.vtx[0].rehash()
+            if compact:
+                self.deliver_compact(alternate, corrupt)
+            else:
+                self.deliver(alternate, corrupt, [])
+            assert_equal(receiver.getbestblockhash(), previous_tip)
+            assert_equal([info["id"] for info in receiver.getpeerinfo() if height in info["inflight"]], owner)
+            assert block.sha256 not in alternate.missing
+            assert (MSG_BLOCK, block.sha256) not in alternate.requests
+            if compact:
+                self.deliver_compact(alternate, block)
+            else:
+                self.deliver(alternate, block, [])
+            assert_equal(receiver.getbestblockhash(), block.hash)
+            self.assert_tip(block)
+            assert all(height not in info["inflight"] for info in receiver.getpeerinfo())
+            peer.reply(block)
+            assert_equal(receiver.getbestblockhash(), block.hash)
+            assert peer.is_connected and alternate.is_connected
+            # The next case spends this now-confirmed ordinary output.
+            coin = {"txid": txid, "vout": 0, "amount": producer.decoderawtransaction(raw)["vout"][0]["value"]}
+        self.close_peers([source])
 
     def exercise_reconstruction_limits(self, peer, alternate, coin):
         producer, receiver = self.nodes[:2]
@@ -231,7 +300,7 @@ class DecoupledBlocksTest(TxValidationTest):
     def run_test(self):
         producer, receiver = self.nodes[:2]
         coins = producer.listunspent(101)
-        assert len(coins) >= 12
+        assert len(coins) >= 13
         assert_equal(receiver.getbuspoolinfo()["maxcount"], 2)
         # One ordinary receiver, five authenticated signers and a control node.
         assert all(mn.nodeIdx >= 2 for mn in self.mninfo)
@@ -241,6 +310,9 @@ class DecoupledBlocksTest(TxValidationTest):
         legacy = receiver.add_p2p_connection(TransportPeer())
         peer = receiver.add_p2p_connection(TransportPeer())
         alternate = receiver.add_p2p_connection(TransportPeer())
+        network_thread_start()
+        for connected in (legacy, peer, alternate):
+            connected.wait_for_verack()
         wait_until(lambda: "senddblock" in peer.last_message, lock=mininode_lock)
         tip = FromHex(CBlock(), receiver.getblock(receiver.getbestblockhash(), 0))
         tip.calc_sha256()
@@ -263,6 +335,7 @@ class DecoupledBlocksTest(TxValidationTest):
         assert_equal(receiver.getbestblockhash(), tip.hash)
         self.deliver(peer, first, [])
         self.assert_tip(first)
+        self.exercise_alternate_recovery(peer, alternate, coins[12])
         self.log.info("Pending certificate announcements recover their count on expiry and disconnect")
         peer = self.exercise_announcement_limits(peer, alternate)
 
@@ -477,7 +550,7 @@ class DecoupledBlocksTest(TxValidationTest):
 
         self.log.info("A node without the experimental flag preserves the ordinary wire contract")
         receiver.disconnect_p2ps()
-        disabled_args = [arg for arg in self.extra_args[1] if not arg.startswith("-txdecoupling")]
+        disabled_args = [arg for arg in self.extra_args[1] if not arg.startswith(("-txdecoupling", "-buspool"))]
         self.restart_node(1, disabled_args)
         receiver = self.nodes[1]
         disabled = receiver.add_p2p_connection(TransportPeer())

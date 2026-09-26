@@ -89,6 +89,14 @@ class DecouplingProfile(AssetsTest):
         count = self.options.profile_count
         coins = [coin for coin in node.listunspent(1)
                  if coin["spendable"] and coin["amount"] > Decimal("0.02")]
+        if len(coins) < input_count * count:
+            # Asset operations may consolidate the wallet's mature outputs.
+            # Fund independent inputs outside the measured admission/relay stages.
+            funding = node.sendmany("", {node.getnewaddress(): Decimal("0.1")
+                                         for _ in range(input_count * count)})
+            self.mine()
+            coins = [coin for coin in node.listunspent(1)
+                     if coin["txid"] == funding and coin["spendable"] and coin["amount"] > Decimal("0.02")]
         assert len(coins) >= input_count * count, "Not enough confirmed independent inputs"
         signed = []
         expected = []

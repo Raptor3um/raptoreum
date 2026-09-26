@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <buspool.h>
 #include <chain.h>
 #include <coins.h>
 #include <consensus/merkle.h>
@@ -9,6 +10,7 @@
 #include <consensus/consensus.h>
 #include <evo/evodb.h>
 #include <llmq/quorums_commitment.h>
+#include <miner.h>
 #include <txdecoupling.h>
 #include <validation.h>
 #include <compat/endian.h>
@@ -554,4 +556,182 @@ BOOST_FIXTURE_TEST_CASE(txcertificate_block_preserves_non_script_rules, Certific
     CValidationState inactive;
     BOOST_CHECK(!TestBlockValidity(inactive, Params(), certified, ChainActive().Tip(), false, true));
     BOOST_CHECK_EQUAL(inactive.GetRejectReason(), "bad-cbtx-version");
+}
+
+BOOST_FIXTURE_TEST_CASE(txcertificate_mining_certificate_capacity, CertificateBlockSetup)
+{
+    BOOST_REQUIRE(CCbTx::MAX_CERTIFICATES == 41);
+    const size_t fillerCount = CCbTx::MAX_CERTIFICATES - 1;
+    const CScript script = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
+    const auto sign = [&](CMutableTransaction& tx) {
+        for (size_t i = 0; i < tx.vin.size(); ++i) {
+            std::vector<unsigned char> signature;
+            BOOST_REQUIRE(coinbaseKey.Sign(SignatureHash(script, tx, i, SIGHASH_ALL, 0, SigVersion::BASE), signature));
+            signature.push_back(SIGHASH_ALL);
+            tx.vin[i].scriptSig << signature;
+        }
+    };
+
+    // Confirm independent outputs: v1 certificates cannot authorize unconfirmed inputs.
+    CMutableTransaction funding;
+    funding.nVersion = 3;
+    funding.vin.emplace_back(m_coinbase_txns[0]->GetHash(), 0);
+    CAmount value;
+    {
+        LOCK(cs_main);
+        value = (ChainstateActive().CoinsTip().AccessCoin(funding.vin[0].prevout).out.nValue - 1000) /
+                (fillerCount + 5);
+    }
+    BOOST_REQUIRE_GT(value, 100000);
+    funding.vout.assign(fillerCount + 5, CTxOut(value, script));
+    sign(funding);
+    const CBlock fundingBlock = CreateAndProcessBlock({funding}, script);
+
+    LOCK(cs_main);
+    BOOST_REQUIRE(ChainActive().Tip()->GetBlockHash() == fundingBlock.GetHash());
+    auto& pool = *m_node.mempool;
+    struct RestoreBusPool {
+        std::shared_ptr<CBusPoolManager> previous;
+        ~RestoreBusPool() { busPoolManager = std::move(previous); }
+    } restore{busPoolManager};
+    busPoolManager = std::make_shared<CBusPoolManager>(pool);
+
+    const auto add = [&](const CTransactionRef& tx, bool local, bool certified) {
+        CTxValidationCertificate certificate;
+        if (certified) certificate = Certify(*tx, ChainstateActive().CoinsTip(), ChainActive().Tip(), keys);
+        CValidationState admitted;
+        // Bypass fee limits to retain zero-fee parents for CPFP.
+        BOOST_REQUIRE_MESSAGE(AcceptToMemoryPool(pool, admitted, tx, nullptr, true, 0, false,
+                                                 local ? nullptr : &certificate), admitted.GetRejectReason());
+        if (certified) {
+            CValidationState retained;
+            BOOST_REQUIRE_MESSAGE(busPoolManager->SubmitTransaction(tx, certificate, retained), retained.GetRejectReason());
+        }
+        LOCK(pool.cs);
+        BOOST_REQUIRE(pool.mapTx.find(tx->GetHash()) != pool.mapTx.end());
+        BOOST_CHECK_EQUAL(pool.mapTx.find(tx->GetHash())->AreScriptsLocallyValidated(), local);
+    };
+    unsigned int output = 0;
+    const auto parent = [&](CAmount fee, bool local, bool certified) {
+        CMutableTransaction tx;
+        tx.nVersion = 3;
+        tx.vin.emplace_back(funding.GetHash(), output++);
+        tx.vout.emplace_back(value - fee, script);
+        if (local) sign(tx); // Remote parents deliberately lack an ECDSA signature.
+        const auto result = MakeTransactionRef(tx);
+        add(result, local, certified);
+        return result;
+    };
+    const auto child = [&](const std::vector<CTransactionRef>& parents, CAmount fee) {
+        CMutableTransaction tx;
+        tx.nVersion = 3;
+        CAmount inputs = 0;
+        for (const auto& txParent : parents) {
+            tx.vin.emplace_back(txParent->GetHash(), 0);
+            inputs += txParent->vout[0].nValue;
+        }
+        tx.vout.emplace_back(inputs - fee, script);
+        sign(tx);
+        const auto result = MakeTransactionRef(tx);
+        add(result, true, false);
+        return result;
+    };
+
+    std::vector<CTransactionRef> fillers;
+    for (size_t i = 0; i < fillerCount; ++i) fillers.push_back(parent(100000, false, true));
+    const auto twoA = parent(0, false, true);
+    const auto twoB = parent(0, false, true);
+    const auto twoChild = child({twoA, twoB}, 60000);
+    const auto oneParent = parent(0, false, true);
+    const auto oneChild = child({oneParent}, 10000);
+    const auto localCertificate = parent(1000, true, true);
+    const auto ordinary = parent(500, true, false);
+    BOOST_CHECK_EQUAL(output, funding.vout.size());
+
+    BlockAssembler::Options options;
+    options.blockMinFeeRate = CFeeRate(1000);
+    const auto checkTemplate = [&](bool includeTwo) {
+        // Body fee rates order fillers, the two-parent package, the one-parent
+        // package, then the two local candidates. Manifest bytes remain overhead.
+        const auto result = BlockAssembler(pool, Params(), options).CreateNewBlock(script, true);
+        const auto& block = result->block; // CreateNewBlock also runs TestBlockValidity.
+        CCbTx payload;
+        BOOST_REQUIRE(GetTxPayload(*block.vtx[0], payload));
+        BOOST_CHECK(payload.nVersion == CCbTx::TX_CERTIFICATE_VERSION);
+        BOOST_REQUIRE_EQUAL(payload.txCertificates.size(), 41U);
+        BOOST_CHECK_EQUAL(block.vtx[0]->vExtraPayload.size(), 9829U); // 70 + 1 + 41 * 238.
+        BOOST_CHECK_LE(block.vtx[0]->vExtraPayload.size(), MAX_TX_EXTRA_PAYLOAD);
+
+        std::set<uint256> expectedCertificates;
+        for (const auto& tx : fillers) expectedCertificates.insert(tx->GetHash());
+        if (includeTwo) {
+            expectedCertificates.insert(twoA->GetHash());
+            expectedCertificates.insert(twoB->GetHash());
+        } else {
+            expectedCertificates.insert(oneParent->GetHash());
+        }
+        auto expected = expectedCertificates;
+        const auto& includedChild = includeTwo ? twoChild : oneChild;
+        expected.insert(includedChild->GetHash());
+        expected.insert(localCertificate->GetHash());
+        expected.insert(ordinary->GetHash());
+        std::set<uint256> actual;
+        std::map<uint256, size_t> positions;
+        for (size_t i = 1; i < block.vtx.size(); ++i) {
+            positions.emplace(block.vtx[i]->GetHash(), i);
+            if (block.vtx[i]->nType != TRANSACTION_QUORUM_COMMITMENT) actual.insert(block.vtx[i]->GetHash());
+        }
+        BOOST_REQUIRE(actual == expected);
+        std::set<uint256> actualCertificates;
+        uint16_t lastIndex = 0;
+        for (const auto& entry : payload.txCertificates) {
+            BOOST_REQUIRE_LT(entry.index, block.vtx.size());
+            BOOST_CHECK_GT(entry.index, lastIndex);
+            BOOST_CHECK(entry.certificate.txid == block.vtx[entry.index]->GetHash());
+            BOOST_CHECK(entry.certificate.parentHash == block.hashPrevBlock);
+            actualCertificates.insert(entry.certificate.txid);
+            lastIndex = entry.index;
+        }
+        BOOST_CHECK(actualCertificates == expectedCertificates);
+        if (includeTwo) {
+            BOOST_CHECK_LT(positions.at(twoA->GetHash()), positions.at(twoChild->GetHash()));
+            BOOST_CHECK_LT(positions.at(twoB->GetHash()), positions.at(twoChild->GetHash()));
+            BOOST_CHECK_EQUAL(positions.at(twoA->GetHash()) < positions.at(twoB->GetHash()),
+                              twoA->GetHash() < twoB->GetHash());
+        } else {
+            BOOST_CHECK_LT(positions.at(oneParent->GetHash()), positions.at(oneChild->GetHash()));
+        }
+        BOOST_CHECK_GT(positions.at(localCertificate->GetHash()), positions.at(includedChild->GetHash()));
+        BOOST_CHECK_GT(positions.at(ordinary->GetHash()), positions.at(includedChild->GetHash()));
+    };
+
+    // One free certificate slot rejects the two-parent package atomically,
+    // admits the one-parent package and still admits both local candidates.
+    checkTemplate(false);
+    pool.removeRecursive(*fillers.back(), MemPoolRemovalReason::MANUAL);
+    fillers.pop_back();
+    // Two free slots now admit both remote parents before their local child.
+    // The lower-fee remote package must be omitted once all 41 slots are used.
+    checkTemplate(true);
+
+    const size_t candidates = pool.size();
+    const auto ordinaryTemplate = BlockAssembler(pool, Params(), options).CreateNewBlock(script, false);
+    CCbTx ordinaryPayload;
+    BOOST_REQUIRE(GetTxPayload(*ordinaryTemplate->block.vtx[0], ordinaryPayload));
+    BOOST_CHECK(ordinaryPayload.nVersion == CCbTx::CURRENT_VERSION);
+    BOOST_CHECK(ordinaryPayload.txCertificates.empty());
+    std::set<uint256> ordinaryIDs;
+    for (const auto& tx : ordinaryTemplate->block.vtx) {
+        if (!tx->IsCoinBase() && tx->nType != TRANSACTION_QUORUM_COMMITMENT) ordinaryIDs.insert(tx->GetHash());
+    }
+    const std::set<uint256> expectedOrdinary{localCertificate->GetHash(), ordinary->GetHash()};
+    BOOST_CHECK(ordinaryIDs == expectedOrdinary);
+    BOOST_CHECK_EQUAL(pool.size(), candidates);
+    LOCK(pool.cs);
+    for (const auto& entry : pool.mapTx) {
+        const bool local = entry.GetTx().GetHash() == twoChild->GetHash() ||
+                           entry.GetTx().GetHash() == oneChild->GetHash() ||
+                           expectedOrdinary.count(entry.GetTx().GetHash()) != 0;
+        BOOST_CHECK_EQUAL(entry.AreScriptsLocallyValidated(), local);
+    }
 }

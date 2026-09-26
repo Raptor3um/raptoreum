@@ -3639,6 +3639,7 @@ bool static ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStr
             return true;
         }
         bool headersOnly = false;
+        bool optimistic = false;
         std::unique_ptr<DecoupledDownload> completed;
         std::shared_ptr<CBlock> block;
         {
@@ -3649,10 +3650,11 @@ bool static ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStr
                 state->m_last_block_announcement = GetTime();
             if (pindex->nStatus & BLOCK_HAVE_DATA) return true;
             auto flight = mapBlocksInFlight.find(hash);
-            if (flight != mapBlocksInFlight.end() && flight->second.first != pfrom->GetId()) return true;
+            optimistic = flight != mapBlocksInFlight.end() && flight->second.first != pfrom->GetId();
             if (chainman.ActiveChainstate().IsInitialBlockDownload() || !CanDirectFetch(chainparams.GetConsensus()) ||
                 pindex->nHeight > ::ChainActive().Height() + 2 ||
                 pindex->nChainWork <= ::ChainActive().Tip()->nChainWork || pindex->nTx != 0) {
+                if (optimistic) return true;
                 if (flight != mapBlocksInFlight.end())
                     RequestFullDecoupledBlock(pfrom, connman, *flight->second.second);
                 else headersOnly = true;
@@ -3663,14 +3665,18 @@ bool static ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStr
                     flight = mapBlocksInFlight.find(hash);
                 }
                 auto& queued = *flight->second.second;
-                if (queued.decoupledBlock || queued.partialBlock || queued.fDecoupledFallback) return true;
+                if (!optimistic && (queued.decoupledBlock || queued.partialBlock || queued.fDecoupledFallback)) return true;
+                // An alternative shares the allocation limits, never the original
+                // partial object or its scheduling ownership.
+                std::unique_ptr<DecoupledDownload> alternative;
+                auto& pending = optimistic ? alternative : queued.decoupledBlock;
                 try {
-                    queued.decoupledBlock = NewDecoupledDownload(pfrom->GetId());
-                    if (!queued.decoupledBlock) {
-                        RequestFullDecoupledBlock(pfrom, connman, queued);
+                    pending = NewDecoupledDownload(pfrom->GetId());
+                    if (!pending) {
+                        if (!optimistic) RequestFullDecoupledBlock(pfrom, connman, queued);
                         return true;
                     }
-                    auto& download = *queued.decoupledBlock;
+                    auto& download = *pending;
                     ChargeDecoupledInput(download, vRecv.size());
                     CDecoupledBudgetedReader<CDataStream> reader(vRecv, download.budget);
                     CDecoupledBlock encoded;
@@ -3693,6 +3699,9 @@ bool static ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStr
                     request.indexes = download.partial.GetMissingIndexes(&download.budget);
                     download.expectedTransactions = request.indexes.size();
                     if (!request.indexes.empty()) {
+                        // Keep one persistent download. An incomplete alternative
+                        // cannot displace its owner or request another body roundtrip.
+                        if (optimistic) return true;
                         download.budget.ChargeArray(2, GetSerializeSize(request, SER_NETWORK, pfrom->GetSendVersion()));
                         connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::GETBLOCKTXN, request));
                     } else {
@@ -3700,20 +3709,28 @@ bool static ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStr
                         block = std::make_shared<CBlock>();
                         if (download.partial.FillBlock(*block, {}, &download.budget) != READ_STATUS_OK)
                             throw std::ios_base::failure("decoupled block reconstruction failed");
-                        completed = std::move(queued.decoupledBlock);
-                        MarkBlockAsReceived(hash);
+                        completed = std::move(pending);
+                        if (!optimistic) MarkBlockAsReceived(hash);
                         mapBlockSource.emplace(hash, std::make_pair(pfrom->GetId(), false));
                     }
                 } catch (const std::ios_base::failure& error) {
-                    LogPrint(BCLog::NET, "Decoupled reconstruction fallback peer=%d: %s\n", pfrom->GetId(), error.what());
+                    LogPrint(BCLog::NET, "Decoupled reconstruction failed peer=%d: %s\n", pfrom->GetId(), error.what());
                     block.reset();
-                    RequestFullDecoupledBlock(pfrom, connman, queued);
+                    if (!optimistic) RequestFullDecoupledBlock(pfrom, connman, queued);
                 }
             }
         }
         if (headersOnly)
             return ProcessHeadersMessage(pfrom, connman, chainman, mempool, {header}, chainparams, false);
-        if (completed) ProcessReconstructedDecoupledBlock(pfrom, chainparams, chainman, block);
+        if (completed) {
+            ProcessReconstructedDecoupledBlock(pfrom, chainparams, chainman, block);
+            if (optimistic) {
+                LOCK(cs_main);
+                // Match optimistic compact reconstruction: only validated data
+                // may retire another peer's original download.
+                if (pindex->IsValid(BLOCK_VALID_TRANSACTIONS)) MarkBlockAsReceived(hash);
+            }
+        }
         return true;
     }
 
@@ -3789,8 +3806,11 @@ bool static ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStr
             std::map < uint256, std::pair < NodeId, std::list<QueuedBlock>::iterator > > ::iterator
             blockInFlightIt = mapBlocksInFlight.find(pindex->GetBlockHash());
             bool fAlreadyInFlight = blockInFlightIt != mapBlocksInFlight.end();
-            if (fAlreadyInFlight && (blockInFlightIt->second.second->decoupledBlock ||
-                                    blockInFlightIt->second.second->fDecoupledFallback)) return true;
+            // Keep the owner's wire formats separate, but preserve optimistic
+            // compact reconstruction from another peer while this one withholds.
+            if (fAlreadyInFlight && blockInFlightIt->second.first == pfrom->GetId() &&
+                (blockInFlightIt->second.second->decoupledBlock ||
+                 blockInFlightIt->second.second->fDecoupledFallback)) return true;
 
             if (pindex->nStatus & BLOCK_HAVE_DATA) // Nothing to do here
                 return true;

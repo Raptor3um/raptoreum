@@ -8,13 +8,15 @@ from io import BytesIO
 from decimal import Decimal
 import copy
 import struct
+import time
 
 from test_framework.blocktools import create_coinbase, get_legacy_sigopcount_tx
 from test_framework.messages import (
     CBlock, CBlockHeader, CTransaction, CTxOut, ser_compact_size, ser_uint256,
 )
+from test_framework.script import CScript, OP_TRUE
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, connect_nodes
+from test_framework.util import assert_equal, assert_raises_rpc_error, connect_nodes, wait_until
 
 
 def encode_decoupled_block(block, references):
@@ -160,6 +162,114 @@ def exercise_certified_mining(test, node, raw, certificate, eviction_bodies=()):
     test.bump_mocktime(601)
     assert_raises_rpc_error(-8, "Unknown or expired workid", node.getdecoupledblocktransactions,
                             template["workid"], [parent_index])
+
+
+def exercise_transport_mining_limits(test):
+    """Exercise byte-bound leases and a full parent with an IS-locked reference child."""
+    node = test.nodes[0]
+    assert_equal(node.getbuspoolinfo()["maxcount"], 4)
+    coins = node.listunspent(101)
+    assert len(coins) >= 16
+    large_ids = []
+    test.log.info("Build valid small-output payments to exercise retained-template bytes")
+    for coin in coins[:12]:
+        raw, _ = test.payment(coin, signed=False)
+        tx = CTransaction()
+        tx.deserialize(BytesIO(bytes.fromhex(raw)))
+        tx.vout.extend(CTxOut(0, CScript([OP_TRUE])) for _ in range(9900))
+        signed = node.signrawtransactionwithwallet(tx.serialize().hex())
+        assert signed["complete"]
+        assert 99000 < len(signed["hex"]) // 2 < 100000
+        large_ids.append(node.sendrawtransaction(signed["hex"]))
+
+    def large_locked():
+        test.bump_mocktime(3)
+        return all(node.getmempoolentry(txid)["instantlock"] for txid in large_ids)
+
+    wait_until(large_locked, timeout=60)
+    node.syncwithvalidationinterfacequeue()
+    parent_raw, parent_id = test.payment(coins[12])
+    assert_equal(node.sendrawtransaction(parent_raw), parent_id)
+    test.wait_for_instantlock(parent_id, node)
+    child_raw = node.createrawtransaction([{"txid": parent_id, "vout": 0}],
+                                         {node.getnewaddress(): coins[12]["amount"] - Decimal("0.002")})
+    child = node.signrawtransactionwithwallet(child_raw)
+    assert child["complete"]
+    child_id = node.sendrawtransaction(child["hex"])
+    test.wait_for_instantlock(child_id, node)
+    node.syncwithvalidationinterfacequeue()
+    assert_equal(node.requesttxvalidation(child["hex"])["status"], "abstain")
+    # Retention controls presentation, not dependency order or script validity.
+    for coin in coins[13:16]:
+        raw, _ = test.payment(coin)
+        assert_equal(node.requesttxvalidation(raw)["status"], "requested")
+    assert_raises_rpc_error(-5, "not retained", node.getbuspoolentry, parent_id)
+    assert parent_id in node.getrawmempool()
+    entry = node.getbuspoolentry(child_id)
+    assert entry["eligible"] and entry["locallyvalidated"] and not entry["certificate"]
+
+    request = {"capabilities": ["decoupled-v1"]}
+    test.bump_mocktime(601)
+    parent_tip, fixed_time, started = node.getbestblockhash(), test.mocktime, time.monotonic()
+    large_workids = []
+    for _ in range(8):
+        template = node.getblocktemplate(request)
+        assert_equal(template["vtxids"], [child_id])
+        assert set(large_ids).issubset(entry["hash"] for entry in template["transactions"])
+        assert_equal(template["expires"], 600)
+        large_workids.append(template["workid"])
+    # Eight leases cannot evict by count. Full bodies exceed 32 MiB here even
+    # though their serialized block fits below 2 MB. Do not assume which lease
+    # first crosses the byte bound: allocation sizes can vary by platform.
+    assert_equal(len(set(large_workids)), 8)
+    assert_equal(test.mocktime, fixed_time)
+    assert time.monotonic() - started < 600
+    assert_equal(node.getbestblockhash(), parent_tip)
+    assert_raises_rpc_error(-8, "Unknown or expired workid", node.getdecoupledblocktransactions,
+                            large_workids[0], [])
+    assert_equal(node.getdecoupledblocktransactions(large_workids[-1], [0])["transactions"][0]["index"], 0)
+
+    test.log.info("Eight small leases remain live; mine their ordinary parent and referenced child")
+    # Keep the allocation fixture out of the chain and subsequent historical replay.
+    for txid in large_ids:
+        node.prioritisetransaction(txid, -1000000000000)
+    test.bump_mocktime(601)
+    fixed_time, started = test.mocktime, time.monotonic()
+    small_workids = []
+    for _ in range(8):
+        template = node.getblocktemplate(request)
+        assert_equal(template["vtxids"], [child_id])
+        assert not set(large_ids).intersection(entry["hash"] for entry in template["transactions"])
+        small_workids.append(template["workid"])
+    assert_equal(len(set(small_workids)), 8)
+    assert_equal(test.mocktime, fixed_time)
+    assert time.monotonic() - started < 600
+    assert_equal(node.getbestblockhash(), parent_tip)
+    assert_equal(node.getdecoupledblocktransactions(small_workids[0], [0])["transactions"][0]["index"], 0)
+    block, references = block_from_template(node, template)
+    parent_entry = next(entry for entry in template["transactions"] if entry["hash"] == parent_id)
+    child_entry = template["vtxidmetadata"][0]
+    assert_equal(child_entry["depends"], [parent_entry["index"]])
+    assert_equal(parent_entry["depends"], [])
+    assert parent_entry["index"] < child_entry["index"]
+    assert_equal(references, {child_entry["index"]: child_id})
+    assert_equal(block.vtx[parent_entry["index"]].serialize().hex(), parent_raw)
+    assert_equal(block.vtx[child_entry["index"]].serialize().hex(), child["hex"])
+    for entry in (parent_entry, child_entry):
+        assert_equal(entry["fee"], 100000)
+        assert_equal(entry["specialTxfee"], 0)
+        assert_equal(entry["sigops"], 1)
+    assert_equal(int.from_bytes(bytes.fromhex(template["coinbase_payload"])[:2], "little"), 2)
+    assert "transactions" in template["mutable"] and "prevblock" in template["mutable"]
+    ordinary = node.getblocktemplate()
+    assert "vtxids" not in ordinary
+    assert {parent_id, child_id}.issubset(entry["hash"] for entry in ordinary["transactions"])
+    block.solve()
+    assert_equal(node.submitdecoupledblock(encode_decoupled_block(block, references), template["workid"]), None)
+    test.sync_blocks()
+    assert_equal(node.getbestblockhash(), block.hash)
+    assert_equal(node.getblock(block.hash, 0), block.serialize().hex())
+    assert set(large_ids).issubset(node.getrawmempool())
 
 
 class DecoupledMiningTest(BitcoinTestFramework):
