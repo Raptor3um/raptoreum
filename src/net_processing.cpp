@@ -9,6 +9,8 @@
 #include <banman.h>
 #include <arith_uint256.h>
 #include <blockencodings.h>
+#include <buspool.h>
+#include <decoupledblock.h>
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <hash.h>
@@ -33,6 +35,7 @@
 #include <util/validation.h>
 #include <validation.h>
 #include <memory>
+#include <array>
 
 #include <spork.h>
 #include <governance/governance.h>
@@ -201,12 +204,84 @@ namespace {
     uint256 hashRecentRejectsChainTip
     GUARDED_BY(cs_main);
 
+    static constexpr size_t MAX_DECOUPLED_PER_PEER = 2;
+    static constexpr size_t MAX_DECOUPLED_GLOBAL = 16;
+    static constexpr size_t MAX_DECOUPLED_PEER_BYTES = 8 * 1024 * 1024;
+    static constexpr size_t MAX_DECOUPLED_GLOBAL_BYTES = 64 * 1024 * 1024;
+
+    struct DecoupledDownload;
+    // Allocation lifetimes only. Block scheduling remains in mapBlocksInFlight.
+    // Completed reconstructions keep their reservation until validation returns.
+    std::array<const DecoupledDownload*, MAX_DECOUPLED_GLOBAL> decoupledAllocations{};
+
+    struct DecoupledDownload {
+        const NodeId peer;
+        const size_t slot;
+        CDecoupledReadBudget budget;
+        PartiallyDownloadedDecoupledBlock partial;
+        size_t expectedTransactions{0};
+        const int64_t started{GetTime()};
+        const std::chrono::steady_clock::time_point startedSteady{std::chrono::steady_clock::now()};
+
+        DecoupledDownload(NodeId peerIn, size_t slotIn, CDecoupledReadBudget budgetIn) :
+            peer(peerIn), slot(slotIn), budget(std::move(budgetIn)) {}
+        ~DecoupledDownload()
+        {
+            LOCK(cs_main);
+            assert(decoupledAllocations[slot] == this);
+            decoupledAllocations[slot] = nullptr;
+        }
+    };
+
+    size_t DecoupledAvailableBytes(NodeId peer, const DecoupledDownload* exclude = nullptr)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+    {
+        AssertLockHeld(cs_main);
+        size_t all = 0, samePeer = 0;
+        for (const auto* allocation : decoupledAllocations) {
+            if (!allocation || allocation == exclude) continue;
+            all += allocation->budget.GetUsed();
+            if (allocation->peer == peer) samePeer += allocation->budget.GetUsed();
+        }
+        assert(all <= MAX_DECOUPLED_GLOBAL_BYTES && samePeer <= MAX_DECOUPLED_PEER_BYTES);
+        return std::min(MAX_DECOUPLED_GLOBAL_BYTES - all, MAX_DECOUPLED_PEER_BYTES - samePeer);
+    }
+
+    std::unique_ptr<DecoupledDownload> NewDecoupledDownload(NodeId peer)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+    {
+        AssertLockHeld(cs_main);
+        size_t freeSlot = MAX_DECOUPLED_GLOBAL, samePeer = 0;
+        for (size_t i = 0; i < decoupledAllocations.size(); ++i) {
+            if (!decoupledAllocations[i]) freeSlot = i;
+            else if (decoupledAllocations[i]->peer == peer) ++samePeer;
+        }
+        if (freeSlot == MAX_DECOUPLED_GLOBAL || samePeer >= MAX_DECOUPLED_PER_PEER) return {};
+        CDecoupledReadBudget budget(DecoupledAvailableBytes(peer));
+        budget.ChargeArray(1, sizeof(DecoupledDownload));
+        std::unique_ptr<DecoupledDownload> result(new DecoupledDownload(peer, freeSlot, std::move(budget)));
+        decoupledAllocations[freeSlot] = result.get();
+        return result;
+    }
+
+    void ChargeDecoupledInput(DecoupledDownload& download, size_t wireSize)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+    {
+        AssertLockHeld(cs_main);
+        download.budget.SetLimit(DecoupledAvailableBytes(download.peer, &download));
+        // CNetMessage grows a byte vector geometrically; reserve twice its final
+        // length, before any decoded allocations or borrowed transaction bodies.
+        download.budget.ChargeArray(2, wireSize);
+    }
+
     /** Blocks that are in flight, and that are in the queue to be downloaded. */
     struct QueuedBlock {
         uint256 hash;
         const CBlockIndex *pindex;                               //!< Optional.
         bool fValidatedHeaders;                                  //!< Whether this block has validated headers at the time of request.
         std::unique_ptr <PartiallyDownloadedBlock> partialBlock;  //!< Optional, used for CMPCTBLOCK downloads
+        std::unique_ptr<DecoupledDownload> decoupledBlock;
+        bool fDecoupledFallback{false};
     };
     std::map <uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator>> mapBlocksInFlight
     GUARDED_BY(cs_main);
@@ -314,6 +389,10 @@ namespace {
          * otherwise: whether this peer sends non-last version in cmpctblocks/blocktxns.
          */
         bool fSupportsDesiredCmpctVersion;
+        bool fProvidesDecoupled{false};
+        bool fPreferDecoupled{false};
+        size_t certificateAnnouncements{0};
+        uint64_t certificateRelayUpdate{std::numeric_limits<uint64_t>::max()};
 
         /** State used to enforce CHAIN_SYNC_TIMEOUT
           * Only in effect for outbound, non-manual connections, with
@@ -457,6 +536,38 @@ namespace {
             return &it->second;
     }
 
+    size_t certificateAnnouncements = 0;
+
+    bool CanExchangeDecoupled(const CNode* peer) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+    {
+        AssertLockHeld(cs_main);
+        const auto* state = State(peer->GetId());
+        return IsBusPoolEnabled() && busPoolManager && peer->CanRelay() && state && state->fProvidesDecoupled;
+    }
+
+    bool CanExchangeCertificates(const CNode* peer) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+    {
+        return CanExchangeDecoupled(peer) && (fRelayTxes ||
+            (peer->fWhitelisted && gArgs.GetBoolArg("-whitelistrelay", DEFAULT_WHITELISTRELAY)));
+    }
+
+    void EraseObjectAnnouncement(CNodeState* state, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+    {
+        AssertLockHeld(cs_main);
+        if (state->m_object_download.m_object_announced.erase(inv) && inv.type == MSG_TX_CERTIFICATE) {
+            assert(state->certificateAnnouncements > 0 && certificateAnnouncements > 0);
+            --state->certificateAnnouncements;
+            --certificateAnnouncements;
+        }
+    }
+
+    bool CanRelayLegacyTransaction(const CTxMemPool& pool, const uint256& hash)
+    {
+        LOCK(pool.cs);
+        const auto candidate = pool.mapTx.find(hash);
+        return candidate == pool.mapTx.end() || candidate->AreScriptsLocallyValidated();
+    }
+
     void UpdatePreferredDownload(CNode *node, CNodeState *state)
 
     EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -574,6 +685,73 @@ namespace {
             if (pit)
             *pit = &itInFlight->second.second;
             return true;
+    }
+
+    void RequestFullDecoupledBlock(CNode* peer, CConnman* connman, QueuedBlock& queued)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+    {
+        AssertLockHeld(cs_main);
+        if (queued.fDecoupledFallback) return;
+        queued.decoupledBlock.reset();
+        queued.partialBlock.reset();
+        queued.fDecoupledFallback = true;
+        const CNetMsgMaker maker(peer->GetSendVersion());
+        connman->PushMessage(peer, maker.Make(NetMsgType::GETDATA, std::vector<CInv>{CInv(MSG_BLOCK, queued.hash)}));
+        LogPrint(BCLog::NET, "Decoupled recovery requests full block %s peer=%d\n", queued.hash.ToString(), peer->GetId());
+    }
+
+    // Only an already validated canonical block may be presented this way.
+    // Retention decides compression, never eligibility or contextual validity.
+    void SendDecoupledBlock(CNode* peer, CConnman* connman, const CBlock& block)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+    {
+        AssertLockHeld(cs_main);
+        const CNetMsgMaker maker(peer->GetSendVersion());
+        if (block.vtx.empty() || block.vtx.size() > CDecoupledBlock::MAX_TRANSACTIONS) {
+            connman->PushMessage(peer, maker.Make(NetMsgType::BLOCK, block));
+            return;
+        }
+        try {
+            auto allocation = NewDecoupledDownload(peer->GetId());
+            if (allocation) {
+                auto& budget = allocation->budget;
+                budget.ChargeArray(block.vtx.size(), memusage::MallocUsage(sizeof(memusage::stl_tree_node<uint256>)));
+                std::set<uint256> references;
+                for (size_t i = 1; i < block.vtx.size(); ++i) {
+                    const auto retained = busPoolManager->GetTransaction(block.vtx[i]->GetHash());
+                    if (retained && retained->GetHash() == block.vtx[i]->GetHash()) references.insert(retained->GetHash());
+                }
+                budget.ChargeArray(4 * block.vtx.size(), sizeof(CTransactionRef) + sizeof(CDecoupledTxRef));
+                // The constructor validates its layout with a temporary set.
+                budget.ChargeArray(block.vtx.size(), memusage::MallocUsage(sizeof(memusage::stl_tree_node<uint256>)));
+                for (const auto& tx : block.vtx) budget.ChargeTransaction(tx);
+                CDecoupledBlock encoded(block, references);
+                budget.ChargeArray(block.vtx.size(), memusage::MallocUsage(sizeof(memusage::stl_tree_node<uint256>)));
+                const size_t wireSize = GetSerializeSize(encoded, SER_NETWORK, peer->GetSendVersion());
+                if (wireSize <= MAX_PROTOCOL_MESSAGE_LENGTH) {
+                    // Serialize validates the same layout before writing bytes.
+                    budget.ChargeArray(block.vtx.size(), memusage::MallocUsage(sizeof(memusage::stl_tree_node<uint256>)));
+                    budget.ChargeArray(2, wireSize);
+                    connman->PushMessage(peer, maker.Make(NetMsgType::DBLOCK, encoded));
+                    return;
+                }
+            }
+        } catch (const std::ios_base::failure&) {
+            // Local resource pressure changes the encoding, not block validity.
+        }
+        connman->PushMessage(peer, maker.Make(NetMsgType::BLOCK, block));
+    }
+
+    void ProcessReconstructedDecoupledBlock(CNode* peer, const CChainParams& params,
+                                             ChainstateManager& chainman, const std::shared_ptr<CBlock>& block)
+    {
+        bool newBlock = false;
+        chainman.ProcessNewBlock(params, block, /*fForceProcessing=*/true, &newBlock);
+        if (newBlock) peer->nLastBlockTime = GetTime();
+        else {
+            LOCK(cs_main);
+            mapBlockSource.erase(block->GetHash());
+        }
     }
 
 /** Check whether the last unknown block a peer advertised is not yet known. */
@@ -797,7 +975,7 @@ EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         g_erased_object_requests.insert(std::make_pair(inv.hash, GetTime<std::chrono::microseconds>()));
 
         if (nodestate) {
-            nodestate->m_object_download.m_object_announced.erase(inv);
+            EraseObjectAnnouncement(nodestate, inv);
             nodestate->m_object_download.m_object_in_flight.erase(inv);
         }
         }
@@ -901,6 +1079,17 @@ EXCLUSIVE_LOCKS_REQUIRED(cs_main)
             // this announcement
             return;
         }
+        if (inv.type == MSG_TX_CERTIFICATE) {
+            if (!busPoolManager) return;
+            // One announcement owns set, process-time and in-flight tree nodes.
+            // Reserve four of the largest nodes, including allocator overhead.
+            const size_t recordBytes = 4 * memusage::MallocUsage(
+                sizeof(memusage::stl_tree_node<std::pair<CInv, std::chrono::microseconds>>));
+            const size_t limit = std::min(busPoolManager->GetMaxCount(), busPoolManager->GetMaxBytes() / recordBytes);
+            if (state->certificateAnnouncements >= limit || certificateAnnouncements >= limit) return;
+            ++state->certificateAnnouncements;
+            ++certificateAnnouncements;
+        }
         peer_download_state.m_object_announced.insert(inv);
 
         // Calculate the time to try requesting this transaction. Use
@@ -989,11 +1178,14 @@ void PeerLogicValidation::FinalizeNode(NodeId nodeid, bool &fUpdateConnectionTim
     g_outbound_peers_with_protect_from_disconnect -= state->m_chain_sync.m_protect;
     assert(g_outbound_peers_with_protect_from_disconnect >= 0);
 
+    assert(certificateAnnouncements >= state->certificateAnnouncements);
+    certificateAnnouncements -= state->certificateAnnouncements;
     mapNodeState.erase(nodeid);
 
     if (mapNodeState.empty()) {
         // Do a consistency check after the last peer is removed.
         assert(mapBlocksInFlight.empty());
+        assert(certificateAnnouncements == 0);
         assert(nPreferredDownload == 0);
         assert(nPeersWithValidatedDownloads == 0);
         assert(g_outbound_peers_with_protect_from_disconnect == 0);
@@ -1480,7 +1672,13 @@ EXCLUSIVE_LOCKS_REQUIRED(cs_main)
                     }
 
                     case MSG_BLOCK:
+                    case MSG_DECOUPLED_BLOCK:
                         return LookupBlockIndex(inv.hash) != nullptr;
+                    case MSG_TX_CERTIFICATE: {
+                        CTransactionRef tx;
+                        CTxValidationCertificate certificate;
+                        return busPoolManager && busPoolManager->GetCertificateByHash(inv.hash, tx, certificate);
+                    }
 
                     /*
                         Raptoreum Related Inventory Messages
@@ -1651,7 +1849,13 @@ void static ProcessGetBlockData(CNode *pfrom, const CChainParams &chainparams, c
         if (pblock) {
             if (inv.type == MSG_BLOCK)
                 connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::BLOCK, *pblock));
-            else if (inv.type == MSG_FILTERED_BLOCK) {
+            else if (inv.type == MSG_DECOUPLED_BLOCK) {
+                if (CanExchangeDecoupled(pfrom) && !::ChainstateActive().IsInitialBlockDownload() &&
+                    pindex->IsValid(BLOCK_VALID_SCRIPTS) && CanDirectFetch(consensusParams) &&
+                    pindex->nHeight >= ::ChainActive().Height() - MAX_CMPCTBLOCK_DEPTH)
+                    SendDecoupledBlock(pfrom, connman, *pblock);
+                else connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::BLOCK, *pblock));
+            } else if (inv.type == MSG_FILTERED_BLOCK) {
                 bool sendMerkleBlock = false;
                 CMerkleBlock merkleBlock;
                 {
@@ -1735,14 +1939,15 @@ LOCKS_EXCLUDED(cs_main)
                     break;
 
                 const CInv &inv = *it;
-                if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_CMPCT_BLOCK) {
+                if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_CMPCT_BLOCK ||
+                    (inv.type == MSG_DECOUPLED_BLOCK && CanExchangeDecoupled(pfrom))) {
                     break;
                 }
                 it++;
 
                 // Send stream from relay memory
                 bool push = false;
-                if (inv.type == MSG_TX || inv.type == MSG_DSTX) {
+                if ((inv.type == MSG_TX || inv.type == MSG_DSTX) && CanRelayLegacyTransaction(mempool, inv.hash)) {
                     CCoinJoinBroadcastTx dstx;
                     if (inv.type == MSG_DSTX) {
                         dstx = CCoinJoin::GetDSTX(inv.hash);
@@ -1767,6 +1972,18 @@ LOCKS_EXCLUDED(cs_main)
                             }
                             push = true;
                         }
+                    }
+                }
+
+                if (!push && inv.type == MSG_TX_CERTIFICATE && CanExchangeCertificates(pfrom) &&
+                    !::ChainstateActive().IsInitialBlockDownload()) {
+                    CTransactionRef tx;
+                    CTxValidationCertificate certificate;
+                    if (busPoolManager->GetCertificateByHash(inv.hash, tx, certificate) &&
+                        GetSerializeSize(certificate, SER_NETWORK, pfrom->GetSendVersion()) +
+                        GetSerializeSize(*tx, SER_NETWORK, pfrom->GetSendVersion()) <= MAX_PROTOCOL_MESSAGE_LENGTH) {
+                        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::TXCERT, certificate, *tx));
+                        push = true;
                     }
                 }
 
@@ -1880,7 +2097,7 @@ LOCKS_EXCLUDED(cs_main)
 
         if (it != pfrom->vRecvGetData.end() && !pfrom->fPauseSend) {
             const CInv &inv = *it;
-            if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_CMPCT_BLOCK) {
+            if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_CMPCT_BLOCK || inv.type == MSG_DECOUPLED_BLOCK) {
                 it++;
                 ProcessGetBlockData(pfrom, chainparams, inv, connman);
             }
@@ -2109,7 +2326,12 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, ChainstateMan
                              pindexLast->GetBlockHash().ToString(), pindexLast->nHeight);
                 }
                 if (vGetData.size() > 0) {
-                    if (nodestate->fSupportsDesiredCmpctVersion && vGetData.size() == 1 &&
+                    if (CanExchangeDecoupled(pfrom) && !::ChainstateActive().IsInitialBlockDownload() &&
+                        vGetData.size() == 1 && pindexLast->nHeight > ::ChainActive().Height() &&
+                        pindexLast->nHeight <= ::ChainActive().Height() + 2) {
+                        vGetData[0] = CInv(MSG_DECOUPLED_BLOCK, vGetData[0].hash);
+                    } else if ((!CanExchangeDecoupled(pfrom) || !::ChainstateActive().IsInitialBlockDownload()) &&
+                               nodestate->fSupportsDesiredCmpctVersion && vGetData.size() == 1 &&
                         mapBlocksInFlight.size() == 1 && pindexLast->pprev->IsValid(BLOCK_VALID_CHAIN)) {
                         // In any case, we want to download using a compact block, not a regular one
                         vGetData[0] = CInv(MSG_CMPCT_BLOCK, vGetData[0].hash);
@@ -2609,6 +2831,8 @@ bool static ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStr
             // they may wish to request compact blocks from us
             bool fAnnounceUsingCMPCTBLOCK = false;
             uint64_t nCMPCTBLOCKVersion = 1;
+            if (IsBusPoolEnabled())
+                connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::SENDDBLOCK, true, uint64_t{1}));
             connman->PushMessage(pfrom,
                                  msgMaker.Make(NetMsgType::SENDCMPCT, fAnnounceUsingCMPCTBLOCK, nCMPCTBLOCKVersion));
         }
@@ -2739,6 +2963,20 @@ bool static ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStr
         return true;
     }
 
+    if (strCommand == NetMsgType::SENDDBLOCK) {
+        if (!IsBusPoolEnabled() || !pfrom->CanRelay()) return true;
+        bool announce;
+        uint64_t version;
+        vRecv >> announce >> version;
+        if (version == 1 && vRecv.empty()) {
+            LOCK(cs_main);
+            auto* state = State(pfrom->GetId());
+            state->fProvidesDecoupled = true;
+            state->fPreferDecoupled = announce;
+        }
+        return true;
+    }
+
     if (strCommand == NetMsgType::SENDCMPCT) {
         bool fAnnounceUsingCMPCTBLOCK = false;
         uint64_t nCMPCTBLOCKVersion = 1;
@@ -2797,12 +3035,14 @@ bool static ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStr
             if (interruptMsgProc)
                 return true;
 
+            if (inv.type == MSG_DECOUPLED_BLOCK && !CanExchangeDecoupled(pfrom)) continue;
+            if (inv.type == MSG_TX_CERTIFICATE && !CanExchangeCertificates(pfrom)) continue;
             bool fAlreadyHave = AlreadyHave(inv, mempool);
             LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new",
                      pfrom->GetId());
             statsClient.inc(strprintf("message.received.inv_%s", inv.GetCommand()), 1.0f);
 
-            if (inv.type == MSG_BLOCK) {
+            if (inv.type == MSG_BLOCK || inv.type == MSG_DECOUPLED_BLOCK) {
                 UpdateBlockAvailability(pfrom->GetId(), inv.hash);
 
                 if (fAlreadyHave || fImporting || fReindex || mapBlocksInFlight.count(inv.hash)) {
@@ -3068,6 +3308,90 @@ bool static ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStr
         return true;
     }
 
+    if (strCommand == NetMsgType::TXCERT) {
+        LOCK2(cs_main, g_cs_orphans);
+        if (!CanExchangeCertificates(pfrom) || fImporting || fReindex ||
+            chainman.ActiveChainstate().IsInitialBlockDownload()) return true;
+        // Version 1 has fixed-size proof framing. Hash the wire prefix before
+        // constructing a BLS object: its ordinary decoder is not lazy.
+        static constexpr size_t CERTIFICATE_V1_SIZE = 236;
+        if (vRecv.size() < CERTIFICATE_V1_SIZE) return true;
+        const CInv inv(MSG_TX_CERTIFICATE, Hash(vRecv.begin(), vRecv.begin() + CERTIFICATE_V1_SIZE));
+        auto* state = State(pfrom->GetId());
+        if (!state->m_object_download.m_object_in_flight.count(inv)) return true;
+        auto retry = [state, &inv] {
+            // Preserve the last-request time: a valid proof declined by local
+            // policy/scripts must not bypass the normal repeat-request interval.
+            EraseObjectAnnouncement(state, inv);
+            state->m_object_download.m_object_in_flight.erase(inv);
+        };
+        bool currentContext = false;
+        try {
+            auto allocation = NewDecoupledDownload(pfrom->GetId());
+            if (!allocation) {
+                retry();
+                return true;
+            }
+            ChargeDecoupledInput(*allocation, vRecv.size());
+            // Keep the body decoder bounded by both reconstruction and configured cache limits.
+            allocation->budget.SetLimit(std::min(DecoupledAvailableBytes(pfrom->GetId(), allocation.get()),
+                                                 busPoolManager->GetMaxBytes()));
+            // BLS serialization uses fixed temporary byte vectors internally.
+            allocation->budget.ChargeArray(4, memusage::MallocUsage(CBLSSignature::SerSize));
+            CDecoupledBudgetedReader<CDataStream> reader(vRecv, allocation->budget);
+            CTxValidationCertificate certificate;
+            reader >> certificate;
+            if (GetSerializeSize(certificate, SER_NETWORK, PROTOCOL_VERSION) != CERTIFICATE_V1_SIZE ||
+                SerializeHash(certificate) != inv.hash)
+                throw std::ios_base::failure("non-canonical transaction certificate");
+            if (!::ChainActive().Tip() || certificate.parentHash != ::ChainActive().Tip()->GetBlockHash()) {
+                retry();
+                return true;
+            }
+            currentContext = true;
+            CTransactionRef tx;
+            reader >> tx;
+            if (!vRecv.empty()) throw std::ios_base::failure("trailing certificate transaction bytes");
+            if (tx->GetHash() != certificate.txid)
+                throw std::ios_base::failure("certificate transaction ID mismatch");
+            CValidationState validation;
+            const bool accepted = busPoolManager->SubmitTransaction(tx, certificate, validation);
+            pfrom->AddInventoryKnown(inv);
+            if (!accepted) {
+                // Stale/unavailable public context and local ATMP policy/scripts are
+                // not evidence that an honest relay peer supplied a false proof.
+                const std::string reason = validation.GetRejectReason();
+                if (validation.IsInvalid() &&
+                    (reason == "bad-txcert-format" || reason == "bad-txcert-flags" ||
+                     reason == "bad-txcert-prevouts" || reason == "bad-txcert-signature")) {
+                    EraseObjectRequest(state, inv);
+                    Misbehaving(pfrom->GetId(), 20, reason);
+                } else retry();
+                return true;
+            }
+            EraseObjectRequest(state, inv);
+            RelayTransaction(tx->GetHash(), *connman);
+            pfrom->nLastTXTime = GetTime();
+            for (size_t i = 0; i < tx->vout.size(); ++i) {
+                const auto orphans = mapOrphanTransactionsByPrev.find(COutPoint(tx->GetHash(), i));
+                if (orphans != mapOrphanTransactionsByPrev.end()) {
+                    for (const auto& orphan : orphans->second) pfrom->orphan_work_set.insert(orphan->first);
+                }
+            }
+            ProcessOrphanTx(connman, mempool, pfrom->orphan_work_set);
+        } catch (const CDecoupledReadBudget::Exceeded&) {
+            // Resource pressure permits a later attempt from another source.
+            retry();
+        } catch (const std::ios_base::failure& error) {
+            // Suppress malformed proofs by certificate identity, never by txid.
+            // In particular, a malformed BLS object cannot reuse an in-flight request.
+            EraseObjectRequest(state, inv);
+            if (currentContext) Misbehaving(pfrom->GetId(), 20, "malformed certificate transaction");
+            LogPrint(BCLog::NET, "Certificate decode dropped peer=%d: %s\n", pfrom->GetId(), error.what());
+        }
+        return true;
+    }
+
     if (strCommand == NetMsgType::TX || strCommand == NetMsgType::DSTX ||
         strCommand == NetMsgType::LEGACYTXLOCKREQUEST) {
         // Stop processing the transaction early if
@@ -3273,6 +3597,126 @@ bool static ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStr
         return true;
     }
 
+    if (strCommand == NetMsgType::DBLOCK && !fImporting && !fReindex) {
+        {
+            LOCK(cs_main);
+            if (!CanExchangeDecoupled(pfrom)) return true;
+        }
+        // Read only fixed-size framing before header admission and allocation.
+        // Leave a byte unread so CDataStream retains its rewindable buffer.
+        if (vRecv.size() <= 82) return true;
+        uint16_t version;
+        CBlockHeader header;
+        vRecv >> version >> header;
+        if (!vRecv.Rewind(82)) return false;
+        const uint256 hash = header.GetHash();
+        if (version != CDecoupledBlock::VERSION) {
+            LOCK(cs_main);
+            auto flight = mapBlocksInFlight.find(hash);
+            if (flight != mapBlocksInFlight.end() && flight->second.first == pfrom->GetId())
+                RequestFullDecoupledBlock(pfrom, connman, *flight->second.second);
+            return true;
+        }
+        bool newHeader = false;
+        {
+            LOCK(cs_main);
+            if (!LookupBlockIndex(header.hashPrevBlock)) {
+                if (!chainman.ActiveChainstate().IsInitialBlockDownload())
+                    connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::GETHEADERS,
+                        ::ChainActive().GetLocator(pindexBestHeader), uint256()));
+                return true;
+            }
+            newHeader = LookupBlockIndex(hash) == nullptr;
+        }
+        const CBlockIndex* pindex = nullptr;
+        CValidationState headerState;
+        if (!chainman.ProcessNewBlockHeaders({header}, headerState, chainparams, &pindex)) {
+            int score = 0;
+            if (headerState.IsInvalid(score) && score > 0) {
+                LOCK(cs_main);
+                Misbehaving(pfrom->GetId(), score, "invalid decoupled block header");
+            }
+            return true;
+        }
+        bool headersOnly = false;
+        std::unique_ptr<DecoupledDownload> completed;
+        std::shared_ptr<CBlock> block;
+        {
+            LOCK2(cs_main, g_cs_orphans);
+            auto* state = State(pfrom->GetId());
+            UpdateBlockAvailability(pfrom->GetId(), hash);
+            if (newHeader && pindex->nChainWork > ::ChainActive().Tip()->nChainWork)
+                state->m_last_block_announcement = GetTime();
+            if (pindex->nStatus & BLOCK_HAVE_DATA) return true;
+            auto flight = mapBlocksInFlight.find(hash);
+            if (flight != mapBlocksInFlight.end() && flight->second.first != pfrom->GetId()) return true;
+            if (chainman.ActiveChainstate().IsInitialBlockDownload() || !CanDirectFetch(chainparams.GetConsensus()) ||
+                pindex->nHeight > ::ChainActive().Height() + 2 ||
+                pindex->nChainWork <= ::ChainActive().Tip()->nChainWork || pindex->nTx != 0) {
+                if (flight != mapBlocksInFlight.end())
+                    RequestFullDecoupledBlock(pfrom, connman, *flight->second.second);
+                else headersOnly = true;
+            } else {
+                if (flight == mapBlocksInFlight.end()) {
+                    if (state->nBlocksInFlight >= MAX_BLOCKS_IN_TRANSIT_PER_PEER) return true;
+                    MarkBlockAsInFlight(mempool, pfrom->GetId(), hash, pindex);
+                    flight = mapBlocksInFlight.find(hash);
+                }
+                auto& queued = *flight->second.second;
+                if (queued.decoupledBlock || queued.partialBlock || queued.fDecoupledFallback) return true;
+                try {
+                    queued.decoupledBlock = NewDecoupledDownload(pfrom->GetId());
+                    if (!queued.decoupledBlock) {
+                        RequestFullDecoupledBlock(pfrom, connman, queued);
+                        return true;
+                    }
+                    auto& download = *queued.decoupledBlock;
+                    ChargeDecoupledInput(download, vRecv.size());
+                    CDecoupledBudgetedReader<CDataStream> reader(vRecv, download.budget);
+                    CDecoupledBlock encoded;
+                    reader >> encoded;
+                    if (!vRecv.empty()) throw std::ios_base::failure("trailing decoupled block bytes");
+                    auto lookup = [&mempool](const uint256& txid) {
+                        CTransactionRef tx = mempool.get(txid);
+                        if (!tx) tx = busPoolManager->GetTransaction(txid);
+                        if (!tx) {
+                            for (const auto& extra : vExtraTxnForCompact) {
+                                if (extra.first == txid) return extra.second;
+                            }
+                        }
+                        return tx;
+                    };
+                    if (download.partial.InitData(encoded, lookup, &download.budget) != READ_STATUS_OK)
+                        throw std::ios_base::failure("invalid decoupled block layout");
+                    BlockTransactionsRequest request;
+                    request.blockhash = hash;
+                    request.indexes = download.partial.GetMissingIndexes(&download.budget);
+                    download.expectedTransactions = request.indexes.size();
+                    if (!request.indexes.empty()) {
+                        download.budget.ChargeArray(2, GetSerializeSize(request, SER_NETWORK, pfrom->GetSendVersion()));
+                        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::GETBLOCKTXN, request));
+                    } else {
+                        download.budget.ChargeShared(sizeof(CBlock));
+                        block = std::make_shared<CBlock>();
+                        if (download.partial.FillBlock(*block, {}, &download.budget) != READ_STATUS_OK)
+                            throw std::ios_base::failure("decoupled block reconstruction failed");
+                        completed = std::move(queued.decoupledBlock);
+                        MarkBlockAsReceived(hash);
+                        mapBlockSource.emplace(hash, std::make_pair(pfrom->GetId(), false));
+                    }
+                } catch (const std::ios_base::failure& error) {
+                    LogPrint(BCLog::NET, "Decoupled reconstruction fallback peer=%d: %s\n", pfrom->GetId(), error.what());
+                    block.reset();
+                    RequestFullDecoupledBlock(pfrom, connman, queued);
+                }
+            }
+        }
+        if (headersOnly)
+            return ProcessHeadersMessage(pfrom, connman, chainman, mempool, {header}, chainparams, false);
+        if (completed) ProcessReconstructedDecoupledBlock(pfrom, chainparams, chainman, block);
+        return true;
+    }
+
     if (strCommand == NetMsgType::CMPCTBLOCK && !fImporting && !fReindex) // Ignore blocks received while importing
     {
         CBlockHeaderAndShortTxIDs cmpctblock;
@@ -3345,6 +3789,8 @@ bool static ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStr
             std::map < uint256, std::pair < NodeId, std::list<QueuedBlock>::iterator > > ::iterator
             blockInFlightIt = mapBlocksInFlight.find(pindex->GetBlockHash());
             bool fAlreadyInFlight = blockInFlightIt != mapBlocksInFlight.end();
+            if (fAlreadyInFlight && (blockInFlightIt->second.second->decoupledBlock ||
+                                    blockInFlightIt->second.second->fDecoupledFallback)) return true;
 
             if (pindex->nStatus & BLOCK_HAVE_DATA) // Nothing to do here
                 return true;
@@ -3496,6 +3942,55 @@ bool static ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStr
 
     if (strCommand == NetMsgType::BLOCKTXN && !fImporting && !fReindex) // Ignore blocks received while importing
     {
+        // Dispatch by the fixed hash before any transaction-vector allocation.
+        // A late/unsolicited experimental response never reaches the compact decoder.
+        if (vRecv.size() >= 32) {
+            uint256 hash;
+            std::copy_n(vRecv.begin(), 32, hash.begin());
+            std::unique_ptr<DecoupledDownload> completed;
+            std::shared_ptr<CBlock> block;
+            bool handled = false;
+            {
+                LOCK(cs_main);
+                auto flight = mapBlocksInFlight.find(hash);
+                if (flight != mapBlocksInFlight.end() && flight->second.first == pfrom->GetId() &&
+                    flight->second.second->decoupledBlock) {
+                    handled = true;
+                    auto& queued = *flight->second.second;
+                    auto& download = *queued.decoupledBlock;
+                    try {
+                        ChargeDecoupledInput(download, vRecv.size());
+                        CDecoupledBudgetedReader<CDataStream> reader(vRecv, download.budget);
+                        BlockTransactions response;
+                        reader >> response.blockhash;
+                        const uint64_t count = ReadCompactSize(reader);
+                        if (count != download.expectedTransactions)
+                            throw std::ios_base::failure("unexpected decoupled response count");
+                        download.budget.ChargeArray(count, sizeof(CTransactionRef));
+                        response.txn.resize(count);
+                        for (auto& tx : response.txn) reader >> tx;
+                        if (!vRecv.empty()) throw std::ios_base::failure("trailing decoupled response bytes");
+                        download.budget.ChargeShared(sizeof(CBlock));
+                        block = std::make_shared<CBlock>();
+                        if (download.partial.FillBlock(*block, response.txn, &download.budget) != READ_STATUS_OK)
+                            throw std::ios_base::failure("non-matching decoupled block transactions");
+                        completed = std::move(queued.decoupledBlock);
+                        MarkBlockAsReceived(hash);
+                        mapBlockSource.emplace(hash, std::make_pair(pfrom->GetId(), false));
+                    } catch (const std::ios_base::failure& error) {
+                        LogPrint(BCLog::NET, "Decoupled response fallback peer=%d: %s\n", pfrom->GetId(), error.what());
+                        block.reset();
+                        RequestFullDecoupledBlock(pfrom, connman, queued);
+                    }
+                } else if (CanExchangeDecoupled(pfrom) &&
+                           (flight == mapBlocksInFlight.end() || flight->second.first != pfrom->GetId() ||
+                            !flight->second.second->partialBlock)) {
+                    return true;
+                }
+            }
+            if (completed) ProcessReconstructedDecoupledBlock(pfrom, chainparams, chainman, block);
+            if (handled) return true;
+        }
         BlockTransactions resp;
         vRecv >> resp;
 
@@ -3835,6 +4330,12 @@ bool static ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStr
         vRecv >> vInv;
         if (vInv.size() <= MAX_PEER_OBJECT_IN_FLIGHT + MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
             for (CInv &inv: vInv) {
+                if (inv.type == MSG_DECOUPLED_BLOCK && CanExchangeDecoupled(pfrom)) {
+                    auto flight = mapBlocksInFlight.find(inv.hash);
+                    if (flight != mapBlocksInFlight.end() && flight->second.first == pfrom->GetId())
+                        RequestFullDecoupledBlock(pfrom, connman, *flight->second.second);
+                    continue;
+                }
                 if (inv.IsKnownType()) {
                     // If we receive a NOTFOUND message for a txid we requested, erase
                     // it from our data structures for this peer.
@@ -3845,7 +4346,7 @@ bool static ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStr
                         continue;
                     }
                     state->m_object_download.m_object_in_flight.erase(in_flight_it);
-                    state->m_object_download.m_object_announced.erase(inv);
+                    EraseObjectAnnouncement(state, inv);
                 }
             }
         }
@@ -4365,7 +4866,7 @@ bool PeerLogicValidation::SendMessages(CNode *pto) {
             LOCK(pto->cs_inventory);
             std::vector <CBlock> vHeaders;
             bool fRevertToInv = ((!state.fPreferHeaders &&
-                                  (!state.fPreferHeaderAndIDs || pto->vBlockHashesToAnnounce.size() > 1)) ||
+                                  (!(state.fPreferHeaderAndIDs || state.fPreferDecoupled) || pto->vBlockHashesToAnnounce.size() > 1)) ||
                                  pto->vBlockHashesToAnnounce.size() > MAX_BLOCKS_TO_ANNOUNCE);
             const CBlockIndex *pBestIndex = nullptr; // last header queued for delivery
             ProcessBlockAvailability(pto->GetId()); // ensure pindexBestKnownBlock is up-to-date
@@ -4428,7 +4929,14 @@ bool PeerLogicValidation::SendMessages(CNode *pto) {
                 }
             }
             if (!fRevertToInv && !vHeaders.empty()) {
-                if (vHeaders.size() == 1 && state.fPreferHeaderAndIDs) {
+                if (vHeaders.size() == 1 && state.fPreferDecoupled && CanExchangeDecoupled(pto) &&
+                    !::ChainstateActive().IsInitialBlockDownload() && pBestIndex->IsValid(BLOCK_VALID_SCRIPTS)) {
+                    CBlock block;
+                    bool ret = ReadBlockFromDisk(block, pBestIndex, consensusParams);
+                    assert(ret);
+                    SendDecoupledBlock(pto, connman, block);
+                    state.pindexBestHeaderSent = pBestIndex;
+                } else if (vHeaders.size() == 1 && state.fPreferHeaderAndIDs) {
                     // We only send up to 1 block as header-and-ids, as otherwise
                     // probably means we're doing an initial-ish-sync or they're slow
                     LogPrint(BCLog::NET, "%s sending header-and-ids %s to peer=%d\n", __func__,
@@ -4509,7 +5017,9 @@ bool PeerLogicValidation::SendMessages(CNode *pto) {
 
             // Add blocks
             for (const uint256 &hash: pto->vInventoryBlockToSend) {
-                vInv.push_back(CInv(MSG_BLOCK, hash));
+                const int type = CanExchangeDecoupled(pto) && !::ChainstateActive().IsInitialBlockDownload() ?
+                    MSG_DECOUPLED_BLOCK : MSG_BLOCK;
+                vInv.push_back(CInv(type, hash));
                 if (vInv.size() == MAX_INV_SZ) {
                     connman->PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
                     vInv.clear();
@@ -4520,6 +5030,7 @@ bool PeerLogicValidation::SendMessages(CNode *pto) {
             // Check whether periodic sends should happen
             // Note: If this node is running in a Smartnode mode, it makes no sense to delay outgoing txes
             // because we never produce any txes ourselves i.e. no privacy is lost in this case.
+            const bool certificateRelayInterval = pto->nNextInvSend < current_time;
             bool fSendTrickle = pto->fWhitelisted || fSmartnodeMode;
             if (pto->nNextInvSend < current_time) {
                 fSendTrickle = true;
@@ -4564,6 +5075,7 @@ bool PeerLogicValidation::SendMessages(CNode *pto) {
                 for (const auto &txinfo: vtxinfo) {
                     const uint256 &hash = txinfo.tx->GetHash();
                     pto->setInventoryTxToSend.erase(hash);
+                    if (!CanRelayLegacyTransaction(mempool, hash)) continue;
                     if (pto->pfilter && !pto->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
 
                     int nInvType = CCoinJoin::GetDSTX(hash) ? MSG_DSTX : MSG_TX;
@@ -4619,7 +5131,7 @@ bool PeerLogicValidation::SendMessages(CNode *pto) {
                     }
                     // Not in the mempool anymore? don't bother sending it.
                     auto txinfo = mempool.info(hash);
-                    if (!txinfo.tx) {
+                    if (!txinfo.tx || !CanRelayLegacyTransaction(mempool, hash)) {
                         continue;
                     }
                     if (pto->pfilter && !pto->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
@@ -4642,8 +5154,23 @@ bool PeerLogicValidation::SendMessages(CNode *pto) {
                 }
             }
 
+            if (certificateRelayInterval && CanExchangeCertificates(pto) &&
+                !::ChainstateActive().IsInitialBlockDownload() &&
+                state.certificateRelayUpdate != mempool.GetTransactionsUpdated()) {
+                LOCK(pto->cs_filter);
+                if (pto->fRelayTxes) {
+                    state.certificateRelayUpdate = mempool.GetTransactionsUpdated();
+                    for (const auto& hash : busPoolManager->GetRelayCertificateHashes()) {
+                        if (!pto->filterInventoryKnown.contains(hash))
+                            queueAndMaybePushInv(CInv(MSG_TX_CERTIFICATE, hash));
+                    }
+                }
+            }
+
             // Send non-tx/non-block inventory items
             for (const auto &inv: pto->vInventoryOtherToSend) {
+                if (inv.type == MSG_TX_CERTIFICATE && !CanExchangeCertificates(pto)) continue;
+                if (inv.type == MSG_DECOUPLED_BLOCK && !CanExchangeDecoupled(pto)) continue;
                 if (pto->filterInventoryKnown.contains(inv.hash)) {
                     continue;
                 }
@@ -4653,6 +5180,16 @@ bool PeerLogicValidation::SendMessages(CNode *pto) {
         }
         if (!vInv.empty())
             connman->PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
+
+        // Missing bodies share the existing block download queue and fall back
+        // once. Its normal full-block timeout and alternate-peer scheduling remain.
+        for (auto& queued : state.vBlocksInFlight) {
+            if (queued.decoupledBlock &&
+                (GetTime() - queued.decoupledBlock->started >=
+                    std::chrono::duration_cast<std::chrono::seconds>(GETDATA_TX_INTERVAL).count() ||
+                 std::chrono::steady_clock::now() - queued.decoupledBlock->startedSteady >= GETDATA_TX_INTERVAL))
+                RequestFullDecoupledBlock(pto, connman, queued);
+        }
 
         // Detect whether we're stalling
         current_time = GetTime<std::chrono::microseconds>();
@@ -4736,7 +5273,10 @@ bool PeerLogicValidation::SendMessages(CNode *pto) {
             FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload,
                                      staller, consensusParams);
             for (const CBlockIndex *pindex: vToDownload) {
-                vGetData.push_back(CInv(MSG_BLOCK, pindex->GetBlockHash()));
+                const int type = CanExchangeDecoupled(pto) && !::ChainstateActive().IsInitialBlockDownload() &&
+                    CanDirectFetch(consensusParams) && pindex->nHeight > ::ChainActive().Height() &&
+                    pindex->nHeight <= ::ChainActive().Height() + 2 ? MSG_DECOUPLED_BLOCK : MSG_BLOCK;
+                vGetData.push_back(CInv(type, pindex->GetBlockHash()));
                 MarkBlockAsInFlight(m_mempool, pto->GetId(), pindex->GetBlockHash(), pindex);
                 LogPrint(BCLog::NET, "Requesting block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
                          pindex->nHeight, pto->GetId());
@@ -4764,7 +5304,7 @@ bool PeerLogicValidation::SendMessages(CNode *pto) {
                 if (it->second <= current_time - GetObjectExpiryInterval(it->first.type)) {
                     LogPrint(BCLog::NET, "timeout of inflight object %s from peer=%d\n", it->first.ToString(),
                              pto->GetId());
-                    state.m_object_download.m_object_announced.erase(it->first);
+                    EraseObjectAnnouncement(&state, it->first);
                     state.m_object_download.m_object_in_flight.erase(it++);
                 } else {
                     ++it;
@@ -4787,7 +5327,7 @@ bool PeerLogicValidation::SendMessages(CNode *pto) {
             if (g_erased_object_requests.count(inv.hash)) {
                 LogPrint(BCLog::NET, "%s -- GETDATA skipping inv=(%s), peer=%d\n", __func__, inv.ToString(),
                          pto->GetId());
-                state.m_object_download.m_object_announced.erase(inv);
+                EraseObjectAnnouncement(&state, inv);
                 state.m_object_download.m_object_in_flight.erase(inv);
                 continue;
             }
@@ -4818,7 +5358,7 @@ bool PeerLogicValidation::SendMessages(CNode *pto) {
                 }
             } else {
                 // We have already seen this object, no need to download.
-                state.m_object_download.m_object_announced.erase(inv);
+                EraseObjectAnnouncement(&state, inv);
                 state.m_object_download.m_object_in_flight.erase(inv);
                 LogPrint(BCLog::NET, "%s -- GETDATA already seen inv=(%s), peer=%d\n", __func__, inv.ToString(),
                          pto->GetId());

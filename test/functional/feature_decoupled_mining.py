@@ -9,7 +9,7 @@ from decimal import Decimal
 import copy
 import struct
 
-from test_framework.blocktools import create_coinbase
+from test_framework.blocktools import create_coinbase, get_legacy_sigopcount_tx
 from test_framework.messages import (
     CBlock, CBlockHeader, CTransaction, CTxOut, ser_compact_size, ser_uint256,
 )
@@ -82,7 +82,7 @@ def block_from_template(node, template):
     return block, references
 
 
-def exercise_certified_mining(test, node, raw, certificate):
+def exercise_certified_mining(test, node, raw, certificate, eviction_bodies=()):
     """Mine a real certified parent and ordinary child, then exercise its lease."""
     txid = node.decoderawtransaction(raw)["txid"]
     assert_equal(node.submitbuspooltransaction(raw, certificate["hex"]), txid)
@@ -119,6 +119,16 @@ def exercise_certified_mining(test, node, raw, certificate):
                             node.getdecoupledblocktransactions, template["workid"], [1, 1])
     block, references = block_from_template(node, template)
     assert_equal(references[parent_index], txid)
+    parent_entry = template["vtxidmetadata"][template["vtxids"].index(txid)]
+    child_entry = next(entry for entry in template["transactions"] if entry["hash"] == child_id)
+    assert_equal(parent_entry["depends"], [])
+    assert_equal(child_entry["depends"], [parent_index])
+    for candidate, entry in ((txid, parent_entry), (child_id, child_entry)):
+        assert_equal(entry["fee"], int(node.getmempoolentry(candidate)["fees"]["base"] * 100000000))
+        assert_equal(entry["fee"], 100000)
+        assert_equal(entry["specialTxfee"], 0)
+        assert_equal(entry["sigops"], get_legacy_sigopcount_tx(block.vtx[entry["index"]]))
+        assert_equal(entry["sigops"], 1)
     tampered = copy.deepcopy(block)
     tampered.hashMerkleRoot ^= 1
     tips = node.getchaintips()
@@ -126,7 +136,19 @@ def exercise_certified_mining(test, node, raw, certificate):
                             encode_decoupled_block(tampered, references), template["workid"])
     assert_equal(node.getchaintips(), tips)
     block.solve()
-    assert_equal(node.submitdecoupledblock(encode_decoupled_block(block, references), template["workid"]), None)
+    encoded = encode_decoupled_block(block, references)
+    if eviction_bodies:
+        # Evict the invalid-script parent from retention and the candidate graph.
+        # No tip or clock change may expire its otherwise valid work lease.
+        for body in eviction_bodies:
+            assert_equal(node.requesttxvalidation(body)["status"], "requested")
+        assert_raises_rpc_error(-5, "not retained", node.getbuspoolentry, txid)
+        assert txid not in node.getrawmempool() and child_id not in node.getrawmempool()
+        assert_equal(node.getbestblockhash(), template["previousblockhash"])
+        assert_equal(node.submitdecoupledblock(encoded, ""), {
+            "status": "incomplete", "missing": [{"index": parent_index, "txid": txid}]})
+        assert_equal(node.getchaintips(), tips)
+    assert_equal(node.submitdecoupledblock(encoded, template["workid"]), None)
     test.sync_blocks()
     assert_equal(node.getbestblockhash(), block.hash)
     assert txid in node.getblock(block.hash)["tx"] and child_id in node.getblock(block.hash)["tx"]

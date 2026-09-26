@@ -116,6 +116,8 @@ An experimental response containing a certificate manifest must not advertise tr
 
 The block assembler selects the shared graph and first produces a complete valid template. Classification, certification and payload capacity determine its reference presentation. Promotions/demotions update the existing template-change counter so caching/longpoll cannot serve stale eligibility.
 
+Keep existing fee-rate ranking and `-blockmintxfee` calculations based on transaction-body bytes. Certificate manifests remain coinbase overhead for this policy; every manifest byte still counts toward the block and coinbase-payload limits. Delegation changes neither transaction fees nor special fees.
+
 Retain complete templates under a bounded `workid` for 600 seconds. Return `workid` and `expires` only in the opt-in mixed response. Provide an explicit RPC to retrieve bodies by `workid` and canonical indexes.
 
 `submitdecoupledblock(hex, workid)` reconstructs using retained templates and current body sources, then shares the normal full-block processing path. Missing data returns an explicit incomplete result with positions and txids, never success and never permanent block invalidity. A complete `submitblock` remains accepted through its existing path.

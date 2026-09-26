@@ -24,24 +24,29 @@ private:
     size_t used{0};
 
 public:
+    class Exceeded : public std::ios_base::failure {
+    public:
+        Exceeded() : std::ios_base::failure("decoupled allocation budget exceeded") {}
+    };
+
     explicit CDecoupledReadBudget(size_t limitIn) : limit(limitIn) {}
 
     void SetLimit(size_t limitIn)
     {
-        if (limitIn < used) throw std::ios_base::failure("decoupled allocation budget exceeded");
+        if (limitIn < used) throw Exceeded();
         limit = limitIn;
     }
 
     void ChargeBytes(size_t bytes)
     {
-        if (bytes > limit - used) throw std::ios_base::failure("decoupled allocation budget exceeded");
+        if (bytes > limit - used) throw Exceeded();
         used += bytes;
     }
 
     void ChargeArray(size_t count, size_t elementSize)
     {
         if (elementSize != 0 && count > (std::numeric_limits<size_t>::max() - 31) / elementSize) {
-            throw std::ios_base::failure("decoupled allocation budget exceeded");
+            throw Exceeded();
         }
         ChargeBytes(memusage::MallocUsage(count * elementSize));
     }

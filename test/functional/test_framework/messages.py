@@ -264,6 +264,8 @@ class CAddress():
 MSG_ERROR = 0
 MSG_TX = 1
 MSG_BLOCK = 2
+MSG_DECOUPLED_BLOCK = 0x8001
+MSG_TX_CERTIFICATE = 0x8002
 
 
 class CInv():
@@ -271,7 +273,9 @@ class CInv():
         0: "Error",
         1: "TX",
         2: "Block",
-        20: "CompactBlock"
+        20: "CompactBlock",
+        MSG_DECOUPLED_BLOCK: "DecoupledBlock",
+        MSG_TX_CERTIFICATE: "TxCertificate"
     }
 
     def __init__(self, t=0, h=0):
@@ -1504,6 +1508,94 @@ class msg_cmpctblock():
 
     def __repr__(self):
         return "msg_cmpctblock(HeaderAndShortIDs=%s)" % repr(self.header_and_shortids)
+
+class CDecoupledTxRef():
+    def __init__(self, index=0, txid=0):
+        self.index = index
+        self.txid = txid
+
+    def deserialize(self, f):
+        self.index = struct.unpack("<H", f.read(2))[0]
+        self.txid = deser_uint256(f)
+
+    def serialize(self):
+        return struct.pack("<H", self.index) + ser_uint256(self.txid)
+
+
+class CDecoupledBlock():
+    def __init__(self, block=None, references=()):
+        self.version = 1
+        self.header = CBlockHeader(block)
+        self.vtx = []
+        self.vtxids = []
+        if block is not None:
+            for index, tx in enumerate(block.vtx):
+                tx.calc_sha256()
+                if index in references:
+                    self.vtxids.append(CDecoupledTxRef(index, tx.sha256))
+                else:
+                    self.vtx.append(tx)
+
+    def deserialize(self, f):
+        self.version = struct.unpack("<H", f.read(2))[0]
+        self.header.deserialize(f)
+        self.vtx = deser_vector(f, CTransaction)
+        self.vtxids = deser_vector(f, CDecoupledTxRef)
+
+    def serialize(self):
+        return struct.pack("<H", self.version) + self.header.serialize() + ser_vector(self.vtx) + ser_vector(self.vtxids)
+
+
+class CTxValidationCertificate():
+    """Opaque fixed-size statement, shared with the certificate RPC encoding."""
+    def __init__(self, data=bytes(236)):
+        if len(data) != 236:
+            raise ValueError("Invalid certificate size")
+        self.data = data
+
+    def deserialize(self, f):
+        self.data = f.read(236)
+        if len(self.data) != 236:
+            raise ValueError("Truncated certificate")
+
+    def serialize(self):
+        return self.data
+
+    def get_hash(self):
+        return uint256_from_str(hash256(self.data))
+
+
+class msg_senddblock(msg_sendcmpct):
+    command = b"senddblock"
+
+
+class msg_dblock():
+    command = b"dblock"
+
+    def __init__(self, block=None):
+        self.block = block if block is not None else CDecoupledBlock()
+
+    def deserialize(self, f):
+        self.block.deserialize(f)
+
+    def serialize(self):
+        return self.block.serialize()
+
+
+class msg_txcert():
+    command = b"txcert"
+
+    def __init__(self, certificate=None, tx=None):
+        self.certificate = certificate if certificate is not None else CTxValidationCertificate()
+        self.tx = tx if tx is not None else CTransaction()
+
+    def deserialize(self, f):
+        self.certificate.deserialize(f)
+        self.tx.deserialize(f)
+
+    def serialize(self):
+        return self.certificate.serialize() + self.tx.serialize()
+
 
 class msg_getblocktxn():
     command = b"getblocktxn"

@@ -193,6 +193,7 @@ BASE_SCRIPTS = [
     'p2p_leak_tx.py',
     'p2p_blocksonly.py',
     'p2p_compactblocks.py',
+    'p2p_decoupledblocks.py',
     'p2p_connect_to_devnet.py',
     'feature_futures.py',
     'feature_assets.py',

@@ -42,6 +42,9 @@ namespace NetMsgType {
     const char *CMPCTBLOCK = "cmpctblock";
     const char *GETBLOCKTXN = "getblocktxn";
     const char *BLOCKTXN = "blocktxn";
+    const char *SENDDBLOCK = "senddblock";
+    const char *DBLOCK = "dblock";
+    const char *TXCERT = "txcert";
 // Raptoreum message types
     const char *LEGACYTXLOCKREQUEST = "ix";
     const char *SPORK = "spork";
@@ -111,6 +114,9 @@ const static std::string allNetMessageTypes[] = {
         NetMsgType::CMPCTBLOCK,
         NetMsgType::GETBLOCKTXN,
         NetMsgType::BLOCKTXN,
+        NetMsgType::SENDDBLOCK,
+        NetMsgType::DBLOCK,
+        NetMsgType::TXCERT,
         // Raptoreum message types
         // NOTE: do NOT include non-implmented here, we want them to be "Unknown command" in ProcessMessage()
         NetMsgType::LEGACYTXLOCKREQUEST,
@@ -258,6 +264,10 @@ const char *CInv::GetCommandInternal() const {
             return NetMsgType::LEGACYTXLOCKREQUEST;
         case MSG_CMPCT_BLOCK:
             return NetMsgType::CMPCTBLOCK;
+        case MSG_DECOUPLED_BLOCK:
+            return NetMsgType::DBLOCK;
+        case MSG_TX_CERTIFICATE:
+            return NetMsgType::TXCERT;
         case MSG_SPORK:
             return NetMsgType::SPORK;
         case MSG_DSTX:

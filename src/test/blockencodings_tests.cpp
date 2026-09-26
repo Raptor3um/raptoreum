@@ -972,9 +972,9 @@ BOOST_AUTO_TEST_CASE(DecoupledBudgetRejectsOverflow)
     BOOST_CHECK_THROW(budget.ChargeArray(1, std::numeric_limits<size_t>::max()), std::ios_base::failure);
     BOOST_CHECK_EQUAL(budget.GetUsed(), 0U);
     budget.ChargeBytes(64);
-    BOOST_CHECK_THROW(budget.SetLimit(63), std::ios_base::failure);
+    BOOST_CHECK_THROW(budget.SetLimit(63), CDecoupledReadBudget::Exceeded);
     budget.SetLimit(64);
-    BOOST_CHECK_THROW(budget.ChargeBytes(1), std::ios_base::failure);
+    BOOST_CHECK_THROW(budget.ChargeBytes(1), CDecoupledReadBudget::Exceeded);
     budget.SetLimit(128);
     budget.ChargeBytes(64);
     BOOST_CHECK_EQUAL(budget.GetUsed(), 128U);

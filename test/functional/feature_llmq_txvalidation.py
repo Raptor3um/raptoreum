@@ -43,7 +43,10 @@ class TxValidationTest(RaptoreumTestFramework):
         mn.node = self.nodes[mn.nodeIdx]
         connect_nodes(mn.node, 0)
         force_finish_mnsync(mn.node)
-        self.bump_mocktime(1)
+        # Recovered signatures are announced only to authenticated peers. Wait
+        # for the restarted member before issuing the next signing request.
+        self.bump_mocktime(60)
+        self.wait_for_mnauth(mn.node, len(self.mninfo) - 1)
         self.sync_blocks()
 
     def recover(self, raw, nodes=None):
@@ -239,6 +242,7 @@ class TxValidationTest(RaptoreumTestFramework):
         self.sync_blocks()
         assert malicious_id not in node.getrawmempool()
         assert child_id not in node.getrawmempool()
+        node.prioritisetransaction(malicious_id, 1000000000000)
         assert_raises_rpc_error(-26, "script", node.sendrawtransaction, malicious)
 
         self.log.info("Retention evicts old bodies without creating candidates")
@@ -270,7 +274,8 @@ class TxValidationTest(RaptoreumTestFramework):
         recovered = self.get_recovered_sig(statement["requestid"], positive_message)
         proof[140:] = bytes.fromhex(recovered["sig"])
         assert_raises_rpc_error(-26, "script", node.sendrawtransaction, unsigned)
-        exercise_certified_mining(self, node, unsigned, {"hex": proof.hex()})
+        exercise_certified_mining(self, node, unsigned, {"hex": proof.hex()},
+                                  eviction_bodies=[self.payment(coin)[0] for coin in coins[6:12]])
         assert unsigned_id in node.getblock(node.getbestblockhash())["tx"]
         certified_blocks.append(node.getbestblockhash())
         self.check_historical_replay(certified_blocks)
