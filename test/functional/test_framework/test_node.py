@@ -265,7 +265,25 @@ class TestNode():
 
         expected_stderr: what this run should have written to stderr, if
         anything. Raptoreum writes startup warnings there, and a test that
-        provokes one needs to assert on it.
+        provokes one needs to assert on it. Checked synchronously, before
+        this call returns: a caller that stops a node and immediately does
+        something else (restarts it, for instance) must not lose the check
+        because nothing polled for it afterwards.
+        """
+        if not self.running:
+            return
+        self._issue_stop(wait=wait)
+        self._wait_and_check_stderr(expected_stderr)
+        del self.p2ps[:]
+
+    def _issue_stop(self, wait=0):
+        """Send the stop RPC, without waiting for the process to actually exit.
+
+        Split out of stop_node() so stop_nodes() can issue every node's stop
+        RPC before waiting on any single one -- otherwise the loop that
+        dispatches the stop pays each node's own exit time before the next
+        node is even asked to stop, serializing what should be concurrent
+        shutdowns into their sum instead of their max.
         """
         if not self.running:
             return
@@ -274,6 +292,15 @@ class TestNode():
             self.stop(wait=wait)
         except http.client.CannotSendRequest:
             self.log.exception("Unable to stop node.")
+
+    def _wait_and_check_stderr(self, expected_stderr):
+        """Wait for the process to exit, then check what it wrote to stderr.
+
+        A no-op if there is no process to wait for (never started, or
+        already reaped by an earlier is_node_stopped() call).
+        """
+        if self.process is None:
+            return
         try:
             if expected_stderr is not None:
                 # Let the process finish writing before reading what it wrote.
@@ -296,7 +323,6 @@ class TestNode():
             if self._stderr_file is not None:
                 self._stderr_file.close()
                 self._stderr_file = None
-        del self.p2ps[:]
 
     def is_node_stopped(self):
         """Checks whether the node has stopped.

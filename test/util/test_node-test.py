@@ -9,41 +9,34 @@ against a stand-in "node" process, rather than a mock of TestNode itself, so
 these tests exercise the actual code the functional suite runs.
 """
 import os
-import shlex
 import shutil
-import stat
 import sys
 import tempfile
-import textwrap
 import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "functional"))
 from test_framework.test_node import TestNode, KNOWN_STARTUP_WARNINGS  # noqa: E402
 
 
-def make_fake_node_binary(datadir, stderr_text=""):
-    """A stand-in for raptoreumd: writes stderr_text to stderr and exits 0."""
-    path = os.path.join(datadir, "fake_node.sh")
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(textwrap.dedent("""\
-            #!/bin/sh
-            if [ -n {text} ]; then
-                >&2 printf '%s' {text}
-            fi
-            exit 0
-            """).format(text=shlex.quote(stderr_text)))
-    os.chmod(path, os.stat(path).st_mode | stat.S_IEXEC)
-    return path
+def make_fake_node_args(stderr_text=""):
+    """Args for a stand-in "node" process: writes stderr_text to stderr and exits 0.
+
+    A `python -c` invocation rather than a generated shell script, so this
+    needs no executable temp file: that would fail under MSYS (no reliable
+    POSIX shell) and under a noexec temp directory (nothing there can be
+    executed at all).
+    """
+    code = "import sys\nsys.stderr.write({!r})\n".format(stderr_text)
+    return [sys.executable, "-c", code]
 
 
 class TestNodeStderrTest(unittest.TestCase):
     def make_node(self, stderr_text=""):
         datadir = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, datadir, ignore_errors=True)
-        binary = make_fake_node_binary(datadir, stderr_text)
         node = TestNode(0, datadir, [], "regtest", None, None,
-                         binary, "raptoreum-cli", None, 0, None, extra_args=[])
-        node.args = [binary]
+                         sys.executable, "raptoreum-cli", None, 0, None, extra_args=[])
+        node.args = make_fake_node_args(stderr_text)
         node.start()
         node.stop = lambda wait=0: None  # bypass the real RPC stop call
         node.cleanup_on_exit = False  # the stand-in has already exited on its own
