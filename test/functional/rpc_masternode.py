@@ -82,6 +82,22 @@ class RPCMasternodeTest(RaptoreumTestFramework):
         assert_equal(len(past_genesis), height)
         assert_equal(past_genesis[0]["height"], 1)
 
+        self.log.info("test `payments` on a block that has fallen off the active chain")
+        # Orphan a two-deep chain: invalidate the parent of the current tip so
+        # the tip itself (still indexed, never itself invalidated) is now off
+        # the active chain, and the active chain's own height shrinks below
+        # the orphaned tip's own recorded nHeight. GetBlockTxOuts's own
+        # ChainActive()[nHeight - 1] lookup for the orphaned block then indexes
+        # past the (now shorter) active chain and returns nullptr, which the
+        # unguarded loop dereferences.
+        orphan_hash = self.nodes[0].getbestblockhash()
+        orphan_parent = self.nodes[0].getblock(orphan_hash)["previousblockhash"]
+        self.nodes[0].invalidateblock(orphan_parent)
+        assert_raises_rpc_error(-8, "Block is not in the active chain", self.nodes[0].smartnode,
+                                "payments", orphan_hash)
+        self.nodes[0].reconsiderblock(orphan_parent)
+        self.sync_all()
+
         self.log.info("test that `smartnode payments` results at chaintip match `getblocktemplate` results for that block")
         gbt_smartnode = self.nodes[0].getblocktemplate()["smartnode"]
         self.nodes[0].generate(1)
