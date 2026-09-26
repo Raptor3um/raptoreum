@@ -32,6 +32,12 @@ class DeriveaddressesTest(BitcoinTestFramework):
 
         # An end at INT_MAX used to overflow the derivation loop's own `int`
         # counter (see src/rpc/misc.cpp). Adjacent ordinary range alongside it.
+        # Note: signed integer overflow is undefined behaviour, and GCC/Clang
+        # at -O1 and above optimize the wraparound away rather than looping --
+        # this assertion only actually catches a reintroduced bug under
+        # --enable-debug (-ftrapv) or a UBSan build, not a default release
+        # build. Kept anyway: it documents the correct output and still
+        # catches the bug under those configurations.
         assert_equal(
             self.nodes[0].deriveaddresses(ranged_descriptor, [2147483645, 2147483647]),
             ["yV3sCTgukGqFvSqRhA2SNcMMocPrgc48TL", "yV5zx46Vu4LgcJYoMLu7XcpRzvRPB7LK2q", "yUQ4ms3snAAXkWF1AzfnYrxAxgmNVhrydU"])
