@@ -29,6 +29,17 @@ class DecouplingProfile(AssetsTest):
         parser.add_option("--profile-repetitions", type="int", default=3)
         parser.add_option("--profile-assets", type="int", default=25)
         parser.add_option("--profile-output", help="Write verified samples to this JSON file")
+        parser.add_option("--profile-transport-node", type="int", action="append", default=[],
+                          help="Enable -txdecoupling=1 on this node index (repeatable). With one of "
+                               "two nodes, the pair falls back to ordinary relay; enable both to "
+                               "exchange reference blocks")
+
+    def setup_nodes(self):
+        # Transport on a subset of nodes checks that old and new nodes agree.
+        for index in self.options.profile_transport_node:
+            assert 0 <= index < self.num_nodes
+            self.extra_args[index] = self.extra_args[index] + ["-txdecoupling=1"]
+        super().setup_nodes()
 
     def resources(self):
         result = []
@@ -164,6 +175,13 @@ class DecouplingProfile(AssetsTest):
             self.measure("asset_transfer", repetition, [lambda: node.sendasset(asset_id, 25, recipient)["txid"]])
             assert_equal(self.nodes[1].listassetsbalance()[name]["Balance"], 25)
 
+        # Transport options must not change consensus: every node reaches one chain,
+        # UTXO set and asset state. Only the on-disk chainstate size may differ.
+        states = [(peer.getbestblockhash(),
+                   {key: value for key, value in peer.gettxoutsetinfo().items() if key != "disk_size"},
+                   peer.listassets(True, 100000)) for peer in self.nodes]
+        for state in states[1:]:
+            assert_equal(state, states[0])
         summaries = {}
         for name in sorted({sample["workload"] for sample in self.samples}):
             subset = [sample for sample in self.samples if sample["workload"] == name]
