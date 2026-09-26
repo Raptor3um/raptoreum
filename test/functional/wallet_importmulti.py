@@ -511,6 +511,20 @@ class ImportMultiTest(BitcoinTestFramework):
                               success=True,
                               warnings=["Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag."])
 
+        # Test range boundary at INT_MAX (see src/rpc/misc.cpp's deriveaddresses
+        # fix -- importmulti shares the same ParseDescriptorRange). Signed
+        # integer overflow is undefined behaviour and GCC/Clang at -O1 and
+        # above optimize the wraparound away, so this only actually exercises
+        # a reintroduced bug under --enable-debug (-ftrapv) or a UBSan build.
+        # Kept anyway: it proves this range is accepted and completes without
+        # hanging.
+        self.log.info("Should import a ranged descriptor at the INT_MAX boundary")
+        self.test_importmulti({"desc": descsum_create(desc),
+                               "timestamp": "now",
+                               "range": [2147483645, 2147483647]},
+                              success=True,
+                              warnings=["Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag."])
+
         # Test importing of a P2PKH address via descriptor
         key = self.get_key()
         self.log.info("Should import a p2pkh address from descriptor")
