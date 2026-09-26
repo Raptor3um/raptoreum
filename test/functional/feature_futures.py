@@ -214,7 +214,6 @@ class FuturesTest(BitcoinTestFramework):
         # listunspent below and let the actual assertion go unchecked.
         node.abandontransaction(spent)
         node.generate(5)
-        node.getwalletinfo()
         entry = {(u["txid"], u["vout"]): u for u in node.listunspent(0)}[locked]
         assert_equal(entry["futureSpendable"], True)
 
