@@ -3293,7 +3293,7 @@ std::map <CTxDestination, std::vector<COutput>> CWallet::ListCoins() const {
 
 std::map <CTxDestination, std::vector<COutput>> CWallet::ListAssets() const {
     // The return value contains pointers to CWalletTx objects, so the caller
-    // must hold cs_wallet for as long as it uses them. CWallet::listAssets()
+    // must hold cs_wallet for as long as it uses them. WalletImpl::listAssets()
     // (interfaces/wallet.cpp), the one caller, does.
     AssertLockHeld(cs_wallet);
 

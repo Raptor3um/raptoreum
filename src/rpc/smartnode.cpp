@@ -396,6 +396,17 @@ UniValue smartnode_payments(const JSONRPCRequest &request) {
         if (pindex == nullptr) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
+        if (!::ChainActive().Contains(pindex)) {
+            // A block can be indexed (found above) without being on the
+            // active chain -- e.g. the old tip after invalidateblock on its
+            // parent. The loop below walks ChainActive()[nHeight - 1] to
+            // find each block's parent, which is only valid for a height on
+            // the active chain; an off-chain block's own nHeight can exceed
+            // the (possibly shorter) active chain's height entirely, making
+            // that lookup return nullptr and crash the unconditional
+            // dereferences below. Reject it here instead.
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Block is not in the active chain");
+        }
     }
 
     int64_t nCount = request.params.size() > 1 ? ParseInt64V(request.params[1], "count") : 1;
@@ -444,6 +455,14 @@ UniValue smartnode_payments(const JSONRPCRequest &request) {
                 uint256 blockHashTmp;
                 CTransactionRef txPrev = GetTransaction(/* block_index */ nullptr, node.mempool, txin.prevout.hash,
                                                                           Params().GetConsensus(), blockHashTmp);
+                if (!txPrev) {
+                    // GetTransaction can return null -- with -txindex=0 and
+                    // the spending input's own transaction no longer in the
+                    // mempool, there is nowhere left for it to look.
+                    throw JSONRPCError(RPC_INTERNAL_ERROR,
+                                       strprintf("Previous transaction %s not available",
+                                                 txin.prevout.hash.ToString()));
+                }
                 nValueIn += txPrev->vout[txin.prevout.n].nValue;
             }
             nBlockFees += nValueIn - tx->GetValueOut();
