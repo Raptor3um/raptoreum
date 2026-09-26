@@ -304,6 +304,12 @@ class DecoupledBlocksTest(TxValidationTest):
         assert_equal(receiver.getbuspoolinfo()["maxcount"], 2)
         # One ordinary receiver, five authenticated signers and a control node.
         assert all(mn.nodeIdx >= 2 for mn in self.mninfo)
+        # Once the producer's smartnode sync completes, which depends on
+        # mocktime, IsTxSafeForMining requires an InstantSend lock. No quorum
+        # exists before the DKG phase below, so keep IS block filtering off
+        # until then and mine the ordinary payments deterministically.
+        producer.spork("SPORK_3_INSTANTSEND_BLOCK_FILTERING", 4070908800)
+        self.wait_for_sporks_same()
         for peer in receiver.getpeerinfo():
             receiver.disconnectnode(nodeid=peer["id"])
         wait_until(lambda: receiver.getconnectioncount() == 0)
@@ -438,6 +444,7 @@ class DecoupledBlocksTest(TxValidationTest):
         self.bump_mocktime(1)
         producer.generate(1)
         self.sync_blocks()
+        producer.spork("SPORK_3_INSTANTSEND_BLOCK_FILTERING", 0)
         producer.spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         producer.spork("SPORK_23_QUORUM_ALL_CONNECTED", 0)
         self.wait_for_sporks_same()
