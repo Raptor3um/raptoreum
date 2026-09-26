@@ -329,11 +329,15 @@ class BitcoinTestFramework():
     def stop_nodes(self, wait=0):
         """Stop multiple raptoreumd test nodes"""
         for node in self.nodes:
-            # Issue RPC to stop nodes
-            node.stop_node(wait=wait)
+            # Issue RPC to stop nodes, all of them before waiting on any one,
+            # so shutdown takes as long as the slowest node instead of the
+            # sum of every node's exit time.
+            node._issue_stop(wait=wait)
 
         for node in self.nodes:
-            # Wait for nodes to stop
+            # Wait for each node to actually exit, and check its stderr.
+            node._wait_and_check_stderr(expected_stderr='')
+            del node.p2ps[:]
             node.wait_until_stopped()
 
     def restart_node(self, i, extra_args=None):

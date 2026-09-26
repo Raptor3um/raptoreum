@@ -100,6 +100,11 @@ def create_quorum_commitments(node, height, block_hashes=None):
     taking a height and returning a hash or None. A test that builds competing
     chains needs the callable -- a flat map keeps only one block per height, and
     picking the wrong fork's block earns bad-qc-quorum-hash.
+
+    Assumes no real commitment has already landed for any of these sessions: a
+    session carries exactly one commitment, so calling this after the node's
+    own miner (or an earlier hand-built block) already produced a real one
+    earns a conflicting-commitment rejection, not a harmless duplicate.
     """
     txs = []
     for llmq_type, size, interval, start, end in REGTEST_LLMQS.values():
