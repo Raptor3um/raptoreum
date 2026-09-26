@@ -283,6 +283,9 @@ namespace llmq {
     private:
         void ProcessTx(const CTransaction &tx, bool fRetroactive, const Consensus::Params &params);
 
+        friend struct InstantSendSigningTestAccess;
+        bool HasValidSigningContext(const CTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
         bool CheckCanLock(const CTransaction &tx, bool printDebug, const Consensus::Params &params) const;
 
         bool CheckCanLock(const COutPoint &outpoint, bool printDebug, const uint256 &txHash,

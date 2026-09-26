@@ -7,6 +7,7 @@
 #define BITCOIN_MINER_H
 
 #include <primitives/block.h>
+#include <primitives/txcertificate.h>
 #include <txmempool.h>
 #include <validation.h>
 #include <node/context.h>
@@ -33,6 +34,7 @@ struct CBlockTemplate {
     std::vector <CAmount> vTxFees;
     std::vector <CAmount> vSpecialTxFees;
     std::vector <int64_t> vTxSigOps;
+    std::set<uint256> referenceIDs; // Canonical transactions presented by reference on opt-in RPC.
     uint32_t nPrevBits; // nBits of previous block (for subsidy calculation)
     std::vector <CTxOut> voutSmartnodePayments; // smartnode payment
     std::vector <CTxOut> voutSuperblockPayments; // superblock payment
@@ -148,6 +150,9 @@ private:
     CTxMemPool::setEntries inBlock;
 
     // Chain context for the block
+    bool allowDecoupled{false};
+    const CBlockIndex* parent{nullptr};
+    std::vector<CTxCertificateEntry> certificates;
     int nHeight;
     int64_t nLockTimeCutoff;
     const CChainParams &chainparams;
@@ -166,7 +171,7 @@ public:
     explicit BlockAssembler(const CTxMemPool &mempool, const CChainParams &params, const Options &options);
 
     /** Construct a new block template with coinbase to scriptPubKeyIn */
-    std::unique_ptr <CBlockTemplate> CreateNewBlock(const CScript &scriptPubKeyIn);
+    std::unique_ptr <CBlockTemplate> CreateNewBlock(const CScript &scriptPubKeyIn, bool allowDecoupledIn = false);
 
 private:
     // utility functions
@@ -207,7 +212,7 @@ private:
     .cs);
 
     /** Sort the package in an order that is valid to appear in a block */
-    void SortForBlock(const CTxMemPool::setEntries &package, std::vector <CTxMemPool::txiter> &sortedEntries);
+    void SortForBlock(const CTxMemPool::setEntries &package, std::vector <CTxMemPool::txiter> &sortedEntries) const;
 
     /** Add descendants of given transactions to mapModifiedTx with ancestor
       * state updated assuming given transactions are inBlock. Returns number

@@ -81,6 +81,7 @@ private:
     const unsigned int sigOpCount;  //!< Legacy sig ops plus P2SH sig op count
     int64_t feeDelta{0};            //!< Used for determining the priority of the transaction for mining in a block
     LockPoints lockPoints;          //!< Track the height and time at which tx was final
+    bool scriptsLocallyValidated{true}; //!< Remote certificates never prove local script execution
 
     // Information about descendants of this transaction that are in the
     // mempool; if we remove this transaction we must remove all of these
@@ -120,6 +121,10 @@ public:
     size_t DynamicMemoryUsage() const { return nUsageSize; }
 
     const LockPoints &GetLockPoints() const { return lockPoints; }
+
+    bool AreScriptsLocallyValidated() const { return scriptsLocallyValidated; }
+
+    void SetScriptsLocallyValidated(bool validated) { scriptsLocallyValidated = validated; }
 
     // Adjusts the descendant state.
     void UpdateDescendantState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount);

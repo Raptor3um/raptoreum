@@ -32,6 +32,29 @@ static const unsigned int MAX_SIZE = 0x02000000;
 /** Maximum amount of memory (in bytes) to allocate at once when deserializing vectors. */
 static const unsigned int MAX_VECTOR_ALLOCATE = 5000000;
 
+/** Optional allocation accounting for bounded readers. Ordinary streams compile
+ * these hooks to no-ops and retain their existing wire format and allocation path.
+ */
+template<typename Stream>
+auto ReadAllocation(Stream& stream, size_t count, size_t elementSize, int)
+    -> decltype(stream.ChargeReadAllocation(count, elementSize), void())
+{
+    stream.ChargeReadAllocation(count, elementSize);
+}
+
+template<typename Stream>
+void ReadAllocation(Stream&, size_t, size_t, long) {}
+
+template<typename Stream>
+auto ReadSharedAllocation(Stream& stream, size_t objectSize, int)
+    -> decltype(stream.ChargeReadSharedAllocation(objectSize), void())
+{
+    stream.ChargeReadSharedAllocation(objectSize);
+}
+
+template<typename Stream>
+void ReadSharedAllocation(Stream&, size_t, long) {}
+
 /**
  * Dummy data type to identify deserializing constructors.
  *
@@ -867,6 +890,7 @@ struct VectorFormatter {
             // X MiB of data to make us allocate X+5 Mib.
             static_assert(sizeof(typename V::value_type) <= MAX_VECTOR_ALLOCATE, "Vector element size too large");
             allocated = std::min(size, allocated + MAX_VECTOR_ALLOCATE / sizeof(typename V::value_type));
+            ReadAllocation(s, allocated, sizeof(typename V::value_type), 0);
             v.reserve(allocated);
             while (v.size() < allocated) {
                 v.emplace_back();
@@ -1114,6 +1138,7 @@ void Unserialize_impl(Stream &is, prevector <N, T> &v, const unsigned char &) {
     unsigned int i = 0;
     while (i < nSize) {
         unsigned int blk = std::min(nSize - i, (unsigned int) (1 + 4999999 / sizeof(T)));
+        if (i + blk > v.capacity()) ReadAllocation(is, i + blk, sizeof(T), 0);
         v.resize_uninitialized(i + blk);
         is.read((char *) &v[i], blk * sizeof(T));
         i += blk;
@@ -1168,9 +1193,15 @@ void Unserialize_impl(Stream &is, std::vector <T, A> &v, const unsigned char &) 
     // Limit size per read so bogus size value won't cause out of memory
     v.clear();
     unsigned int nSize = ReadCompactSize(is);
+    // Bounded transaction readers also reserve the immutable extra-payload copy.
+    ReadAllocation(is, nSize, sizeof(T), 0);
     unsigned int i = 0;
     while (i < nSize) {
         unsigned int blk = std::min(nSize - i, (unsigned int) (1 + 4999999 / sizeof(T)));
+        if (i + blk > v.capacity()) {
+            // resize may geometrically grow the current allocation.
+            ReadAllocation(is, std::max(size_t(i + blk), 2 * v.capacity()), sizeof(T), 0);
+        }
         v.resize(i + blk);
         is.read((char *) &v[i], blk * sizeof(T));
         i += blk;
@@ -1383,6 +1414,7 @@ Serialize(Stream &os, const std::shared_ptr <T> &p) {
 
 template<typename Stream, typename T>
 void Unserialize(Stream &is, std::shared_ptr <T> &p) {
+    ReadSharedAllocation(is, sizeof(T), 0);
     p = std::make_shared<T>(deserialize, is);
 }
 

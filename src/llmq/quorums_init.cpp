@@ -16,7 +16,9 @@
 #include <llmq/quorums_signing_shares.h>
 #include <llmq/quorums_utils.h>
 
+#include <buspool.h>
 #include <dbwrapper.h>
+#include <util/system.h>
 
 namespace llmq {
 
@@ -33,6 +35,11 @@ namespace llmq {
         quorumSigningManager = new CSigningManager(connman, unitTests, fWipe);
         chainLocksHandler = new CChainLocksHandler(mempool, connman);
         quorumInstantSendManager = new CInstantSendManager(mempool, connman, unitTests, fWipe);
+        if (IsBusPoolEnabled() && !unitTests) {
+            busPoolManager = std::make_shared<CBusPoolManager>(mempool,
+                gArgs.GetArg("-buspoolmaxcount", CBusPoolManager::DEFAULT_MAX_COUNT),
+                gArgs.GetArg("-buspoolmaxbytes", CBusPoolManager::DEFAULT_MAX_BYTES));
+        }
 
         // TODO: remove at some point of future upgrades. it is used only to wipe old db.
         auto llmqDbTmp = std::make_unique<CDBWrapper>(unitTests ? "" : (GetDataDir() / "llmq"), 1 << 20, unitTests,
@@ -40,6 +47,7 @@ namespace llmq {
     }
 
     void DestroyLLMQSystem() {
+        busPoolManager.reset();
         delete quorumInstantSendManager;
         quorumInstantSendManager = nullptr;
         delete chainLocksHandler;
@@ -61,6 +69,10 @@ namespace llmq {
     }
 
     void StartLLMQSystem() {
+        if (busPoolManager) {
+            RegisterSharedValidationInterface(busPoolManager);
+            quorumSigningManager->RegisterRecoveredSigsListener(busPoolManager.get());
+        }
         if (blsWorker != nullptr) {
             blsWorker->Start();
         }
@@ -83,6 +95,10 @@ namespace llmq {
     }
 
     void StopLLMQSystem() {
+        if (busPoolManager) {
+            UnregisterSharedValidationInterface(busPoolManager);
+            quorumSigningManager->UnregisterRecoveredSigsListener(busPoolManager.get());
+        }
         if (quorumInstantSendManager != nullptr) {
             quorumInstantSendManager->Stop();
         }

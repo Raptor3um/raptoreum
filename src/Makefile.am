@@ -368,6 +368,7 @@ libraptoreum_server_a_SOURCES = \
   dbwrapper.cpp \
   dsnotificationinterface.cpp \
   txdecoupling.cpp \
+  buspool.cpp \
   evo/cbtx.cpp \
   evo/deterministicmns.cpp \
   evo/evodb.cpp \
@@ -426,6 +427,7 @@ libraptoreum_server_a_SOURCES = \
   pow.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
+  rpc/buspool.cpp \
   rpc/smartnode.cpp \
   rpc/governance.cpp \
   rpc/mining.cpp \
@@ -648,6 +650,7 @@ libraptoreum_consensus_a_SOURCES = \
   primitives/powcache.h \
   primitives/transaction.cpp \
   txdecoupling.h \
+  buspool.h \
   primitives/transaction.h \
   pubkey.cpp \
   pubkey.h \

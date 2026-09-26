@@ -465,6 +465,8 @@ void SetupServerArgs() {
     const auto testnetChainParams = CreateChainParams(CBaseChainParams::TESTNET);
     const auto regtestChainParams = CreateChainParams(CBaseChainParams::REGTEST);
 
+    gArgs.AddArg("-buspoolmaxcount=<n>", "Maximum experimental buspool records (1..100000, default: 10000)", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+    gArgs.AddArg("-buspoolmaxbytes=<n>", "Maximum experimental buspool bytes (1..1073741824, default: 67108864)", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-txdecoupling", "Enable experimental transaction decoupling on regtest (default: 0)",
                  ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-txdecouplingheight=<n>", "Activate experimental script certificates at this regtest height (default: disabled; requires -txdecoupling=1)",
@@ -1504,6 +1506,15 @@ bool AppInitBasicSetup() {
 }
 
 bool AppInitParameterInteraction() {
+    for (const auto& limit : {std::make_pair("-buspoolmaxcount", int64_t{100000}),
+                              std::make_pair("-buspoolmaxbytes", int64_t{1073741824})}) {
+        if (!gArgs.IsArgSet(limit.first)) continue;
+        int64_t value;
+        if (!ParseInt64(gArgs.GetArg(limit.first, ""), &value) || value < 1 || value > limit.second) {
+            return InitError(strprintf("%s must be between 1 and %d", limit.first, limit.second));
+        }
+        if (!gArgs.GetBoolArg("-txdecoupling", false)) return InitError("Buspool limits require -txdecoupling=1");
+    }
     const CChainParams &chainparams = Params();
     // ********************************************************* Step 2: parameter interactions
 

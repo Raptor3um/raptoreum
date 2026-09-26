@@ -52,6 +52,8 @@ class CConnman;
 
 class CScriptCheck;
 
+class CTxValidationCertificate;
+
 class CBlockPolicyEstimator;
 
 class CTxMemPool;
@@ -314,7 +316,12 @@ void PruneBlockFilesManual(int nManualPruneHeight);
 /** (try to) add transaction to memory pool */
 bool AcceptToMemoryPool(CTxMemPool &pool, CValidationState &state, const CTransactionRef &tx,
                         bool *pfMissingInputs, bool bypass_limits,
-                        const CAmount nAbsurdFee, bool fDryRun = false);
+                        const CAmount nAbsurdFee, bool fDryRun = false,
+                        const CTxValidationCertificate* certificate = nullptr);
+
+// Executes both script rule sets locally; never substitutes a remote certificate.
+// Requires cs_main and confirmed ordinary-payment inputs at the active tip.
+bool CheckTxForCertificate(const CTransaction& tx, CValidationState& state, uint32_t consensusFlags);
 
 /**
  * Does this transaction need a working copy of the global asset cache?

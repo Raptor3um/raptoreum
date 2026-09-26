@@ -246,6 +246,9 @@ EXTENDED_SCRIPTS = [
     'feature_pruning.py', # NOTE: Prune mode is incompatible with -txindex, should work with governance validation disabled though.
     # vv Tests less than 20m vv
     # vv Tests less than 5m vv
+    'feature_decoupling_profile.py',
+    'feature_decoupled_mining.py',
+    'feature_llmq_txvalidation.py',
     'feature_maxuploadtarget.py',
     'feature_dbcrash.py',
     # vv Tests less than 2m vv

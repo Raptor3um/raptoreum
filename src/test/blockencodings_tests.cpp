@@ -731,4 +731,253 @@ BOOST_AUTO_TEST_CASE(DecoupledDefersEmptyTransactionConsensus)
     BOOST_CHECK_EQUAL(state.GetRejectReason(), "bad-txns-vin-empty");
 }
 
+
+// Untrusted counts must be refused without growing the target vectors.
+BOOST_AUTO_TEST_CASE(DecoupledBudgetRejectsTruncatedCountsBeforeAllocation)
+{
+    const auto exhausted = [](const std::ios_base::failure& e) {
+        return std::string(e.what()).find("decoupled allocation budget exceeded") != std::string::npos;
+    };
+    for (bool input : {true, false}) {
+        CDataStream wire(SER_NETWORK, PROTOCOL_VERSION);
+        wire << int32_t(1);
+        if (!input) WriteCompactSize(wire, 0);
+        WriteCompactSize(wire, MAX_SIZE);
+        CMutableTransaction tx;
+        CDecoupledReadBudget budget(1024);
+        CDecoupledBudgetedReader<CDataStream> reader(wire, budget);
+        BOOST_CHECK_EXCEPTION(reader >> tx, std::ios_base::failure, exhausted);
+        BOOST_CHECK_EQUAL(tx.vin.capacity(), 0U);
+        BOOST_CHECK_EQUAL(tx.vout.capacity(), 0U);
+    }
+    CDataStream scriptWire(SER_NETWORK, PROTOCOL_VERSION);
+    WriteCompactSize(scriptWire, MAX_SIZE);
+    CScript script;
+    const auto inlineCapacity = script.capacity();
+    CDecoupledReadBudget scriptBudget(1024);
+    CDecoupledBudgetedReader<CDataStream> scriptReader(scriptWire, scriptBudget);
+    BOOST_CHECK_EXCEPTION(scriptReader >> script, std::ios_base::failure, exhausted);
+    BOOST_CHECK_EQUAL(script.capacity(), inlineCapacity);
+
+    CDataStream payloadWire(SER_NETWORK, PROTOCOL_VERSION);
+    WriteCompactSize(payloadWire, MAX_SIZE);
+    std::vector<unsigned char> payload;
+    CDecoupledReadBudget payloadBudget(1024);
+    CDecoupledBudgetedReader<CDataStream> payloadReader(payloadWire, payloadBudget);
+    BOOST_CHECK_EXCEPTION(payloadReader >> payload, std::ios_base::failure, exhausted);
+    BOOST_CHECK_EQUAL(payload.capacity(), 0U);
+
+    const CBlock block(BuildBlockTestCase());
+    CDataStream bodies(SER_NETWORK, PROTOCOL_VERSION);
+    bodies << uint16_t(1) << block.GetBlockHeader();
+    WriteCompactSize(bodies, 65535);
+    CDecoupledReadBudget bodyBudget(1024);
+    CDecoupledBudgetedReader<CDataStream> bodyReader(bodies, bodyBudget);
+    CDecoupledBlock decoded;
+    BOOST_CHECK_EXCEPTION(bodyReader >> decoded, std::ios_base::failure, exhausted);
+    BOOST_CHECK_EQUAL(decoded.vtx.capacity(), 0U);
+
+    CDataStream references(SER_NETWORK, PROTOCOL_VERSION);
+    references << uint16_t(1) << block.GetBlockHeader() << std::vector<CTransactionRef>{block.vtx[0]};
+    WriteCompactSize(references, 65534);
+    CDecoupledReadBudget refBudget(1024);
+    CDecoupledBudgetedReader<CDataStream> refReader(references, refBudget);
+    CDecoupledBlock decodedRefs;
+    BOOST_CHECK_EXCEPTION(refReader >> decodedRefs, std::ios_base::failure, exhausted);
+    BOOST_CHECK_EQUAL(decodedRefs.vtxids.capacity(), 0U);
+}
+
+BOOST_AUTO_TEST_CASE(DecoupledBudgetChargesSharedBodiesBeforeConstruction)
+{
+    const CBlock block(BuildBlockTestCase());
+    CDataStream wire(SER_NETWORK, PROTOCOL_VERSION);
+    wire << block.vtx[0];
+    const auto unread = wire.size();
+    CDecoupledReadBudget budget(0);
+    CDecoupledBudgetedReader<CDataStream> reader(wire, budget);
+    CTransactionRef tx;
+    BOOST_CHECK_THROW(reader >> tx, std::ios_base::failure);
+    BOOST_CHECK(!tx);
+    BOOST_CHECK_EQUAL(wire.size(), unread);
+}
+
+BOOST_AUTO_TEST_CASE(DecoupledBudgetStopsManyMinimalBodies)
+{
+    const CBlock block(BuildBlockTestCase());
+    CDataStream wire(SER_NETWORK, PROTOCOL_VERSION);
+    wire << uint16_t(1) << block.GetBlockHeader();
+    WriteCompactSize(wire, 5000);
+    wire << block.vtx[0];
+    CMutableTransaction minimal;
+    for (uint32_t i = 1; i < 5000; ++i) {
+        minimal.nLockTime = i;
+        wire << minimal;
+    }
+    WriteCompactSize(wire, 0);
+    BOOST_REQUIRE_LT(wire.size(), 64U * 1024);
+    CDecoupledReadBudget budget(512 * 1024);
+    CDecoupledBudgetedReader<CDataStream> reader(wire, budget);
+    CDecoupledBlock decoded;
+    BOOST_CHECK_THROW(reader >> decoded, std::ios_base::failure);
+    const auto constructed = std::count_if(decoded.vtx.begin(), decoded.vtx.end(),
+                                           [](const CTransactionRef& tx) { return bool(tx); });
+    BOOST_CHECK_GT(constructed, 1);
+    BOOST_CHECK_LT(constructed, 5000);
+    BOOST_CHECK(!wire.empty());
+    BOOST_CHECK_LE(budget.GetUsed(), 512U * 1024);
+}
+
+BOOST_AUTO_TEST_CASE(DecoupledBudgetReservesExtraPayloadCopy)
+{
+    // CTransaction's move constructor currently copies the mutable extra payload.
+    CMutableTransaction tx;
+    tx.nVersion = 3;
+    tx.nType = TRANSACTION_QUORUM_COMMITMENT;
+    tx.vExtraPayload.resize(6000);
+    CDataStream wire(SER_NETWORK, PROTOCOL_VERSION);
+    wire << tx;
+    CDecoupledReadBudget budget(10000);
+    CDecoupledBudgetedReader<CDataStream> reader(wire, budget);
+    CTransactionRef decoded;
+    BOOST_CHECK_THROW(reader >> decoded, std::ios_base::failure);
+    BOOST_CHECK(!decoded);
+    BOOST_CHECK_EQUAL(wire.size(), 6000U);
+
+    CDataStream complete(SER_NETWORK, PROTOCOL_VERSION);
+    complete << tx;
+    CDecoupledReadBudget sufficientBudget(25000);
+    CDecoupledBudgetedReader<CDataStream> completeReader(complete, sufficientBudget);
+    completeReader >> decoded;
+    BOOST_REQUIRE(decoded);
+    BOOST_CHECK(complete.empty());
+    BOOST_CHECK(decoded->vExtraPayload == tx.vExtraPayload);
+    BOOST_CHECK(decoded->GetHash() == tx.GetHash());
+}
+
+BOOST_AUTO_TEST_CASE(DecoupledBudgetChargesLayoutScratch)
+{
+    const CBlock block(BuildBlockTestCase());
+    CDecoupledBlock encoded(block, {});
+    encoded.vtx.resize(1);
+    for (uint16_t i = 1; i <= 1000; ++i) {
+        encoded.vtxids.push_back({i, uint256S(strprintf("%064x", i))});
+    }
+    CDataStream wire(SER_NETWORK, PROTOCOL_VERSION);
+    wire << encoded;
+    CDecoupledReadBudget budget(50 * 1024);
+    CDecoupledBudgetedReader<CDataStream> reader(wire, budget);
+    CDecoupledBlock decoded;
+    BOOST_CHECK_THROW(reader >> decoded, std::ios_base::failure);
+    BOOST_CHECK_EQUAL(decoded.vtxids.size(), 1000U);
+
+    CDecoupledReadBudget partialBudget(0);
+    PartiallyDownloadedDecoupledBlock partial;
+    size_t lookups = 0;
+    BOOST_CHECK_THROW(partial.InitData(encoded, [&lookups](const uint256&) {
+        ++lookups;
+        return CTransactionRef();
+    }, &partialBudget), std::ios_base::failure);
+    BOOST_CHECK_EQUAL(lookups, 0U);
+}
+
+BOOST_AUTO_TEST_CASE(DecoupledBudgetChargesRetainedBodiesAndReconstruction)
+{
+    CBlock block(BuildBlockTestCase());
+    CMutableTransaction special;
+    special.nVersion = 3;
+    special.nType = TRANSACTION_QUORUM_COMMITMENT;
+    special.vExtraPayload.resize(64 * 1024);
+    block.vtx[1] = MakeTransactionRef(special);
+    block.hashMerkleRoot = BlockMerkleRoot(block);
+    CDecoupledBlock encoded(block, {block.vtx[1]->GetHash(), block.vtx[2]->GetHash()});
+    const auto owners = block.vtx[1].use_count();
+    CDecoupledReadBudget budget(4096);
+    PartiallyDownloadedDecoupledBlock partial;
+    BOOST_CHECK_THROW(partial.InitData(encoded, [&block](const uint256&) {
+        return block.vtx[1];
+    }, &budget), std::ios_base::failure);
+    BOOST_CHECK_EQUAL(block.vtx[1].use_count(), owners);
+    CBlock rebuilt;
+    BOOST_CHECK(partial.FillBlock(rebuilt, {}) == READ_STATUS_FAILED);
+
+    BOOST_REQUIRE(partial.InitData(encoded, {}) == READ_STATUS_OK);
+    CDecoupledReadBudget missingBudget(0);
+    BOOST_CHECK_THROW(partial.GetMissingIndexes(&missingBudget), std::ios_base::failure);
+    CDecoupledReadBudget fillBudget(4096);
+    BOOST_CHECK_THROW(partial.FillBlock(rebuilt, {block.vtx[1], block.vtx[2]}, &fillBudget),
+                      std::ios_base::failure);
+    BOOST_CHECK(rebuilt.vtx.empty());
+    BOOST_CHECK(partial.GetMissingIndexes() == std::vector<uint16_t>({1, 2}));
+}
+
+BOOST_AUTO_TEST_CASE(DecoupledBudgetChargesMerkleScratchAndGrowth)
+{
+    const CBlock block(BuildBlockTestCase());
+    const CDecoupledBlock encoded(block, {});
+    // 64 bytes allow the three shared references; 200 also allow the first
+    // three-leaf array, but not the extra allocation for an odd leaf count.
+    for (size_t limit : {64U, 200U}) {
+        PartiallyDownloadedDecoupledBlock partial;
+        BOOST_REQUIRE(partial.InitData(encoded, {}) == READ_STATUS_OK);
+        CDecoupledReadBudget budget(limit);
+        CBlock rebuilt;
+        BOOST_CHECK_THROW(partial.FillBlock(rebuilt, {}, &budget), std::ios_base::failure);
+        BOOST_CHECK(rebuilt.vtx.empty());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(DecoupledBudgetedRoundTripsKeepBodiesAlive)
+{
+    for (bool references : {false, true}) {
+        CBlock block(BuildBlockTestCase());
+        const CDecoupledBlock encoded(block, references ? std::set<uint256>{block.vtx[1]->GetHash(), block.vtx[2]->GetHash()}
+                                                       : std::set<uint256>{});
+        CDataStream expected(SER_NETWORK, PROTOCOL_VERSION), transport(SER_NETWORK, PROTOCOL_VERSION);
+        expected << block;
+        transport << encoded;
+        const std::vector<unsigned char> bytes(transport.begin(), transport.end());
+        VectorReader source(SER_NETWORK, PROTOCOL_VERSION, bytes, 0);
+        CDecoupledReadBudget budget(1024 * 1024);
+        budget.ChargeArray(bytes.capacity(), sizeof(unsigned char));
+        CDecoupledBudgetedReader<VectorReader> reader(source, budget);
+        CDecoupledBlock decoded;
+        reader >> decoded;
+        BOOST_CHECK(source.empty());
+        PartiallyDownloadedDecoupledBlock partial;
+        std::weak_ptr<const CTransaction> retained = block.vtx[1];
+        BOOST_REQUIRE(partial.InitData(decoded, [&block](const uint256& hash) {
+            return hash == block.vtx[1]->GetHash() ? block.vtx[1] : CTransactionRef();
+        }, &budget) == READ_STATUS_OK);
+        const auto missing = partial.GetMissingIndexes(&budget);
+        BOOST_CHECK(missing == (references ? std::vector<uint16_t>{2} : std::vector<uint16_t>{}));
+        const std::vector<CTransactionRef> response = references ? std::vector<CTransactionRef>{block.vtx[2]}
+                                                                : std::vector<CTransactionRef>{};
+        block.vtx.clear();
+        if (references) BOOST_CHECK(!retained.expired());
+        CBlock rebuilt;
+        BOOST_REQUIRE(partial.FillBlock(rebuilt, response, &budget) == READ_STATUS_OK);
+        BOOST_CHECK(!rebuilt.fChecked);
+        CDataStream actual(SER_NETWORK, PROTOCOL_VERSION);
+        actual << rebuilt;
+        BOOST_CHECK_EQUAL_COLLECTIONS(actual.begin(), actual.end(), expected.begin(), expected.end());
+        BOOST_CHECK_GT(budget.GetUsed(), bytes.size());
+        BOOST_CHECK_LT(budget.GetUsed(), 1024U * 1024);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(DecoupledBudgetRejectsOverflow)
+{
+    CDecoupledReadBudget budget(std::numeric_limits<size_t>::max());
+    BOOST_CHECK_THROW(budget.ChargeArray(std::numeric_limits<size_t>::max(), 2), std::ios_base::failure);
+    BOOST_CHECK_THROW(budget.ChargeArray(1, std::numeric_limits<size_t>::max()), std::ios_base::failure);
+    BOOST_CHECK_EQUAL(budget.GetUsed(), 0U);
+    budget.ChargeBytes(64);
+    BOOST_CHECK_THROW(budget.SetLimit(63), std::ios_base::failure);
+    budget.SetLimit(64);
+    BOOST_CHECK_THROW(budget.ChargeBytes(1), std::ios_base::failure);
+    budget.SetLimit(128);
+    budget.ChargeBytes(64);
+    BOOST_CHECK_EQUAL(budget.GetUsed(), 128U);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

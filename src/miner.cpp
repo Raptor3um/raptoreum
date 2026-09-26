@@ -8,6 +8,9 @@
 #include <miner.h>
 
 #include <amount.h>
+#include <buspool.h>
+#include <decoupledblock.h>
+#include <txdecoupling.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
@@ -120,6 +123,7 @@ BlockAssembler::BlockAssembler(const CTxMemPool &mempool, const CChainParams &pa
 
 void BlockAssembler::resetBlock() {
     inBlock.clear();
+    certificates.clear();
 
     // Reserve space for coinbase tx
     nBlockSize = 1000;
@@ -131,7 +135,7 @@ void BlockAssembler::resetBlock() {
     nSpecialTxFees = 0;
 }
 
-std::unique_ptr <CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &scriptPubKeyIn) {
+std::unique_ptr <CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &scriptPubKeyIn, bool allowDecoupledIn) {
     int64_t nTimeStart = GetTimeMicros();
 
     resetBlock();
@@ -152,6 +156,8 @@ std::unique_ptr <CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &s
 
     CBlockIndex *pindexPrev = ::ChainActive().Tip();
     assert(pindexPrev != nullptr);
+    parent = pindexPrev;
+    allowDecoupled = allowDecoupledIn && IsBusPoolEnabled();
     nHeight = pindexPrev->nHeight + 1;
 
     bool fDIP0003Active_context = chainparams.GetConsensus().DIP0003Enabled;
@@ -222,6 +228,10 @@ std::unique_ptr <CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &s
         CCbTx cbTx;
         cbTx.nVersion = 2;
         cbTx.nHeight = nHeight;
+        if (!certificates.empty()) {
+            cbTx.nVersion = CCbTx::TX_CERTIFICATE_VERSION;
+            cbTx.txCertificates = certificates;
+        }
 
         CValidationState state;
         if (!CalcCbTxMerkleRootMNList(*pblock, pindexPrev, cbTx.merkleRootMNList, state,
@@ -295,17 +305,45 @@ bool BlockAssembler::TestPackage(uint64_t packageSize, unsigned int packageSigOp
 // - transaction finality (locktime)
 // - safe TXs in regard to ChainLocks
 bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries &package) const {
-    for (CTxMemPool::txiter it: package) {
+    size_t certificateCount = certificates.size();
+    uint64_t packageBytes = 0;
+    std::vector<CTxMemPool::txiter> sorted;
+    SortForBlock(package, sorted);
+    for (CTxMemPool::txiter it: sorted) {
         if (!IsFinalTx(it->GetTx(), nHeight, nLockTimeCutoff))
             return false;
-        if (!llmq::chainLocksHandler->IsTxSafeForMining(it->GetTx().GetHash())) {
+        if (!llmq::chainLocksHandler->IsTxSafeForMining(it->GetTx().GetHash()))
             return false;
+        packageBytes += it->GetTxSize();
+        CTxValidationCertificate cert;
+        const bool certified = allowDecoupled && busPoolManager &&
+            IsTxDecouplingActive(parent, chainparams.GetConsensus()) &&
+            busPoolManager->GetCertificate(it->GetTx().GetHash(), parent, cert) &&
+            certificateCount < CCbTx::MAX_CERTIFICATES;
+        if (!it->AreScriptsLocallyValidated() && !certified)
+            return false;
+        if (certified) {
+            packageBytes += GetSerializeSize(CTxCertificateEntry{0, cert}, SER_NETWORK, PROTOCOL_VERSION);
+            if (certificateCount++ == 0) ++packageBytes; // Manifest compact-size prefix.
         }
     }
-    return true;
+    return nBlockSize + packageBytes < nBlockMaxSize;
 }
 
 void BlockAssembler::AddToBlock(CTxMemPool::txiter iter) {
+    const size_t index = pblock->vtx.size();
+    const auto txid = iter->GetTx().GetHash();
+    if (allowDecoupled && busPoolManager && index < CDecoupledBlock::MAX_TRANSACTIONS) {
+        CTxValidationCertificate cert;
+        if (IsTxDecouplingActive(parent, chainparams.GetConsensus()) &&
+            certificates.size() < CCbTx::MAX_CERTIFICATES &&
+            busPoolManager->GetCertificate(txid, parent, cert)) {
+            if (certificates.empty()) ++nBlockSize;
+            certificates.push_back({uint16_t(index), cert});
+            nBlockSize += GetSerializeSize(certificates.back(), SER_NETWORK, PROTOCOL_VERSION);
+        }
+        if (busPoolManager->IsEligible(txid, parent)) pblocktemplate->referenceIDs.insert(txid);
+    }
     pblock->vtx.emplace_back(iter->GetSharedTx());
     pblocktemplate->vTxFees.push_back(iter->GetFee());
     pblocktemplate->vSpecialTxFees.push_back(iter->GetSpecialTxFee());
@@ -367,7 +405,7 @@ bool BlockAssembler::SkipMapTxEntry(CTxMemPool::txiter it, indexed_modified_tran
 }
 
 void
-BlockAssembler::SortForBlock(const CTxMemPool::setEntries &package, std::vector <CTxMemPool::txiter> &sortedEntries) {
+BlockAssembler::SortForBlock(const CTxMemPool::setEntries &package, std::vector <CTxMemPool::txiter> &sortedEntries) const {
     // Sort package by ancestor count
     // If a transaction A depends on transaction B, then A's ancestor count
     // must be greater than B's.  So this is sufficient to validly order the

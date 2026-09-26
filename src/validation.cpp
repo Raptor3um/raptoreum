@@ -590,11 +590,43 @@ bool TxNeedsAssetsCache(const CTransaction &tx) {
                                 tx.nType == TRANSACTION_MINT_ASSET);
 }
 
+bool CheckTxForCertificate(const CTransaction& tx, CValidationState& state, uint32_t consensusFlags)
+{
+    AssertLockHeld(cs_main);
+    LOCK(::mempool.cs);
+    const auto* parent = ChainActive().Tip();
+    if (!parent) return state.Error("txcert-parent-unavailable");
+    const auto& view = ChainstateActive().CoinsTip();
+    uint256 digest;
+    if (!GetTxValidationPrevoutsDigest(tx, view, parent, digest, state)) return false;
+    if (!CheckTransaction(tx, state, 0, 0) ||
+        !ContextualCheckTransaction(tx, state, Params().GetConsensus(), parent)) return false;
+    if (!CheckFinalTx(tx, STANDARD_LOCKTIME_VERIFY_FLAGS) ||
+        !CheckSequenceLocks(::mempool, tx, STANDARD_LOCKTIME_VERIFY_FLAGS)) {
+        return state.Invalid(false, REJECT_NONSTANDARD, "txcert-non-final");
+    }
+    CAmount fee = 0, specialFee = 0;
+    if (!Consensus::CheckTxInputs(tx, state, view, parent->nHeight + 1, fee, specialFee, true)) return false;
+    if (GetTransactionSigOpCount(tx, view, TX_VALIDATION_POLICY_FLAGS_V1) > MAX_STANDARD_TX_SIGOPS) {
+        return state.Invalid(false, REJECT_NONSTANDARD, "txcert-too-many-sigops");
+    }
+    PrecomputedTransactionData txdata(tx);
+    for (const uint32_t flags : {TX_VALIDATION_POLICY_FLAGS_V1, consensusFlags}) {
+        for (size_t i = 0; i < tx.vin.size(); ++i) {
+            CScriptCheck check(view.AccessCoin(tx.vin[i].prevout).out, tx, i, flags, true, &txdata);
+            if (!check()) {
+                return state.Invalid(false, REJECT_INVALID, "txcert-script-failed", ScriptErrorString(check.GetScriptError()));
+            }
+        }
+    }
+    return true;
+}
+
 static bool AcceptToMemoryPoolWorker(const CChainParams &chainparams, CTxMemPool &pool, CValidationState &state,
                                      const CTransactionRef &ptx,
                                      bool *pfMissingInputs, int64_t nAcceptTime, bool bypass_limits,
                                      const CAmount &nAbsurdFee, std::vector <COutPoint> &coins_to_uncache,
-                                     bool fDryRun) {
+                                     bool fDryRun, const CTxValidationCertificate* certificate) {
     std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
     //boost::posix_time::ptime start = boost::posix_time::microsec_clock::local_time();
     const CTransaction &tx = *ptx;
@@ -804,38 +836,48 @@ static bool AcceptToMemoryPoolWorker(const CChainParams &chainparams, CTxMemPool
             return state.DoS(0, false, REJECT_DUPLICATE, "asset-dup");
         }
 
+        if (certificate && !gArgs.GetBoolArg("-txdecoupling", false))
+            return state.Invalid(false, REJECT_NONSTANDARD, "tx-decoupling-disabled");
+        if (certificate && !CheckTxValidationCertificate(*certificate, tx, view, ::ChainActive().Tip(),
+                                                        chainparams.GetConsensus(), state)) return false;
+
         // If we aren't going to actually accept it but just were verifying it, we are fine already
         if (fDryRun) return true;
 
-        constexpr unsigned int scriptVerifyFlags = STANDARD_SCRIPT_VERIFY_FLAGS;
+        // Smartnodes must execute scripts before InstantSend or validation votes.
+        if (certificate && !fSmartnodeMode) {
+            entry.SetScriptsLocallyValidated(false);
+        } else {
+            constexpr unsigned int scriptVerifyFlags = STANDARD_SCRIPT_VERIFY_FLAGS;
 
-        // Check against previous transactions
-        // This is done last to help prevent CPU exhaustion denial-of-service attacks.
-        PrecomputedTransactionData txdata(tx);
-        if (!CheckInputs(tx, state, view, true, scriptVerifyFlags, true, false, txdata))
-            return false; // state filled in by CheckInputs
+            // Check against previous transactions
+            // This is done last to help prevent CPU exhaustion denial-of-service attacks.
+            PrecomputedTransactionData txdata(tx);
+            if (!CheckInputs(tx, state, view, true, scriptVerifyFlags, true, false, txdata))
+                return false; // state filled in by CheckInputs
 
-        // Check again against the current block tip's script verification
-        // flags to cache our script execution flags. This is, of course,
-        // useless if the next block has different script flags from the
-        // previous one, but because the cache tracks script flags for us it
-        // will auto-invalidate and we'll just have a few blocks of extra
-        // misses on soft-fork activation.
-        //
-        // This is also useful in case of bugs in the standard flags that cause
-        // transactions to pass as valid when they're actually invalid. For
-        // instance the STRICTENC flag was incorrectly allowing certain
-        // CHECKSIG NOT scripts to pass, even though they were invalid.
-        //
-        // There is a similar check in CreateNewBlock() to prevent creating
-        // invalid blocks (using TestBlockValidity), however allowing such
-        // transactions into the mempool can be exploited as a DoS attack.
-        unsigned int currentBlockScriptVerifyFlags = GetBlockScriptFlags(::ChainActive().Tip(),
-                                                                         chainparams.GetConsensus());
-        if (!CheckInputsFromMempoolAndCache(tx, state, view, pool, currentBlockScriptVerifyFlags, true, txdata)) {
-            return error(
-                    "%s: BUG! PLEASE REPORT THIS! CheckInputs failed against latest-block but not STANDARD flags %s, %s",
-                    __func__, hash.ToString(), FormatStateMessage(state));
+            // Check again against the current block tip's script verification
+            // flags to cache our script execution flags. This is, of course,
+            // useless if the next block has different script flags from the
+            // previous one, but because the cache tracks script flags for us it
+            // will auto-invalidate and we'll just have a few blocks of extra
+            // misses on soft-fork activation.
+            //
+            // This is also useful in case of bugs in the standard flags that cause
+            // transactions to pass as valid when they're actually invalid. For
+            // instance the STRICTENC flag was incorrectly allowing certain
+            // CHECKSIG NOT scripts to pass, even though they were invalid.
+            //
+            // There is a similar check in CreateNewBlock() to prevent creating
+            // invalid blocks (using TestBlockValidity), however allowing such
+            // transactions into the mempool can be exploited as a DoS attack.
+            unsigned int currentBlockScriptVerifyFlags = GetBlockScriptFlags(::ChainActive().Tip(),
+                                                                             chainparams.GetConsensus());
+            if (!CheckInputsFromMempoolAndCache(tx, state, view, pool, currentBlockScriptVerifyFlags, true, txdata)) {
+                return error(
+                        "%s: BUG! PLEASE REPORT THIS! CheckInputs failed against latest-block but not STANDARD flags %s, %s",
+                        __func__, hash.ToString(), FormatStateMessage(state));
+            }
         }
 
         // This transaction should only count for fee estimation if:
@@ -896,10 +938,11 @@ static bool AcceptToMemoryPoolWorker(const CChainParams &chainparams, CTxMemPool
 static bool AcceptToMemoryPoolWithTime(const CChainParams &chainparams, CTxMemPool &pool, CValidationState &state,
                                        const CTransactionRef &tx,
                                        bool *pfMissingInputs, int64_t nAcceptTime, bool bypass_limits,
-                                       const CAmount nAbsurdFee, bool fDryRun) {
+                                       const CAmount nAbsurdFee, bool fDryRun,
+                                       const CTxValidationCertificate* certificate = nullptr) {
     std::vector <COutPoint> coins_to_uncache;
     bool res = AcceptToMemoryPoolWorker(chainparams, pool, state, tx, pfMissingInputs, nAcceptTime, bypass_limits,
-                                        nAbsurdFee, coins_to_uncache, fDryRun);
+                                        nAbsurdFee, coins_to_uncache, fDryRun, certificate);
     if (!res || fDryRun) {
         if (!res)
             LogPrint(BCLog::MEMPOOL, "%s: %s %s (%s)\n", __func__, tx->GetHash().ToString(), state.GetRejectReason(),
@@ -914,10 +957,11 @@ static bool AcceptToMemoryPoolWithTime(const CChainParams &chainparams, CTxMemPo
 }
 
 bool AcceptToMemoryPool(CTxMemPool &pool, CValidationState &state, const CTransactionRef &tx,
-                        bool *pfMissingInputs, bool bypass_limits, const CAmount nAbsurdFee, bool fDryRun) {
+                        bool *pfMissingInputs, bool bypass_limits, const CAmount nAbsurdFee, bool fDryRun,
+                        const CTxValidationCertificate* certificate) {
     const CChainParams &chainparams = Params();
     return AcceptToMemoryPoolWithTime(chainparams, pool, state, tx, pfMissingInputs, GetTime(), bypass_limits,
-                                      nAbsurdFee, fDryRun);
+                                      nAbsurdFee, fDryRun, certificate);
 }
 
 bool GetTimestampIndex(const unsigned int &high, const unsigned int &low, std::vector <uint256> &hashes) {
@@ -3032,6 +3076,8 @@ public:
         // the last entry here to make sure the list we return is sane.
         assert(!blocksConnected.back().pindex);
         assert(blocksConnected.back().conflictedTxs->empty());
+        // The trace is complete; later tip callbacks may remove more candidates.
+        m_connNotifyEntryRemoved.disconnect();
         blocksConnected.pop_back();
         return blocksConnected;
     }
