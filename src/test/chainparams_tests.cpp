@@ -13,6 +13,25 @@
 BOOST_FIXTURE_TEST_SUITE(chainparams_tests, BasicTestingSetup
 )
 
+namespace {
+// gArgs is process-global and BasicTestingSetup never resets it, so a test
+// that sets -llmqtestparams and returns without clearing it again leaks the
+// value into every later test in the binary. Six of the seven cases below
+// route CreateChainParams() through BOOST_CHECK_THROW, which already
+// guarantees the cleanup line still runs either way -- but the one valid
+// case does not, so an unexpected future throw there would leave
+// -llmqtestparams=5:3 set for the rest of the process with no obvious
+// cause downstream. A scope guard makes every case safe the same way,
+// rather than leaving just that one case exposed.
+struct ScopedArg {
+    std::string name;
+    ScopedArg(std::string argName, const std::string &value) : name(std::move(argName)) {
+        gArgs.ForceSetArg(name, value);
+    }
+    ~ScopedArg() { gArgs.ForceRemoveArg(name); }
+};
+} // namespace
+
 // Both regtest-only quorum types are meant to be used together on the same DKG
 // cycle. If one is ever given a shorter retention window than the other, whichever
 // quorum forms second loses its DKG contributions first, and cleanup can also
@@ -31,9 +50,8 @@ BOOST_AUTO_TEST_CASE(regtest_llmq_types_share_retention_window) {
 }
 
 BOOST_AUTO_TEST_CASE(llmqtestparams_applies_valid_size_and_threshold) {
-    gArgs.ForceSetArg("-llmqtestparams", "5:3");
+    ScopedArg arg("-llmqtestparams", "5:3");
     auto params = CreateChainParams(CBaseChainParams::REGTEST);
-    gArgs.ForceRemoveArg("-llmqtestparams");
 
     for (const auto type: {Consensus::LLMQ_5_60, Consensus::LLMQ_TEST_V17}) {
         const auto &llmq = params->GetConsensus().llmqs.at(type);
@@ -45,39 +63,33 @@ BOOST_AUTO_TEST_CASE(llmqtestparams_applies_valid_size_and_threshold) {
 }
 
 BOOST_AUTO_TEST_CASE(llmqtestparams_rejects_missing_colon) {
-    gArgs.ForceSetArg("-llmqtestparams", "5");
+    ScopedArg arg("-llmqtestparams", "5");
     BOOST_CHECK_THROW(CreateChainParams(CBaseChainParams::REGTEST), std::runtime_error);
-    gArgs.ForceRemoveArg("-llmqtestparams");
 }
 
 BOOST_AUTO_TEST_CASE(llmqtestparams_rejects_extra_colon) {
-    gArgs.ForceSetArg("-llmqtestparams", "5:3:1");
+    ScopedArg arg("-llmqtestparams", "5:3:1");
     BOOST_CHECK_THROW(CreateChainParams(CBaseChainParams::REGTEST), std::runtime_error);
-    gArgs.ForceRemoveArg("-llmqtestparams");
 }
 
 BOOST_AUTO_TEST_CASE(llmqtestparams_rejects_non_numeric_values) {
-    gArgs.ForceSetArg("-llmqtestparams", "a:b");
+    ScopedArg arg("-llmqtestparams", "a:b");
     BOOST_CHECK_THROW(CreateChainParams(CBaseChainParams::REGTEST), std::runtime_error);
-    gArgs.ForceRemoveArg("-llmqtestparams");
 }
 
 BOOST_AUTO_TEST_CASE(llmqtestparams_rejects_threshold_above_size) {
-    gArgs.ForceSetArg("-llmqtestparams", "2:5");
+    ScopedArg arg("-llmqtestparams", "2:5");
     BOOST_CHECK_THROW(CreateChainParams(CBaseChainParams::REGTEST), std::runtime_error);
-    gArgs.ForceRemoveArg("-llmqtestparams");
 }
 
 BOOST_AUTO_TEST_CASE(llmqtestparams_rejects_zero_size) {
-    gArgs.ForceSetArg("-llmqtestparams", "0:0");
+    ScopedArg arg("-llmqtestparams", "0:0");
     BOOST_CHECK_THROW(CreateChainParams(CBaseChainParams::REGTEST), std::runtime_error);
-    gArgs.ForceRemoveArg("-llmqtestparams");
 }
 
 BOOST_AUTO_TEST_CASE(llmqtestparams_rejects_zero_threshold) {
-    gArgs.ForceSetArg("-llmqtestparams", "5:0");
+    ScopedArg arg("-llmqtestparams", "5:0");
     BOOST_CHECK_THROW(CreateChainParams(CBaseChainParams::REGTEST), std::runtime_error);
-    gArgs.ForceRemoveArg("-llmqtestparams");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
