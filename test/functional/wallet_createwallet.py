@@ -12,7 +12,10 @@ runner lines from a newer upstream without the test.
 
 createwallet's arguments here -- wallet_name, disable_private_keys, blank and
 passphrase -- all exist in this tree (src/wallet/rpcwallet.cpp), as do
-upgradetohd, importmulti and importpubkey, so the test ports across unchanged.
+upgradetohd, importmulti and importpubkey. Two behaviours differ from
+upstream, both noted where they're exercised below: this tree has no guard
+against encrypting a keyless wallet, and it refuses an empty passphrase
+outright rather than warning on it. Neither changes what this test checks.
 """
 
 from test_framework.test_framework import BitcoinTestFramework
