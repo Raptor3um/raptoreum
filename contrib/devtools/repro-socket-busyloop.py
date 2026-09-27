@@ -78,6 +78,20 @@ def version_payload():
 
 
 def thread_cpu(pid, comm):
+    # Linux-only: reads /proc directly rather than shelling out, to keep this script
+    # standard-library-only and dependency-free. There is no equivalent of a per-thread
+    # /proc/<pid>/task/<tid>/stat on macOS or FreeBSD -- the closest equivalents (Mach
+    # thread APIs on macOS, sysctl(3)/libutil on FreeBSD) aren't stdlib-reachable, so this
+    # would need a real platform-specific implementation, not a one-line substitution.
+    # Because the kqueue route this script's --mode sendqueue exercises is exactly the one
+    # that only reproduces on those platforms (net.cpp's kqueue registration, epoll on
+    # Linux is unaffected by that specific bug), this script cannot reproduce THAT route at
+    # all today -- see the kqueue fix's own commit message for how it was verified instead
+    # (built and run directly on real macOS hardware, CPU read via Activity Monitor/top,
+    # not this script).
+    if not sys.platform.startswith("linux"):
+        sys.exit("thread_cpu() reads /proc and only works on Linux; "
+                 "not implemented for sys.platform=%r. See this function's own comment." % sys.platform)
     base = "/proc/%d/task" % pid
     for tid in os.listdir(base):
         try:
