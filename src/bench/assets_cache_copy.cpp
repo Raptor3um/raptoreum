@@ -8,11 +8,16 @@
 //     CAssetsCache assetsCache = *passetsCache.get();
 // unconditionally, on every transaction whether or not it touched an asset.
 // This benchmark isolates the cost of that copy itself, as a function of
-// confirmed asset count -- both to show why paying it unconditionally was
-// wrong, and as a standing regression check: if TxNeedsAssetsCache's guard in
-// validation.cpp is ever removed or narrowed to miss a real asset type, the
-// numbers here are what would silently start being paid again on the payment
-// path.
+// confirmed asset count, to show why paying it unconditionally was wrong.
+//
+// It does NOT exercise AcceptToMemoryPoolWorker or TxNeedsAssetsCache at all
+// -- it constructs the copy directly, every run, regardless of whether the
+// real guard is intact, narrowed, or removed entirely. If that guard ever
+// regresses, these numbers will not move; they show what the cost WOULD be
+// if paid unconditionally, not whether it currently is. The regression check
+// for that is src/test/txvalidation_tests.cpp's
+// tx_mempool_atmp_accepts_ordinary_tx_with_null_assets_cache, which runs a
+// transaction through the real ATMP call site instead.
 //
 // The copy duplicates CAssets' three maps (mapAsset, mapAssetId,
 // mapAssetAddressAmount) plus CAssetsCache's four dirty-tracking sets.
