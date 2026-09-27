@@ -63,8 +63,9 @@ class CheckScriptListTest(unittest.TestCase):
     def test_forgotten_script_aborts_under_ci(self):
         src_dir = self.make_src_dir(["test_forgotten_script.py"])
         self.set_lists()
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(SystemExit) as cm:
             self.run_captured(src_dir=src_dir, fail_on_warn=True)
+        self.assertEqual(cm.exception.code, 1)
 
     # A name in both ALL_SCRIPTS and DISABLED_SCRIPTS would run while
     # claiming to be disabled.
@@ -77,8 +78,9 @@ class CheckScriptListTest(unittest.TestCase):
     def test_script_listed_as_both_registered_and_disabled_aborts_under_ci(self):
         src_dir = self.make_src_dir(["dup.py"])
         self.set_lists(all_scripts=["dup.py"], disabled_scripts=["dup.py"])
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(SystemExit) as cm:
             self.run_captured(src_dir=src_dir, fail_on_warn=True)
+        self.assertEqual(cm.exception.code, 1)
 
     # A NON_SCRIPTS entry (a known non-test file, e.g. combine_logs.py)
     # mistakenly also listed in DISABLED_SCRIPTS is the same mistake by a
@@ -94,8 +96,9 @@ class CheckScriptListTest(unittest.TestCase):
     def test_script_listed_as_both_non_script_and_disabled_aborts_under_ci(self):
         src_dir = self.make_src_dir(["helper.py"])
         self.set_lists(non_scripts=["helper.py"], disabled_scripts=["helper.py"])
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(SystemExit) as cm:
             self.run_captured(src_dir=src_dir, fail_on_warn=True)
+        self.assertEqual(cm.exception.code, 1)
 
     # A DISABLED_SCRIPTS entry whose file has since been deleted should not
     # go unnoticed.
@@ -108,8 +111,9 @@ class CheckScriptListTest(unittest.TestCase):
     def test_stale_disabled_entry_aborts_under_ci(self):
         src_dir = self.make_src_dir([])
         self.set_lists(disabled_scripts=["ghost.py"])
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(SystemExit) as cm:
             self.run_captured(src_dir=src_dir, fail_on_warn=True)
+        self.assertEqual(cm.exception.code, 1)
 
 
 if __name__ == '__main__':
