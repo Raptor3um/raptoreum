@@ -72,7 +72,6 @@ BASE_SCRIPTS = [
     # Scripts that are run by default.
     # Longest test should go first, to favor running tests in parallel
     'feature_dip3_deterministicmns.py', # NOTE: needs dash_hash to pass
-    'feature_block_reward_reallocation.py',
     'feature_llmq_data_recovery.py',
     'wallet_hd.py',
     'wallet_backup.py',
@@ -109,6 +108,8 @@ BASE_SCRIPTS = [
     'rpc_rawtransaction.py',
     'feature_reindex.py',
     # vv Tests less than 30s vv
+    'rpc_blockchain_queries.py',
+    'wallet_address_queries.py',
     'wallet_keypool_topup.py',
     'interface_zmq_dash.py',
     'interface_zmq.py',
@@ -121,6 +122,7 @@ BASE_SCRIPTS = [
     'interface_rest.py',
     'mempool_spend_coinbase.py',
     'mempool_reorg.py',
+    'mempool_expiry.py',
     'mempool_persist.py',
     'wallet_multiwallet.py',
     'wallet_disableprivatekeys.py',
@@ -137,22 +139,27 @@ BASE_SCRIPTS = [
     'feature_addressindex.py',
     'feature_timestampindex.py',
     'feature_spentindex.py',
+    'rpc_dumptxoutset.py',
     'rpc_decodescript.py',
     'rpc_blockchain.py',
     'rpc_deprecated.py',
     'wallet_disable.py',
     'p2p_addr_relay.py',
     'rpc_net.py',
+    'wallet_coinbase_category.py',
     'wallet_keypool.py',
     'wallet_keypool_hd.py',
     'p2p_mempool.py',
     'mining_prioritisetransaction.py',
     'p2p_invalid_block.py',
+    'p2p_invalid_locator.py',
+    'p2p_invalid_messages.py',
     'p2p_invalid_tx.py',
     'feature_versionbits_warning.py',
     'rpc_preciousblock.py',
     'wallet_importprunedfunds.py',
     'rpc_zmq.py',
+    'rpc_setban.py',
     'rpc_signmessage.py',
     'feature_nulldummy.py',
     'wallet_import_rescan.py',
@@ -160,11 +167,20 @@ BASE_SCRIPTS = [
     'rpc_bind.py --ipv6',
     'rpc_bind.py --nonloopback',
     'mining_basic.py',
+    'rpc_help.py',
+    'rpc_misc.py',
+    'interface_rpc.py',
     'rpc_named_arguments.py',
     'wallet_listsinceblock.py',
     'p2p_leak.py',
+    'p2p_leak_tx.py',
+    'p2p_blocksonly.py',
     'p2p_compactblocks.py',
     'p2p_connect_to_devnet.py',
+    'feature_futures.py',
+    'feature_assets.py',
+    'feature_founder_payment.py',
+    'feature_assets_rules.py',
     'feature_sporks.py',
     'rpc_getblockstats.py',
     'wallet_encryption.py',
@@ -172,7 +188,9 @@ BASE_SCRIPTS = [
     'feature_dersig.py',
     'feature_cltv.py',
     'feature_new_quorum_type_activation.py',
-    'feature_governance_objects.py',
+    # feature_governance_objects.py is deliberately not registered here --
+    # see DISABLED_SCRIPTS below, which is what check_script_list() actually
+    # consults (a comment alone doesn't exclude a file from that check).
     'rpc_uptime.py',
     'wallet_resendwallettransactions.py',
     'feature_minchainwork.py',
@@ -190,6 +208,7 @@ BASE_SCRIPTS = [
     'feature_uacomment.py',
     'p2p_unrequested_blocks.py',
     'feature_includeconf.py',
+    'feature_abortnode.py',
     'feature_asmap.py',
     'rpc_deriveaddresses.py',
     'rpc_deriveaddresses.py --usecli',
@@ -230,6 +249,16 @@ EXTENDED_SCRIPTS = [
 
 # Place EXTENDED_SCRIPTS first since it has the 3 longest running tests
 ALL_SCRIPTS = EXTENDED_SCRIPTS + BASE_SCRIPTS
+
+DISABLED_SCRIPTS = [
+    # Real test scripts that live in the functional tests directory but are
+    # deliberately not registered in ALL_SCRIPTS -- distinct from
+    # NON_SCRIPTS below, which is for files that are not test scripts at
+    # all. check_script_list() needs to know about these too, or it reports
+    # each one as accidentally forgotten (and aborts under --ci) rather
+    # than recognising it as a real, intentional exclusion.
+    "feature_governance_objects.py",  # governance is not exercised on Raptoreum
+]
 
 NON_SCRIPTS = [
     # These are python files that live in the functional tests directory, but are not test scripts.
@@ -282,7 +311,6 @@ def main():
     logging.debug("Temporary test directory at %s" % tmpdir)
 
     enable_wallet = config["components"].getboolean("ENABLE_WALLET")
-    enable_utils = config["components"].getboolean("ENABLE_UTILS")
     enable_bitcoind = config["components"].getboolean("ENABLE_BITCOIND")
 
     if config["environment"]["EXEEXT"] == ".exe" and not args.force:
@@ -291,9 +319,9 @@ def main():
         print("Tests currently disabled on Windows by default. Use --force option to enable")
         sys.exit(0)
 
-    if not (enable_wallet and enable_utils and enable_bitcoind):
-        print("No functional tests to run. Wallet, utils, and raptoreumd must all be enabled")
-        print("Rerun `configure` with -enable-wallet, -with-utils and -with-daemon and rerun make")
+    if not (enable_wallet and enable_bitcoind):
+        print("No functional tests to run. Wallet and raptoreumd must both be enabled")
+        print("Rerun `configure` with -enable-wallet and -with-daemon and rerun make")
         sys.exit(0)
 
     # Build list of tests
@@ -601,7 +629,29 @@ def check_script_list(*, src_dir, fail_on_warn):
     not being run by pull-tester.py."""
     script_dir = src_dir + '/test/functional/'
     python_files = set([test_file for test_file in os.listdir(script_dir) if test_file.endswith(".py")])
-    missed_tests = list(python_files - set(map(lambda x: x.split()[0], ALL_SCRIPTS + NON_SCRIPTS)))
+
+    disabled_names = set(map(lambda x: x.split()[0], DISABLED_SCRIPTS))
+    all_names = set(map(lambda x: x.split()[0], ALL_SCRIPTS))
+    non_names = set(map(lambda x: x.split()[0], NON_SCRIPTS))
+
+    # A name registered as both disabled AND (a real test or a known
+    # non-test file) would run -- or be silently accepted as a non-script --
+    # while still being reported everywhere else as intentionally disabled.
+    # print()+sys.exit(1), not assert: this must still fire under
+    # `python -O`/PYTHONOPTIMIZE=1, which strips bare asserts but not this.
+    both = disabled_names & (all_names | non_names)
+    if both:
+        print("%sWARNING!%s Listed in DISABLED_SCRIPTS but also registered elsewhere, so it would not actually be treated as disabled: %s." % (BOLD[1], BOLD[0], str(sorted(both))))
+        if fail_on_warn:
+            sys.exit(1)
+
+    stale_disabled = disabled_names - python_files
+    if stale_disabled:
+        print("%sWARNING!%s DISABLED_SCRIPTS names a file that no longer exists: %s." % (BOLD[1], BOLD[0], str(sorted(stale_disabled))))
+        if fail_on_warn:
+            sys.exit(1)
+
+    missed_tests = list(python_files - (all_names | non_names | disabled_names))
     if len(missed_tests) != 0:
         print("%sWARNING!%s The following scripts are not being run: %s. Check the test lists in test_runner.py." % (BOLD[1], BOLD[0], str(missed_tests)))
         if fail_on_warn:

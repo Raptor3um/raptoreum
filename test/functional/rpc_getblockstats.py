@@ -11,6 +11,7 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
+from decimal import Decimal
 import json
 import os
 
@@ -20,18 +21,6 @@ class GetblockstatsTest(BitcoinTestFramework):
 
     start_height = 101
     max_stat_pos = 2
-    STATS_NEED_TXINDEX = [
-        'avgfee',
-        'avgfeerate',
-        'maxfee',
-        'maxfeerate',
-        'medianfee',
-        'medianfeerate',
-        'minfee',
-        'minfeerate',
-        'totalfee',
-        'utxo_size_inc',
-    ]
 
     def add_options(self, parser):
         parser.add_option('--gen-test-data', dest='gen_test_data',
@@ -52,15 +41,18 @@ class GetblockstatsTest(BitcoinTestFramework):
         return [self.nodes[0].getblockstats(hash_or_height=self.start_height + i) for i in range(self.max_stat_pos+1)]
 
     def generate_test_data(self, filename):
-        self.nodes[0].generate(101)
+        # Regenerate with --gen-test-data. The chain is still in the launch
+        # window at these heights, so a coinbase pays 4 RTM and the amounts
+        # below have to stay well inside a single mature output.
+        self.nodes[0].generate(self.start_height)
 
-        self.nodes[0].sendtoaddress(address=self.nodes[1].getnewaddress(), amount=10, subtractfeefromamount=True)
+        self.nodes[0].sendtoaddress(address=self.nodes[1].getnewaddress(), amount=1, subtractfeefromamount=True)
         self.nodes[0].generate(1)
         self.sync_all()
 
-        self.nodes[0].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=10, subtractfeefromamount=True)
-        self.nodes[0].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=10, subtractfeefromamount=False)
-        self.nodes[1].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=1, subtractfeefromamount=True)
+        self.nodes[0].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=1, subtractfeefromamount=True)
+        self.nodes[0].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=1, subtractfeefromamount=False)
+        self.nodes[1].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=Decimal('0.5'), subtractfeefromamount=True)
         self.sync_all()
         self.nodes[0].generate(1)
 
@@ -106,9 +98,6 @@ class GetblockstatsTest(BitcoinTestFramework):
 
         self.sync_all()
         stats = self.get_stats()
-        expected_stats_noindex = []
-        for stat_row in stats:
-            expected_stats_noindex.append({k: v for k, v in stat_row.items() if k not in self.STATS_NEED_TXINDEX})
 
         # Make sure all valid statistics are included but nothing else is
         expected_keys = self.expected_stats[0].keys()
@@ -126,9 +115,9 @@ class GetblockstatsTest(BitcoinTestFramework):
             stats_by_hash = self.nodes[0].getblockstats(hash_or_height=blockhash)
             assert_equal(stats_by_hash, self.expected_stats[i])
 
-            # Check with the node that has no txindex
-            stats_no_txindex = self.nodes[1].getblockstats(hash_or_height=blockhash, stats=list(expected_stats_noindex[i].keys()))
-            assert_equal(stats_no_txindex, expected_stats_noindex[i])
+            # getblockstats reads the block's undo data, not the transaction
+            # index, so a node without -txindex answers exactly the same.
+            assert_equal(self.nodes[1].getblockstats(hash_or_height=blockhash), self.expected_stats[i])
 
         # Make sure each stat can be queried on its own
         for stat in expected_keys:
@@ -167,9 +156,6 @@ class GetblockstatsTest(BitcoinTestFramework):
         # Make sure we aren't always returning inv_sel_stat as the culprit stat
         assert_raises_rpc_error(-8, 'Invalid selected statistic aaa%s' % inv_sel_stat,
                                 self.nodes[0].getblockstats, hash_or_height=1, stats=['minfee' , 'aaa%s' % inv_sel_stat])
-
-        assert_raises_rpc_error(-8, 'One or more of the selected stats requires -txindex enabled',
-                                self.nodes[1].getblockstats, hash_or_height=self.start_height + self.max_stat_pos)
 
         # Mainchain's genesis block shouldn't be found on regtest
         assert_raises_rpc_error(-5, 'Block not found', self.nodes[0].getblockstats,
