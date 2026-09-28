@@ -11,20 +11,39 @@
 import copy
 from decimal import Decimal
 
-from test_framework.blocktools import create_coinbase
+from test_framework.blocktools import create_coinbase, create_quorum_commitments
 from test_framework.messages import (
     CBlock,
     CBlockHeader,
+    COutPoint,
+    CTransaction,
+    CTxIn,
+    CTxOut,
 )
+from test_framework.script import CScript, CScriptNum, OP_TRUE
 from test_framework.mininode import (
     P2PDataStore,
+    network_thread_start,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    CACHE_HEIGHT,
     assert_equal,
     assert_raises_rpc_error,
     bytes_to_hex_str as b2x,
 )
+
+def assert_submitblock(node, block, result_str_1='invalid', result_str_2='duplicate-invalid'):
+    """Submit a block twice; the second time it must be remembered as invalid.
+
+    Upstream expects the reject reason on the first submit. Here it is the
+    generic "invalid": the header is already known by then, so submitblock
+    takes the !new_block path in rpc/mining.cpp rather than reporting state.
+    """
+    block.solve()
+    assert_equal(result_str_1, node.submitblock(hexdata=b2x(block.serialize())))
+    assert_equal(result_str_2, node.submitblock(hexdata=b2x(block.serialize())))
+
 
 def assert_template(node, block, expect, rehash=True):
     if rehash:
@@ -42,7 +61,7 @@ class MiningTest(BitcoinTestFramework):
 
         self.log.info('getmininginfo')
         mining_info = node.getmininginfo()
-        assert_equal(mining_info['blocks'], 200)
+        assert_equal(mining_info['blocks'], CACHE_HEIGHT)
         assert_equal(mining_info['chain'], self.chain)
         assert_equal(mining_info['currentblocksize'], 0)
         assert_equal(mining_info['currentblocktx'], 0)
@@ -57,10 +76,21 @@ class MiningTest(BitcoinTestFramework):
         assert 'proposal' in tmpl['capabilities']
         assert 'coinbasetxn' not in tmpl
 
-        coinbase_tx = create_coinbase(height=int(tmpl["height"]) + 1)
+        # tmpl["height"] is already the height of the block being built. The
+        # extra +1 inherited from upstream is invisible on a chain that does
+        # not check it, but Raptoreum's CbTx carries the height and rejects a
+        # mismatch with "bad-cbtx-height".
+        coinbase_tx = create_coinbase(height=int(tmpl["height"]))
         # sequence numbers must not be max for nLockTime to have effect
         coinbase_tx.vin[0].nSequence = 2 ** 32 - 2
         coinbase_tx.rehash()
+
+        # round-trip the encoded bip34 block height commitment
+        assert_equal(CScriptNum.decode(coinbase_tx.vin[0].scriptSig), int(tmpl["height"]))
+        # round-trip negative and multi-byte CScriptNums to catch python regression
+        assert_equal(CScriptNum.decode(CScriptNum.encode(CScriptNum(1500))), 1500)
+        assert_equal(CScriptNum.decode(CScriptNum.encode(CScriptNum(-1500))), -1500)
+        assert_equal(CScriptNum.decode(CScriptNum.encode(CScriptNum(-1))), -1)
 
         block = CBlock()
         block.nVersion = tmpl["version"]
@@ -68,7 +98,9 @@ class MiningTest(BitcoinTestFramework):
         block.nTime = tmpl["curtime"]
         block.nBits = int(tmpl["bits"], 16)
         block.nNonce = 0
-        block.vtx = [coinbase_tx]
+        # a block in a DKG mining window needs its (null) commitments, as the
+        # node's own miner would have added them
+        block.vtx = [coinbase_tx] + create_quorum_commitments(node, int(tmpl["height"]))
 
         self.log.info("getblocktemplate: Test valid block")
         assert_template(node, block, None)
@@ -88,16 +120,22 @@ class MiningTest(BitcoinTestFramework):
         self.log.info("getblocktemplate: Test truncated final transaction")
         assert_raises_rpc_error(-22, "Block decode failed", node.getblocktemplate, {'data': b2x(block.serialize()[:-1]), 'mode': 'proposal'})
 
-        self.log.info("getblocktemplate: Test duplicate transaction")
+        self.log.info("getblocktemplate: Test duplicate coinbase")
         bad_block = copy.deepcopy(block)
         bad_block.vtx.append(bad_block.vtx[0])
         assert_template(node, bad_block, 'bad-txns-duplicate')
+        assert_submitblock(node, bad_block, 'invalid', 'invalid')
 
         self.log.info("getblocktemplate: Test invalid transaction")
         bad_block = copy.deepcopy(block)
-        bad_tx = copy.deepcopy(bad_block.vtx[0])
-        bad_tx.vin[0].prevout.hash = 255
-        bad_tx.rehash()
+        # Upstream copies the coinbase and rewrites its input. Raptoreum's
+        # coinbase is a CbTx, so a second one is rejected as bad-cbtx-invalid
+        # before the missing input is ever looked at -- which tests something
+        # else entirely. Append a plain transaction spending nothing instead.
+        bad_tx = CTransaction()
+        bad_tx.vin.append(CTxIn(COutPoint(255, 0)))
+        bad_tx.vout.append(CTxOut(0, CScript([OP_TRUE])))
+        bad_tx.calc_sha256()
         bad_block.vtx.append(bad_tx)
         assert_template(node, bad_block, 'bad-txns-inputs-missingorspent')
 
@@ -106,12 +144,13 @@ class MiningTest(BitcoinTestFramework):
         bad_block.vtx[0].nLockTime = 2 ** 32 - 1
         bad_block.vtx[0].rehash()
         assert_template(node, bad_block, 'bad-txns-nonfinal')
+        assert_submitblock(node, bad_block)
 
         self.log.info("getblocktemplate: Test bad tx count")
         # The tx count is immediately after the block header
         TX_COUNT_OFFSET = 80
         bad_block_sn = bytearray(block.serialize())
-        assert_equal(bad_block_sn[TX_COUNT_OFFSET], 1)
+        assert_equal(bad_block_sn[TX_COUNT_OFFSET], len(block.vtx))
         bad_block_sn[TX_COUNT_OFFSET] += 1
         assert_raises_rpc_error(-22, "Block decode failed", node.getblocktemplate, {'data': b2x(bad_block_sn), 'mode': 'proposal'})
 
@@ -156,7 +195,7 @@ class MiningTest(BitcoinTestFramework):
             return filtered_tips
 
         def chain_tip(b_hash, *, status='headers-only', branchlen=1):
-            return {'hash': b_hash, 'height': 202, 'branchlen': branchlen, 'status': status}
+            return {'hash': b_hash, 'height': int(tmpl["height"]), 'branchlen': branchlen, 'status': status}
         assert chain_tip(block.hash) not in filter_tip_keys(node.getchaintips())
         node.submitheader(hexdata=b2x(block.serialize()))
         assert chain_tip(block.hash) in filter_tip_keys(node.getchaintips())
@@ -195,9 +234,16 @@ class MiningTest(BitcoinTestFramework):
         assert_raises_rpc_error(-25, 'time-too-old', lambda: node.submitheader(hexdata=b2x(CBlockHeader(bad_block_time).serialize())))
 
         # Should ask for the block from a p2p node, if they announce the header as well:
+        # This section was ported from a newer upstream, where the network thread
+        # starts itself and send_blocks_and_test names its node argument "node".
+        # Neither holds in this framework: without the explicit start the socket
+        # is accepted but no message ever flows, and the node never even sees a
+        # version.
         node.add_p2p_connection(P2PDataStore())
+        network_thread_start()
+        node.p2p.wait_for_verack()
         node.p2p.wait_for_getheaders(timeout=5)  # Drop the first getheaders
-        node.p2p.send_blocks_and_test(blocks=[block], node=node)
+        node.p2p.send_blocks_and_test(blocks=[block], rpc=node)
         # Must be active now:
         assert chain_tip(block.hash, status='active', branchlen=0) in filter_tip_keys(node.getchaintips())
 

@@ -7,10 +7,10 @@
 #
 # Test deterministic smartnodes
 #
-from test_framework.blocktools import create_block, create_coinbase, get_masternode_payment
+from test_framework.blocktools import create_block, create_coinbase, get_smartnode_payment
 from test_framework.messages import uint256_to_string
 from test_framework.mininode import CTransaction, ToHex, FromHex, COIN, CCbTx
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SMARTNODE_COLLATERAL, BitcoinTestFramework
 from test_framework.util import *
 
 class Smartnode(object):
@@ -23,8 +23,8 @@ class DIP3Test(BitcoinTestFramework):
         self.setup_clean_chain = True
 
         self.extra_args = ["-budgetparams=10:10:10"]
-        self.extra_args += ["-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"]
-        self.extra_args += ["-dip3params=135:150"]
+        self.extra_args += ["-sporkkey=cVpnZj4dZvRXmBf7Jze1GjpLQb25iKP92GDXUsKdUJTXhXRo2RFA"]
+        self.extra_args += []
 
 
     def setup_network(self):
@@ -49,28 +49,23 @@ class DIP3Test(BitcoinTestFramework):
 
     def run_test(self):
         self.log.info("funding controller node")
-        while self.nodes[0].getbalance() < (self.num_initial_mn + 3) * 1000:
+        while self.nodes[0].getbalance() < (self.num_initial_mn + 3) * SMARTNODE_COLLATERAL:
             self.nodes[0].generate(10) # generate enough for collaterals
         self.log.info("controller node has {} dash".format(self.nodes[0].getbalance()))
 
-        # Make sure we're below block 135 (which activates dip3)
-        self.log.info("testing rejection of ProTx before dip3 activation")
-        assert(self.nodes[0].getblockchaininfo()['blocks'] < 135)
-
+        # No pre-activation phase: DIP0003Enabled is an unconditional bool, so
+        # DIP3 is in force from genesis.
         mns = []
 
-        # prepare mn which should still be accepted later when dip3 activates
-        self.log.info("creating collateral for mn-before-dip3")
+        self.log.info("creating collateral for the first mn")
         before_dip3_mn = self.prepare_mn(self.nodes[0], 1, 'mn-before-dip3')
         self.create_mn_collateral(self.nodes[0], before_dip3_mn)
         mns.append(before_dip3_mn)
 
-        # block 150 starts enforcing DIP3 MN payments
-        self.nodes[0].generate(150 - self.nodes[0].getblockcount())
-        assert(self.nodes[0].getblockcount() == 150)
-
-        self.log.info("mining final block for DIP3 activation")
-        self.nodes[0].generate(1)
+        # Smartnode payments start at nSmartnodePaymentsStartBlock, 240 on
+        # regtest, so get well past it before registering anything.
+        if self.nodes[0].getblockcount() < 250:
+            self.nodes[0].generate(250 - self.nodes[0].getblockcount())
 
         # We have hundreds of blocks to sync here, give it more time
         self.log.info("syncing blocks for all nodes")
@@ -229,30 +224,33 @@ class DIP3Test(BitcoinTestFramework):
 
     def create_mn_collateral(self, node, mn):
         mn.collateral_address = node.getnewaddress()
-        mn.collateral_txid = node.sendtoaddress(mn.collateral_address, 1000)
+        mn.collateral_txid = node.sendtoaddress(mn.collateral_address, SMARTNODE_COLLATERAL)
         mn.collateral_vout = -1
         node.generate(1)
 
         rawtx = node.getrawtransaction(mn.collateral_txid, 1)
         for txout in rawtx['vout']:
-            if txout['value'] == Decimal(1000):
+            if txout['value'] == Decimal(SMARTNODE_COLLATERAL):
                 mn.collateral_vout = txout['n']
                 break
         assert(mn.collateral_vout != -1)
 
     # register a protx MN and also fund it (using collateral inside ProRegTx)
     def register_fund_mn(self, node, mn):
-        node.sendtoaddress(mn.fundsAddr, 1000.001)
+        node.sendtoaddress(mn.fundsAddr, SMARTNODE_COLLATERAL + Decimal('0.001'))
         mn.collateral_address = node.getnewaddress()
         mn.rewards_address = node.getnewaddress()
 
-        mn.protx_hash = node.protx('register_fund', mn.collateral_address, '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, 0, mn.rewards_address, mn.fundsAddr)
+        # Raptoreum's register_fund takes an explicit collateralAmount, which
+        # Dash's signature does not have -- without it every later argument is
+        # shifted by one.
+        mn.protx_hash = node.protx('register_fund', mn.collateral_address, SMARTNODE_COLLATERAL, '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, 0, mn.rewards_address, mn.fundsAddr)
         mn.collateral_txid = mn.protx_hash
         mn.collateral_vout = -1
 
         rawtx = node.getrawtransaction(mn.collateral_txid, 1)
         for txout in rawtx['vout']:
-            if txout['value'] == Decimal(1000):
+            if txout['value'] == Decimal(SMARTNODE_COLLATERAL):
                 mn.collateral_vout = txout['n']
                 break
         assert(mn.collateral_vout != -1)
@@ -276,7 +274,7 @@ class DIP3Test(BitcoinTestFramework):
         self.sync_all()
 
     def spend_mn_collateral(self, mn, with_dummy_input_output=False):
-        return self.spend_input(mn.collateral_txid, mn.collateral_vout, 1000, with_dummy_input_output)
+        return self.spend_input(mn.collateral_txid, mn.collateral_vout, SMARTNODE_COLLATERAL, with_dummy_input_output)
 
     def update_mn_payee(self, mn, payee):
         self.nodes[0].sendtoaddress(mn.fundsAddr, 0.001)
@@ -392,11 +390,8 @@ class DIP3Test(BitcoinTestFramework):
         coinbasevalue += new_fees
 
         if mn_amount is None:
-            realloc_info = get_bip9_status(self.nodes[0], 'realloc')
-            realloc_height = 99999999
-            if realloc_info['status'] == 'active':
-                realloc_height = realloc_info['since']
-            mn_amount = get_masternode_payment(height, coinbasevalue, realloc_height)
+            mn_count = len(self.nodes[0].protx('list', 'valid'))
+            mn_amount = get_smartnode_payment(height, coinbasevalue, mn_count)
         miner_amount = coinbasevalue - mn_amount
 
         outputs = {miner_address: str(Decimal(miner_amount) / COIN)}
@@ -420,6 +415,9 @@ class DIP3Test(BitcoinTestFramework):
 
         coinbase.calc_sha256()
 
+        # No node= here: this function takes the quorum commitments straight
+        # from the block template a few lines below, and create_block adding its
+        # own as well makes the block a duplicate-commitment reject (bad-qc-dup).
         block = create_block(int(tip_hash, 16), coinbase)
         block.vtx += vtx
 

@@ -8,7 +8,7 @@ import time
 
 from test_framework.blocktools import create_block, create_coinbase
 from test_framework.messages import ToHex
-from test_framework.mininode import P2PInterface, mininode_lock
+from test_framework.mininode import P2PInterface, mininode_lock, network_thread_start
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, wait_until
 
@@ -35,6 +35,8 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         node = self.nodes[0]  # alias
 
         node.add_p2p_connection(P2PStoreTxInvs())
+        network_thread_start()
+        node.p2p.wait_for_verack()
 
         self.log.info("Create a new transaction and wait until it's broadcast")
         txid = int(node.sendtoaddress(node.getnewaddress(), 1), 16)
@@ -53,6 +55,7 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
 
         # Add a second peer since txs aren't rebroadcast to the same peer (see filterInventoryKnown)
         node.add_p2p_connection(P2PStoreTxInvs())
+        node.p2ps[1].wait_for_verack()
 
         self.log.info("Create a block")
         # Create and submit a block without the transaction.
@@ -60,7 +63,8 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         # after the last time we tried to broadcast. Use mocktime and give an extra minute to be sure.
         block_time = self.mocktime + 6 * 60
         node.setmocktime(block_time)
-        block = create_block(int(node.getbestblockhash(), 16), create_coinbase(node.getblockchaininfo()['blocks']), block_time)
+        block = create_block(int(node.getbestblockhash(), 16),
+                             create_coinbase(node.getblockcount() + 1), block_time, node=node)
         block.nVersion = 3
         block.rehash()
         block.solve()
