@@ -33,7 +33,7 @@ class IncludeConfTest(BitcoinTestFramework):
         # - tmpdir/node0/relative2.conf
         with open(os.path.join(self.options.tmpdir, "node0", "relative2.conf"), "w", encoding="utf8") as f:
             f.write("uacomment=relative2\n")
-        with open(os.path.join(self.options.tmpdir, "node0", "dash.conf"), "a", encoding='utf8') as f:
+        with open(os.path.join(self.options.tmpdir, "node0", "raptoreum.conf"), "a", encoding='utf8') as f:
             f.write("uacomment=main\nincludeconf=relative.conf\n")
 
     def run_test(self):
@@ -44,7 +44,7 @@ class IncludeConfTest(BitcoinTestFramework):
 
         self.log.info("-includeconf cannot be used as command-line arg")
         self.stop_node(0)
-        self.nodes[0].assert_start_raises_init_error(extra_args=["-includeconf=relative2.conf"], expected_msg="Error parsing command line arguments: -includeconf cannot be used from command line; -includeconf=relative2.conf")
+        self.nodes[0].assert_start_raises_init_error(extra_args=["-includeconf=relative2.conf"], expected_msg="Error: Error parsing command line arguments: -includeconf can not be used from commandline. Ignoring -includeconf=relative2.conf")
 
         self.log.info("-includeconf cannot be used recursively. subversion should end with 'main; relative)/'")
         with open(os.path.join(self.options.tmpdir, "node0", "relative.conf"), "a", encoding="utf8") as f:
@@ -53,16 +53,23 @@ class IncludeConfTest(BitcoinTestFramework):
 
         subversion = self.nodes[0].getnetworkinfo()["subversion"]
         assert subversion.endswith("main; relative)/")
-        self.stop_node(0, expected_stderr="warning: -includeconf cannot be used from included files; ignoring -includeconf=relative2.conf")
+        self.stop_node(0, expected_stderr="Warning: -includeconf cannot be used from included files. Ignoring -includeconf=relative2.conf")
 
-        self.log.info("-includeconf cannot contain invalid arg")
+        self.log.info("an unknown -includeconf arg is ignored, not fatal")
+        # raptoreumd.cpp calls ReadConfigFiles(error, /* ignore_invalid_keys */ true),
+        # so an unrecognised key anywhere in the config is logged and skipped
+        # rather than refused. A typo in raptoreum.conf is therefore silent.
         with open(os.path.join(self.options.tmpdir, "node0", "relative.conf"), "w", encoding="utf8") as f:
             f.write("foo=bar\n")
-        self.nodes[0].assert_start_raises_init_error(expected_msg="Error reading configuration file: Invalid configuration value foo")
+        self.start_node(0)
+        assert_equal(self.nodes[0].getnetworkinfo()["subversion"].endswith("main)/"), True)
+        self.stop_node(0)
+        with open(os.path.join(self.nodes[0].datadir, "regtest", "debug.log"), encoding="utf8") as f:
+            assert "Ignoring unknown configuration value foo" in f.read()
 
         self.log.info("-includeconf cannot be invalid path")
         os.remove(os.path.join(self.options.tmpdir, "node0", "relative.conf"))
-        self.nodes[0].assert_start_raises_init_error(expected_msg="Error reading configuration file: Failed to include configuration file relative.conf")
+        self.nodes[0].assert_start_raises_init_error(expected_msg="Error: Error reading configuration file: Failed to include configuration file relative.conf")
 
         self.log.info("multiple -includeconf args can be used from the base config file. subversion should end with 'main; relative; relative2)/'")
         with open(os.path.join(self.options.tmpdir, "node0", "relative.conf"), "w", encoding="utf8") as f:
