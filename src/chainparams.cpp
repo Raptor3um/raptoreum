@@ -219,7 +219,7 @@ public:
 
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S(
-                "ox6fb0b649723f51b67484019409fef94d077f17c8d88645e08c000b2e4fd3e28a"); // block hash for 421457
+                "0x6fb0b649723f51b67484019409fef94d077f17c8d88645e08c000b2e4fd3e28a"); // block hash for 421457
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
