@@ -1291,21 +1291,29 @@ UniValue BuildDMNListEntry(CWallet *pwallet, const CDeterministicMNCPtr &dmn, bo
     o.pushKV("confirmations", confirmations);
 
 #ifdef ENABLE_WALLET
-    bool hasOwnerKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDOwner);
-    bool hasVotingKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDVoting);
-
-    bool ownsCollateral = false;
-    uint256 tmpHashBlock;
-    CTransactionRef collateralTx = GetTransaction(/* block_index */ nullptr, /* mempool */ nullptr, dmn->collateralOutpoint.hash, Params().GetConsensus(), tmpHashBlock);
-    if (collateralTx) {
-        ownsCollateral = CheckWalletOwnsScript(pwallet, collateralTx->vout[dmn->collateralOutpoint.n].scriptPubKey);
-    }
-
+    // All of this is only reported when a wallet is available, so skip it
+    // entirely otherwise instead of computing it and throwing it away.
     if (pwallet) {
+        bool ownsCollateral = false;
+        // The collateral of a smartnode in the list is normally unspent, so it can
+        // be read straight from the UTXO set. Falling back to GetTransaction() (a
+        // txindex lookup plus a block file read) is only needed when listing at a
+        // historical height at which the collateral has since been spent.
+        Coin coin;
+        if (GetUTXOCoin(dmn->collateralOutpoint, coin)) {
+            ownsCollateral = CheckWalletOwnsScript(pwallet, coin.out.scriptPubKey);
+        } else {
+            uint256 tmpHashBlock;
+            CTransactionRef collateralTx = GetTransaction(/* block_index */ nullptr, /* mempool */ nullptr, dmn->collateralOutpoint.hash, Params().GetConsensus(), tmpHashBlock);
+            if (collateralTx && dmn->collateralOutpoint.n < collateralTx->vout.size()) {
+                ownsCollateral = CheckWalletOwnsScript(pwallet, collateralTx->vout[dmn->collateralOutpoint.n].scriptPubKey);
+            }
+        }
+
         UniValue walletObj(UniValue::VOBJ);
-        walletObj.pushKV("hasOwnerKey", hasOwnerKey);
+        walletObj.pushKV("hasOwnerKey", CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDOwner));
         walletObj.pushKV("hasOperatorKey", false);
-        walletObj.pushKV("hasVotingKey", hasVotingKey);
+        walletObj.pushKV("hasVotingKey", CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDVoting));
         walletObj.pushKV("ownsCollateral", ownsCollateral);
         walletObj.pushKV("ownsPayeeScript", CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptPayout));
         walletObj.pushKV("ownsOperatorRewardScript", CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptOperatorPayout));

@@ -525,24 +525,6 @@ CGovernanceManager::GetCurrentVotes(const uint256 &nParentHash, const COutPoint 
     return vecResult;
 }
 
-std::vector <CGovernanceObject> CGovernanceManager::GetAllNewerThan(int64_t nMoreThanTime) const {
-    LOCK(cs);
-
-    std::vector <CGovernanceObject> vGovObjs;
-
-    for (const auto &objPair: mapObjects) {
-        // IF THIS OBJECT IS OLDER THAN TIME, CONTINUE
-        if (objPair.second.GetCreationTime() < nMoreThanTime) {
-            continue;
-        }
-
-        // ADD GOVERNANCE OBJECT TO LIST
-        vGovObjs.push_back(objPair.second);
-    }
-
-    return vGovObjs;
-}
-
 //
 // Sort by votes, if there's a tie sort by their feeHash TX
 //

@@ -245,7 +245,19 @@ public:
     std::vector <CGovernanceVote>
     GetCurrentVotes(const uint256 &nParentHash, const COutPoint &mnCollateralOutpointFilter) const;
 
-    std::vector <CGovernanceObject> GetAllNewerThan(int64_t nMoreThanTime) const;
+    // Hands every object created at or after nMoreThanTime to the callback by
+    // reference. Replaces the former GetAllNewerThan(), which copied every object
+    // (and all of its votes) into a vector just for the caller to read them.
+    template<typename Callable>
+    void ForEachObjectNewerThan(int64_t nMoreThanTime, Callable &&func) const {
+        LOCK(cs);
+        for (const auto &objPair: mapObjects) {
+            if (objPair.second.GetCreationTime() < nMoreThanTime) {
+                continue;
+            }
+            func(objPair.second);
+        }
+    }
 
     void AddGovernanceObject(CGovernanceObject &govobj, CConnman &connman, CNode *pfrom = nullptr);
 
