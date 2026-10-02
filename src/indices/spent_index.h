@@ -367,16 +367,18 @@ struct CAddressIndexIteratorKey {
 struct CAddressIndexIteratorHeightKey {
     unsigned int type;
     uint160 hashBytes;
-    int blockHeight;
+    std::string asset;
+    uint32_t blockHeight;
 
     size_t GetSerializeSize(int nType, int nVersion) const {
-        return 25;
+        return 25 + ::GetSerializeSize(asset, nType, nVersion);
     }
 
     template<typename Stream>
     void Serialize(Stream &s) const {
         ser_writedata8(s, type);
         hashBytes.Serialize(s);
+        ::Serialize(s, asset);
         ser_writedata32be(s, blockHeight);
     }
 
@@ -384,12 +386,15 @@ struct CAddressIndexIteratorHeightKey {
     void Unserialize(Stream &s) {
         type = ser_readdata8(s);
         hashBytes.Unserialize(s);
+        ::Unserialize(s, asset);
         blockHeight = ser_readdata32be(s);
     }
 
-    CAddressIndexIteratorHeightKey(unsigned int addressType, uint160 addressHash, int height) {
+    CAddressIndexIteratorHeightKey(unsigned int addressType, uint160 addressHash, const std::string& assetId,
+                                   uint32_t height) {
         type = addressType;
         hashBytes = addressHash;
+        asset = assetId;
         blockHeight = height;
     }
 
@@ -400,6 +405,7 @@ struct CAddressIndexIteratorHeightKey {
     void SetNull() {
         type = 0;
         hashBytes.SetNull();
+        asset.clear();
         blockHeight = 0;
     }
 };
