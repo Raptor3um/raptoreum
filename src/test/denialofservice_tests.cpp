@@ -19,6 +19,11 @@
 
 #include <stdint.h>
 
+#ifdef USE_WAKEUP_PIPE
+#include <fcntl.h>
+#include <unistd.h>
+#endif
+
 #include <boost/test/unit_test.hpp>
 
 struct CConnmanTest : public CConnman {
@@ -36,6 +41,34 @@ struct CConnmanTest : public CConnman {
         }
         vNodes.clear();
     }
+
+#ifdef USE_WAKEUP_PIPE
+    // CConnman's own wakeupPipe is only opened by Start(), which also spins up the real
+    // network threads -- too heavy for a unit test. Wire a private pipe into the same
+    // member instead, so WakeSelect() has somewhere to write and a test can observe it.
+    void SetupWakeupPipeForTest() {
+        int fds[2];
+        if (pipe(fds) == 0) {
+            wakeupPipe[0] = fds[0];
+            wakeupPipe[1] = fds[1];
+            // Non-blocking read end: a test asking whether a wakeup happened must get an
+            // answer either way, not block forever when the code under test failed to write.
+            int flags = fcntl(wakeupPipe[0], F_GETFL, 0);
+            fcntl(wakeupPipe[0], F_SETFL, flags | O_NONBLOCK);
+        }
+    }
+
+    bool WakeupPipeSignaled() {
+        char buf;
+        return read(wakeupPipe[0], &buf, 1) == 1;
+    }
+
+    ~CConnmanTest() {
+        if (wakeupPipe[0] != -1) close(wakeupPipe[0]);
+        if (wakeupPipe[1] != -1) close(wakeupPipe[1]);
+        wakeupPipe[0] = wakeupPipe[1] = -1;
+    }
+#endif
 };
 
 // Tests these internal-to-net_processing.cpp methods:
@@ -446,5 +479,99 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         LimitOrphanTxSize(0);
         BOOST_CHECK(mapOrphanTransactions.empty());
         }
+
+#ifdef USE_WAKEUP_PIPE
+// Regression test: ProcessMessages() must call CConnman::WakeSelect() the moment a peer's
+// fPauseRecv clears, or the socket thread does not learn a paused peer is drainable again
+// until its next SELECT_TIMEOUT_MILLISECONDS wakeup (see net_processing.cpp). Unlike the
+// HasUnpausedReceivableNode() predicate covered in net_tests.cpp, this checks the actual
+// WakeSelect() call site: deleting it, while leaving the surrounding logic untouched, would
+// not be caught by a test of the predicate alone.
+BOOST_AUTO_TEST_CASE(process_messages_wakes_select_on_unpause)
+        {
+                auto connman = MakeUnique<CConnmanTest>(0x1337, 0x1337);
+        connman->SetupWakeupPipeForTest();
+        auto peerLogic = MakeUnique<PeerLogicValidation>(connman.get(), nullptr, *m_node.scheduler, *m_node.chainman, *m_node.mempool, false);
+
+        CAddress addr(ip(0xa0b0c002), NODE_NONE);
+        CNode node(id++, ServiceFlags(NODE_NETWORK), 0, INVALID_SOCKET, addr, 0, 0, CAddress(), "", /*fInboundIn=*/ true);
+        node.SetSendVersion(PROTOCOL_VERSION);
+        peerLogic->InitializeNode(&node);
+        node.nVersion = 1;
+        node.fSuccessfullyConnected = true;
+
+        // A message start that matches no configured network. ProcessMessages() disconnects
+        // on it right after the wake_select check, before it would touch validation or the
+        // mempool -- exactly the boundary this test needs to stay inside.
+        CMessageHeader::MessageStartChars badStart = {0, 0, 0, 0};
+        CNetMessage msg(badStart, SER_NETWORK, node.GetRecvVersion());
+        const size_t queued_size = msg.vRecv.size() + CMessageHeader::HEADER_SIZE;
+
+        node.fPauseRecv = true;
+        // Default-constructed CConnman has a 0-byte receive flood size, so dropping the
+        // queue to exactly 0 (not merely below the flood size) is what flips fPauseRecv.
+        node.nProcessQueueSize = queued_size;
+        {
+            LOCK(node.cs_vProcessMsg);
+            node.vProcessMsg.push_back(std::move(msg));
+        }
+
+        std::atomic<bool> interrupt{false};
+        peerLogic->ProcessMessages(&node, interrupt);
+
+        BOOST_CHECK(!node.fPauseRecv);
+        BOOST_CHECK(connman->WakeupPipeSignaled());
+
+        bool dummy;
+        peerLogic->FinalizeNode(node.GetId(), dummy);
+        }
+
+// Companion to process_messages_wakes_select_on_unpause: that test alone would still pass
+// if WakeSelect() were called unconditionally on every processed message rather than only
+// on a genuine pause->unpause transition, since it never checks the non-paused case. Confirm
+// a peer that was never paused leaves the wakeup pipe unsignaled after the same message is
+// processed.
+BOOST_AUTO_TEST_CASE(process_messages_does_not_wake_select_when_nothing_was_paused)
+        {
+                auto connman = MakeUnique<CConnmanTest>(0x1337, 0x1337);
+        connman->SetupWakeupPipeForTest();
+        auto peerLogic = MakeUnique<PeerLogicValidation>(connman.get(), nullptr, *m_node.scheduler, *m_node.chainman, *m_node.mempool, false);
+
+        CAddress addr(ip(0xa0b0c003), NODE_NONE);
+        CNode node(id++, ServiceFlags(NODE_NETWORK), 0, INVALID_SOCKET, addr, 0, 0, CAddress(), "", /*fInboundIn=*/ true);
+        node.SetSendVersion(PROTOCOL_VERSION);
+        peerLogic->InitializeNode(&node);
+        node.nVersion = 1;
+        node.fSuccessfullyConnected = true;
+
+        // Same message shape as the sibling test -- disconnects right after the wake_select
+        // check, before touching validation or the mempool. nProcessQueueSize must still be
+        // set to match the message's own size, mirroring what the real receive path would
+        // have added when queuing it: ProcessMessages unconditionally SUBTRACTS this same
+        // amount when it pops the message (net_processing.cpp), so leaving it at the
+        // default 0 underflows (nProcessQueueSize is size_t) into a huge value, which then
+        // reads as over the flood size and spuriously pauses the peer -- exactly the
+        // pause/wake transition this test exists to rule out, not induce.
+        CMessageHeader::MessageStartChars badStart = {0, 0, 0, 0};
+        CNetMessage msg(badStart, SER_NETWORK, node.GetRecvVersion());
+        const size_t queued_size = msg.vRecv.size() + CMessageHeader::HEADER_SIZE;
+        node.nProcessQueueSize = queued_size;
+        {
+            LOCK(node.cs_vProcessMsg);
+            node.vProcessMsg.push_back(std::move(msg));
+        }
+
+        BOOST_REQUIRE(!node.fPauseRecv);
+
+        std::atomic<bool> interrupt{false};
+        peerLogic->ProcessMessages(&node, interrupt);
+
+        BOOST_CHECK(!node.fPauseRecv);
+        BOOST_CHECK(!connman->WakeupPipeSignaled());
+
+        bool dummy;
+        peerLogic->FinalizeNode(node.GetId(), dummy);
+        }
+#endif // USE_WAKEUP_PIPE
 
 BOOST_AUTO_TEST_SUITE_END()

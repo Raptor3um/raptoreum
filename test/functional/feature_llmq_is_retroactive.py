@@ -5,7 +5,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.mininode import *
-from test_framework.test_framework import DashTestFramework
+from test_framework.test_framework import RaptoreumTestFramework
 from test_framework.util import set_node_times, isolate_node, reconnect_isolated_node
 
 '''
@@ -22,15 +22,22 @@ class LLMQ_IS_RetroactiveSigning(RaptoreumTestFramework):
     def set_test_params(self):
         # -whitelist is needed to avoid the trickling logic on node0
         self.set_raptoreum_test_params(6, 5, [["-whitelist=127.0.0.1"], [], [], [], ["-minrelaytxfee=0.001"], ["-minrelaytxfee=0.001"]], fast_dip3_enforcement=True)
+        # Size the quorum to all five smartnodes, as upstream does. Otherwise it
+        # is llmq_test's default three drawn from the five, so whether the
+        # isolated node is a member changes per run and the cases below, all
+        # written for five members, fail in different places each time.
+        self.set_raptoreum_llmq_test_params(5, 3)
 
     def run_test(self):
-        while self.nodes[0].getblockchaininfo()["bip9_softforks"]["dip0008"]["status"] != "active":
-            self.nodes[0].generate(10)
+        self.wait_for_dip8_activation()
         self.sync_blocks(self.nodes, timeout=60*5)
 
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
-        self.nodes[0].spork("SPORK_2_INSTANTSEND_ENABLED", 0)
+        # 1, not upstream's 0: the spork carries two meanings. IsSporkActive is
+        # value < now, so 1 leaves InstantSend on, while mempool signing wants
+        # exactly 0. The first case below needs signing off.
+        self.nodes[0].spork("SPORK_2_INSTANTSEND_ENABLED", 1)
         self.nodes[0].spork("SPORK_3_INSTANTSEND_BLOCK_FILTERING", 0)
         self.wait_for_sporks_same()
 

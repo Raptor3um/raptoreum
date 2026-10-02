@@ -137,7 +137,11 @@ UniValue importprivkey(const JSONRPCRequest &request) {
         CKeyID vchAddress = pubkey.GetID();
         {
             pwallet->MarkDirty();
-            pwallet->SetAddressBook(vchAddress, strLabel, "receive");
+
+            // Only touch the address book if a label was given or there is none yet.
+            if (!request.params[1].isNull() || pwallet->mapAddressBook.count(vchAddress) == 0) {
+                pwallet->SetAddressBook(vchAddress, strLabel, "receive");
+            }
 
             // Don't throw error in case a key is already there
             if (pwallet->HaveKey(vchAddress)) {
@@ -715,11 +719,13 @@ UniValue importelectrumwallet(const JSONRPCRequest &request) {
 
     fsbridge::ifstream file;
     std::string strFileName = request.params[0].get_str();
-    size_t nDotPos = strFileName.find_last_of(".");
-    if (nDotPos == std::string::npos)
+    // The extension belongs to the file name, not to the path: a directory such
+    // as "2.0.3" or ".raptoreum" would otherwise supply one.
+    std::string strFileExt = fs::path(strFileName).extension().string();
+    if (strFileExt.empty())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "File has no extension, should be .json or .csv");
+    strFileExt.erase(0, 1); // extension() keeps the dot; the parser below compares without it
 
-    std::string strFileExt = strFileName.substr(nDotPos + 1);
     if (strFileExt != "json" && strFileExt != "csv")
         throw JSONRPCError(RPC_INVALID_PARAMETER, "File has wrong extension, should be .json or .csv");
 
@@ -1325,9 +1331,11 @@ static UniValue ProcessImportDescriptor(ImportData &import_data, std::map <CKeyI
 
     // Expand all descriptors to get public keys and scripts.
     // TODO: get private keys from descriptors too
-    for (int i = range_start; i <= range_end; ++i) {
+    // Same INT_MAX overflow as deriveaddresses (src/rpc/misc.cpp) -- i must
+    // be widened past int to test the loop condition there.
+    for (int64_t i = range_start; i <= range_end; ++i) {
         std::vector <CScript> scripts_temp;
-        parsed_desc->Expand(i, keys, scripts_temp, out_keys);
+        parsed_desc->Expand(static_cast<int>(i), keys, scripts_temp, out_keys);
         std::copy(scripts_temp.begin(), scripts_temp.end(), std::inserter(script_pub_keys, script_pub_keys.end()));
     }
 

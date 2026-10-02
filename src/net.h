@@ -31,6 +31,7 @@
 #include <thread>
 #include <memory>
 #include <condition_variable>
+#include <unordered_map>
 #include <unordered_set>
 #include <queue>
 
@@ -148,6 +149,23 @@ struct CSerializedNetMsg {
 
 
 class NetEventsInterface;
+
+/**
+ * Does any node in `receivable_nodes` have receive work that can actually be done?
+ *
+ * A node enters mapReceivableNodes when its socket signals readable and leaves only once
+ * SocketRecvData() drains it. But the receive path will not drain a node unless it is
+ * unpaused, has an empty send queue, and is not disconnecting -- the same three conditions
+ * tested in ThreadSocketHandler(). A node failing any of them lingers in the set with its
+ * readable flag set and is never read.
+ *
+ * SocketHandler() treats a non-empty receivable set as a reason to skip waiting and poll
+ * with a zero timeout. If the set holds only nodes that will not be read, that poll returns
+ * nothing and is immediately repeated, and the socket thread spins at 100% of a core for as
+ * long as the condition lasts -- which a remote peer can sustain. This predicate must
+ * therefore stay in exact agreement with the receive path's own test.
+ */
+bool HasUnpausedReceivableNode(const std::unordered_map<NodeId, CNode *> &receivable_nodes);
 
 class CConnman {
     friend class CNode;

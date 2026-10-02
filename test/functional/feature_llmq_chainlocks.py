@@ -19,7 +19,10 @@ Checks LLMQs based ChainLocks
 
 class LLMQChainLocksTest(RaptoreumTestFramework):
     def set_test_params(self):
-        self.set_raptoreum_test_params(6, 5, fast_dip3_enforcement=True)
+        # Three smartnodes for a quorum of three, matching upstream. With five,
+        # only three take part in each session and the smartnodes this test
+        # acts on are often not among them.
+        self.set_raptoreum_test_params(4, 3, fast_dip3_enforcement=True)
 
     def run_test(self):
 
@@ -32,8 +35,7 @@ class LLMQChainLocksTest(RaptoreumTestFramework):
 
         self.log.info("Wait for dip0008 activation")
 
-        while self.nodes[0].getblockchaininfo()["bip9_softforks"]["dip0008"]["status"] != "active":
-            self.nodes[0].generate(10)
+        self.wait_for_dip8_activation()
         self.sync_blocks(self.nodes, timeout=60*5)
 
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
@@ -133,8 +135,10 @@ class LLMQChainLocksTest(RaptoreumTestFramework):
         assert(self.nodes[0].getbestblockhash() == good_tip)
 
         self.log.info("Isolate a node and let it create some transactions which won't get IS locked")
-        force_finish_mnsync(self.nodes[0])
         isolate_node(self.nodes[0])
+        # After isolating, not before: setnetworkactive(False) resets the sync,
+        # and RejectConflictingBlocks returns false while unsynced.
+        force_finish_mnsync(self.nodes[0])
         txs = []
         for i in range(3):
             txs.append(self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1))
