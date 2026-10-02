@@ -135,6 +135,7 @@ BASE_SCRIPTS = [
     'wallet_groups.py',
     'p2p_disconnect_ban.py',
     'feature_addressindex.py',
+    'rpc_getaddressdeltas.py',
     'feature_timestampindex.py',
     'feature_spentindex.py',
     'rpc_decodescript.py',

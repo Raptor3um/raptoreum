@@ -908,6 +908,10 @@ UniValue getaddressutxos(const JSONRPCRequest &request) {
 UniValue getaddressdeltas(const JSONRPCRequest &request) {
     RPCHelpMan{"getaddressdeltas",
                "\nReturns all changes for an address (requires addressindex to be enabled).\n"
+               "Deltas are ordered by block height, then transaction position in the block,\n"
+               "including across multiple addresses and assets.\n"
+               "Pagination is not a snapshot. New blocks only append deltas, so advancing skip\n"
+               "is stable unless a reorg occurs between calls.\n"
                "\nThe request object also accepts the following optional fields:\n"
                "  \"start\"  (numeric) only return deltas at or above this block height\n"
                "  \"end\"    (numeric) only return deltas at or below this block height\n"
@@ -933,7 +937,7 @@ UniValue getaddressdeltas(const JSONRPCRequest &request) {
                                         {RPCResult::Type::NUM, "index", "The related input or output index"},
                                         {RPCResult::Type::NUM, "blockindex", "The related block index"},
                                         {RPCResult::Type::NUM, "height", "The block height"},
-                                        {RPCResult::Type::NUM_TIME, "timestamp", "The block time in " + UNIX_EPOCH_TIME},
+                                        {RPCResult::Type::NUM_TIME, "timestamp", "The block time in " + UNIX_EPOCH_TIME + ", or 0 if the height is no longer in the active chain"},
                                         {RPCResult::Type::STR, "address", "The base58check encoded address"},
                                 }},
                        }},
@@ -970,7 +974,7 @@ UniValue getaddressdeltas(const JSONRPCRequest &request) {
         }
     }
 
-    // Optional pagination over the (height-ordered) deltas (issue #433): "skip"
+    // Optional pagination over the asset-filtered deltas (issue #433): "skip"
     // drops that many leading entries and "count" caps how many are returned, so
     // callers no longer have to fetch and trim the whole history client-side.
     int skip = 0;
@@ -1011,26 +1015,48 @@ UniValue getaddressdeltas(const JSONRPCRequest &request) {
         }
     }
 
-    UniValue result(UniValue::VARR);
+    if (addresses.size() > 1 || assetId == "*") {
+        std::stable_sort(addressIndex.begin(), addressIndex.end(), [](const auto& a, const auto& b) {
+            return std::tie(a.first.blockHeight, a.first.txindex) < std::tie(b.first.blockHeight, b.first.txindex);
+        });
+    }
 
-    // Hold cs_main while mapping block heights to block times (issue #434): the
-    // active chain must stay stable for the duration of the lookups.
-    LOCK(cs_main);
-
-    int matched = 0;   // deltas passing the asset filter (pagination is applied here)
-    int emitted = 0;   // deltas actually pushed into the result
-    for (std::vector < std::pair < CAddressIndexKey, CAmount > > ::const_iterator it = addressIndex.begin(); it !=
-                                                                                                             addressIndex.end();
-    it++) {
+    std::vector<decltype(addressIndex)::const_iterator> selected;
+    std::map<int, int64_t> blockTimes;
+    std::map<std::string, std::string> assetNames;
+    for (auto it = addressIndex.cbegin(); it != addressIndex.cend(); ++it) {
         if (it->first.asset != assetId && assetId != "*")
             continue;
-
-        // Apply skip/count pagination over the asset-filtered, height-ordered set.
-        if (matched++ < skip)
+        if (skip > 0) {
+            --skip;
             continue;
-        if (count > 0 && emitted >= count)
+        }
+        selected.push_back(it);
+        blockTimes.emplace(it->first.blockHeight, 0);
+        if (it->first.asset != "RTM")
+            assetNames.emplace(it->first.asset, "");
+        if (count > 0 && selected.size() >= static_cast<size_t>(count))
             break;
+    }
 
+    // Resolve distinct heights and asset names under the chain/cache lock.
+    {
+        LOCK(cs_main);
+        for (auto& entry : blockTimes) {
+            const CBlockIndex* pblockindex = ::ChainActive()[entry.first];
+            entry.second = pblockindex ? pblockindex->GetBlockTime() : 0;
+        }
+        for (auto& entry : assetNames) {
+            CAssetMetaData metadata;
+            if (!passetsCache->GetAssetMetaData(entry.first, metadata)) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset asset metadata not found");
+            }
+            entry.second = metadata.name;
+        }
+    }
+
+    UniValue result(UniValue::VARR);
+    for (const auto it : selected) {
         std::string address;
         if (!getAddressFromIndex(it->first.type, it->first.hashBytes, address)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unknown address type");
@@ -1038,24 +1064,17 @@ UniValue getaddressdeltas(const JSONRPCRequest &request) {
 
         UniValue delta(UniValue::VOBJ);
         delta.pushKV("satoshis", it->second);
-        if (it->first.asset != "RTM"){
-            CAssetMetaData tmpAsset;
-            if (!passetsCache->GetAssetMetaData(it->first.asset, tmpAsset)) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Asset asset metadata not found");
-            }
-            delta.pushKV("asset", tmpAsset.name);
+        if (it->first.asset != "RTM") {
+            delta.pushKV("asset", assetNames.at(it->first.asset));
             delta.pushKV("assetId", it->first.asset);
         }
         delta.pushKV("txid", it->first.txhash.GetHex());
         delta.pushKV("index", (int) it->first.index);
         delta.pushKV("blockindex", (int) it->first.txindex);
         delta.pushKV("height", it->first.blockHeight);
-        // Surface the block timestamp so callers don't need a second lookup (issue #434).
-        CBlockIndex* pblockindex = ::ChainActive()[it->first.blockHeight];
-        delta.pushKV("timestamp", pblockindex ? pblockindex->GetBlockTime() : 0);
+        delta.pushKV("timestamp", blockTimes.at(it->first.blockHeight));
         delta.pushKV("address", address);
         result.push_back(delta);
-        emitted++;
     }
 
     return result;
