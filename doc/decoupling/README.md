@@ -34,7 +34,7 @@ The functional scenarios below set up the real quorum and required public commit
 
 Indexes and dependencies always refer to the complete block, with coinbase at zero. A certificate manifest binds these positions; obey the returned `mutable` contract. The ordinary template omits candidates that have only delegated script provenance. Without selected references, even an opt-in call returns the ordinary schema.
 
-Work leases retain complete bodies for up to 600 seconds, subject to eight-template/32-MiB limits. An expired workid can no longer retrieve its bodies. Submission can still reconstruct from current local sources; otherwise it returns `status=incomplete` with exact missing positions and IDs. A lease does not make a stale-parent block valid.
+Work leases retain complete bodies for up to 600 seconds, subject to eight-template/32-MiB limits. Polling an unchanged template returns the same `workid` and its remaining lifetime in `expires`. An expired workid can no longer retrieve its bodies. Submission can still reconstruct from current local sources; otherwise it returns `status=incomplete` with exact missing positions and IDs. A lease does not make a stale-parent block valid.
 
 Fee ranking and `-blockmintxfee` continue to use transaction-body bytes. Manifest bytes count toward block and payload capacity as coinbase overhead.
 
@@ -42,7 +42,7 @@ Fee ranking and `-blockmintxfee` continue to use transaction-body bytes. Manifes
 
 `-buspoolmaxcount` defaults to 10,000 and accepts 1..100,000. `-buspoolmaxbytes` defaults to 67,108,864 and accepts 1..1,073,741,824. Both require the experimental flag. Use `getbuspoolinfo` to inspect accounted retention and signing requests.
 
-Peer reconstructions are bounded to two/8 MiB per peer and sixteen/64 MiB globally, including held bodies after cache eviction. Missing-body recovery uses the existing block download queue and full-block fallback. These are resource ceilings, not throughput promises.
+Peer reconstructions are bounded to two/8 MiB per peer and sixteen/64 MiB globally, including held bodies after cache eviction. Pending certificate announcements follow the buspool bounds, with at most one eighth per peer. `submitdecoupledblock` may use up to 64 MiB per call, enough for the most expensive valid block. Missing-body recovery uses the existing block download queue and full-block fallback. These are resource ceilings, not throughput promises.
 
 ## Running the checks
 
@@ -58,3 +58,5 @@ python3 test/functional/p2p_compactblocks.py
 The quorum scenario exercises real five-member, threshold-three DKG, opposite-vote persistence, mixed mining, lease expiry/eviction, delegated-script trust and historical replay. The P2P scenario exercises negotiation, missing/wrong bodies, quotas, fallback and certificate relay. Each command must complete successfully; reaching an intermediate stage is not a passing result.
 
 Run `feature_decoupling_profile.py` alone for repeated ordinary/complex-payment and asset samples. It records offered/admitted/relayed/mined counts, bytes, stage times, resource snapshots and the executable hash. Its local RPC samples include polling and RPC overhead and do not establish network saturation throughput.
+
+Add `--raptoreumd-arg=-txdecoupling=1` to enable transport on every node, or `--profile-transport-node=0` to enable it on one node only. The profile ends by asserting that all nodes share the best block, UTXO set and asset state, so the mixed form checks that enabled and ordinary nodes agree. Reference blocks are exchanged only when both peers enable transport.

@@ -94,7 +94,7 @@ Bodies fill positions not named by `vtxids`. Total count equals the sum of both 
 
 This encoding supports at most 65,535 positions; use ordinary full-block transport otherwise. Validate vector counts before allocation, and reconstructed bytes before acceptance. Encoding limits are not an increase in consensus limits.
 
-Reconstruction resolves bodies from the common graph, buspool retention and the existing compact-block extra cache. Any body with the exact requested txid can supply data; it need not satisfy mempool policy. Check every supplied body against the expected position and txid. Hold shared references while reconstructing so cache eviction cannot invalidate live work. Produce `CBlock` with `fChecked=false` and use its actual parent context.
+Peer reconstruction resolves bodies from the common graph, buspool retention and the existing compact-block extra cache; RPC submission uses the retained template, the common graph and the buspool. Any body with the exact requested txid can supply data; it need not satisfy mempool policy. Check every supplied body against the expected position and txid. Hold shared references while reconstructing so cache eviction cannot invalidate live work. Produce `CBlock` with `fChecked=false` and use its actual parent context.
 
 ## Peer protocol and availability
 
@@ -102,7 +102,9 @@ Negotiate `senddblock(announce, version=1)` only between enabled experimental pe
 
 Use `GETBLOCKTXN`/`BLOCKTXN` for missing canonical positions. A response must satisfy expected txids before completion. Failed encoding, wrong bodies, missing data, timeouts and local quota eviction trigger fallback or remain pending; none permanently marks the header consensus-invalid. A complete reconstructed block alone enters `ProcessNewBlock`.
 
-Certificate/body announcements have their own negotiated message/inventory identity, keyed by the certificate hash so a new-parent certificate is not confused with an older one. Bound pending announcements by the buspool budget and rate-limit expensive repeated invalid proofs using the existing peer misbehavior/request mechanisms. Legacy peers receive ordinary transactions.
+Certificate/body announcements have their own negotiated message/inventory identity, keyed by the certificate hash so a new-parent certificate is not confused with an older one. Bound pending announcements by the buspool budget, and let one peer hold at most one eighth of that bound. Rate-limit expensive repeated invalid proofs using the existing peer misbehavior/request mechanisms. A correct certificate delivered with a wrong transaction body penalizes only its sender and remains requestable from other peers. Legacy peers receive ordinary transactions.
+
+A reference-block announcement that cannot be encoded within its budget falls back to the ordinary header, compact or inventory announcement; a full block is sent only when a peer requests it.
 
 Keep historical download/IBD on full canonical blocks. When all sources withhold a body, report an incomplete block and preserve bounded progress; no certificate can manufacture availability.
 
@@ -118,9 +120,9 @@ The block assembler selects the shared graph and first produces a complete valid
 
 Keep existing fee-rate ranking and `-blockmintxfee` calculations based on transaction-body bytes. Certificate manifests remain coinbase overhead for this policy; every manifest byte still counts toward the block and coinbase-payload limits. Delegation changes neither transaction fees nor special fees.
 
-Retain complete templates under a bounded `workid` for 600 seconds. Return `workid` and `expires` only in the opt-in mixed response. Provide an explicit RPC to retrieve bodies by `workid` and canonical indexes.
+Retain complete templates under a bounded `workid` for 600 seconds. Return `workid` and `expires` only in the opt-in mixed response. Repeated requests for an unchanged template return the same `workid` with its remaining lifetime, so polling does not evict other work. Provide an explicit RPC to retrieve bodies by `workid` and canonical indexes.
 
-`submitdecoupledblock(hex, workid)` reconstructs using retained templates and current body sources, then shares the normal full-block processing path. Missing data returns an explicit incomplete result with positions and txids, never success and never permanent block invalidity. A complete `submitblock` remains accepted through its existing path.
+`submitdecoupledblock(hex, workid)` reconstructs using the retained template, the mempool and the buspool, then shares the normal full-block processing path. Its reconstruction budget (64 MiB per call) covers the most expensive valid block: the measured worst case, a full block of minimal transactions, uses about 25 MB. Missing data returns an explicit incomplete result with positions and txids, never success and never permanent block invalidity. A complete `submitblock` remains accepted through its existing path.
 
 ## Resource bounds and lifecycle
 
@@ -131,12 +133,26 @@ Initial experimental bounds, not throughput promises:
 | Buspool records | 10,000 by default, plus 64 MiB including retained bodies/certificates/indexes |
 | Pending reconstructions | Two per peer, sixteen globally |
 | Reconstruction memory | 8 MiB per peer, 64 MiB globally |
-| Retained templates | Eight, 32 MiB globally, 600-second expiry |
+| Retained templates | Eight, 32 MiB globally, 600-second expiry (evaluated when a lease RPC runs) |
+| RPC block submission | 64 MiB of decoding and reconstruction per call |
+| Pending certificate announcements | Derived from the buspool bounds; at most one eighth per peer |
 | Wire messages | Existing maximum and bounded element counts; full-block fallback when reference encoding does not fit |
 
 Configuration must reject negative, zero where unusable, overflowing and unreasonably large values. Account for held references after eviction; do not hide memory in a lease or pending queue. Clear candidate eligibility on incompatible tip/rule context. ChainLock/mining cleanup may release acceleration data only after canonical block storage supplies history; it must not destroy required recovery data.
 
 No persistent buspool database is required initially. Restart reconstructs its optimization state through normal admission/certificates while replay uses canonical blocks. This avoids inventing a second authoritative transaction store.
+
+## Known limits and accepted consequences
+
+These are deliberate properties of this experiment, recorded so that reviewers can weigh them explicitly:
+
+- **Retroactive InstantSend locks.** After a block is connected, smartnodes may retroactively lock its transactions, as they do for any mined transaction. Under a compromised threshold, a certified transaction with invalid scripts can therefore become InstantSend-locked; a replacement block that spends the same inputs then conflicts with that lock until a ChainLock settles the chain. This is part of the delegated trust model and is not mitigated here.
+- **Retention order.** The buspool retains mempool bodies first in, first out. Ordinary traffic can evict certified entries; this removes reference eligibility, never validity.
+- **Manifest slots.** The 41 manifest slots are assigned greedily by package fee. Locally validated transactions also carry certificates, which let receivers skip their scripts, so a candidate with only delegated provenance may wait until it is revalidated locally after the next tip.
+- **Malformed reference encodings.** Invalid layouts, inconsistent responses and wrong bodies fall back to a full block without a misbehavior penalty (compact blocks penalize some equivalent cases). Withholding is bounded by the existing block-download timeouts.
+- **Punishment of reconstructed blocks.** A block reconstructed from a reference or compact encoding is processed without punishing its sender, as upstream compact blocks are. An invalid certificate manifest therefore penalizes a peer only when it delivers the full block.
+- **Announcement fan-out.** Reference blocks are pushed to every enabled peer that asked for announcements; there is no BIP152-style limit of three high-bandwidth peers. The sender charges transaction bodies conservatively, so large blocks fall back to ordinary announcements and are fetched in full on request.
+- **Reconstruction size.** A block whose reconstruction exceeds the 8 MiB per-peer budget is fetched as a full block.
 
 ## Verification and completion
 
