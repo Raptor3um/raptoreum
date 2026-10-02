@@ -59,7 +59,10 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs &c
 
     int32_t lastprefilledindex = -1;
     for (size_t i = 0; i < cmpctblock.prefilledtxn.size(); i++) {
-        if (cmpctblock.prefilledtxn[i].tx->IsNull())
+        const auto& tx = cmpctblock.prefilledtxn[i].tx;
+        // Quorum commitments may have no inputs or outputs; block validation remains authoritative.
+        if (!tx || (tx->IsNull() &&
+                    (tx->nVersion != 3 || tx->nType != TRANSACTION_QUORUM_COMMITMENT)))
             return READ_STATUS_INVALID;
 
         lastprefilledindex += cmpctblock.prefilledtxn[i].index + 1; //index is a uint16_t, so can't overflow here

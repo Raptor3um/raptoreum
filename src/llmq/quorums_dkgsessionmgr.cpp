@@ -339,7 +339,8 @@ namespace llmq {
                                                  std::vector <BLSVerificationVectorPtr> &vvecsRet,
                                                  BLSSecretKeyVector &skContributionsRet,
                                                  Consensus::CQuorumUpdateVoteVec &updateVotesRet) const {
-        LOCK(contributionsCacheCs);
+        // Membership and activation checks below can acquire cs_main.
+        LOCK2(cs_main, contributionsCacheCs);
         auto members = CLLMQUtils::GetAllQuorumMembers(GetLLMQParams(llmqType), pQuorumBaseBlockIndex);
 
         memberIndexesRet.clear();
@@ -439,9 +440,14 @@ namespace llmq {
         return sporkManager.IsSporkActive(SPORK_17_QUORUM_DKG_ENABLED);
     }
 
+    bool IsContributionExpired(int nTipHeight, int nQuorumHeight, const Consensus::LLMQParams &params) {
+        return nTipHeight - nQuorumHeight > params.max_store_depth();
+    }
+
     void CDKGSessionManager::CleanupOldContributions() const
     {
-        LOCK(cs_db);
+        // Match validation and quorum construction: chain state precedes the database.
+        LOCK2(cs_main, cs_db);
         if (db->IsEmpty()) {
             return;
         }
@@ -460,7 +466,6 @@ namespace llmq {
                 decltype(start) k;
 
                 pcursor->Seek(start);
-                LOCK(cs_main);
                 LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- Valid: %d, PrefixMatch: %d, TypeMatch: %d\n", __func__, pcursor->Valid(), std::get<0>(k) == prefix, std::get<1>(k) == params.type);
 
                 while (pcursor->Valid()) {
@@ -469,7 +474,7 @@ namespace llmq {
                     }
                     cnt_all++;
                     const CBlockIndex* pindexQuorum = LookupBlockIndex(std::get<2>(k));
-                    if (pindexQuorum == nullptr || ::ChainActive().Tip()->nHeight - pindexQuorum->nHeight > params.max_store_depth()) {
+                    if (pindexQuorum == nullptr || IsContributionExpired(::ChainActive().Tip()->nHeight, pindexQuorum->nHeight, params)) {
                         LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- removing element for llmq type %d\n", __func__, uint8_t(params.type));
 
                         // not found or too old

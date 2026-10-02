@@ -21,6 +21,7 @@
 #include <net_processing.h>
 #include <spork.h>
 #include <validation.h>
+#include <txdecoupling.h>
 #include <util/validation.h>
 
 #include <cxxtimer.hpp>
@@ -505,8 +506,38 @@ namespace llmq {
         TrySignInstantSendLock(tx);
     }
 
+    // Delegated script checks exist only after a configured private-network activation.
+    static bool IsTxDelegationConfigured() {
+        const auto& consensus = Params().GetConsensus();
+        return consensus.fTxDecouplingAllowed && consensus.nTxDecouplingHeight >= 0;
+    }
+
+    bool CInstantSendManager::HasValidSigningContext(const CTransaction& tx) const {
+        AssertLockHeld(cs_main);
+        if (!IsTxDecouplingActive(ChainActive().Tip(), Params().GetConsensus())) return true;
+        {
+            LOCK(mempool.cs);
+            const auto candidate = mempool.mapTx.find(tx.GetHash());
+            if (candidate != mempool.mapTx.end()) return candidate->AreScriptsLocallyValidated();
+        }
+        // A disconnected block does not authorize a new vote. Its transaction
+        // must first return through local mempool validation on the new branch.
+        LOCK(cs_nonLocked);
+        const auto entry = nonLockedTxs.find(tx.GetHash());
+        return entry != nonLockedTxs.end() && entry->second.pindexMined &&
+            ChainActive().Contains(entry->second.pindexMined);
+    }
+
     bool
     CInstantSendManager::TrySignInputLocks(const CTransaction &tx, bool fRetroactive, Consensus::LLMQType llmqType) {
+        if (!IsTxDelegationConfigured()) return TrySignInputLocksImpl(tx, fRetroactive, llmqType);
+        LOCK(cs_main);
+        if (!HasValidSigningContext(tx)) return false;
+        return TrySignInputLocksImpl(tx, fRetroactive, llmqType);
+    }
+
+    bool
+    CInstantSendManager::TrySignInputLocksImpl(const CTransaction &tx, bool fRetroactive, Consensus::LLMQType llmqType) {
         std::vector <uint256> ids;
         ids.reserve(tx.vin.size());
 
@@ -679,6 +710,13 @@ namespace llmq {
     }
 
     void CInstantSendManager::TrySignInstantSendLock(const CTransaction &tx) {
+        if (!IsTxDelegationConfigured()) return TrySignInstantSendLockImpl(tx);
+        LOCK(cs_main);
+        if (!HasValidSigningContext(tx)) return;
+        TrySignInstantSendLockImpl(tx);
+    }
+
+    void CInstantSendManager::TrySignInstantSendLockImpl(const CTransaction &tx) {
         const auto llmqType = Params().GetConsensus().llmqTypeInstantSend;
 
         for (auto &in: tx.vin) {
@@ -1173,9 +1211,15 @@ namespace llmq {
 
                 if (!IsLocked(tx->GetHash()) &&
                     !chainLocksHandler->HasChainLock(pindex->nHeight, pindex->GetBlockHash())) {
-                    ProcessTx(*tx, true, Params().GetConsensus());
-                    // TX is not locked, so make sure it is tracked
-                    AddNonLockedTx(tx, pindex);
+                    if (IsTxDelegationConfigured()) {
+                        // Track the connected context before either signing path consults it.
+                        AddNonLockedTx(tx, pindex);
+                        ProcessTx(*tx, true, Params().GetConsensus());
+                    } else {
+                        ProcessTx(*tx, true, Params().GetConsensus());
+                        // TX is not locked, so make sure it is tracked
+                        AddNonLockedTx(tx, pindex);
+                    }
                 } else {
                     // TX is locked, so make sure we don't track it anymore
                     RemoveNonLockedTx(tx->GetHash(), true);

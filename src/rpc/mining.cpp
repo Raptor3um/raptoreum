@@ -10,6 +10,11 @@
 #endif
 
 #include <amount.h>
+#include <buspool.h>
+#include <core_memusage.h>
+#include <decoupledblock.h>
+#include <random.h>
+#include <streams.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <consensus/consensus.h>
@@ -52,6 +57,7 @@
 #include <evo/cbtx.h>
 
 #include <memory>
+#include <list>
 #include <stdint.h>
 
 extern double nHashesPerSec;
@@ -426,10 +432,118 @@ std::string gbt_update_name(const Update* update) {
     return s;
 }
 
+namespace {
+constexpr size_t MAX_MINING_LEASES = 8;
+constexpr size_t MAX_MINING_LEASE_BYTES = 32 * 1024 * 1024;
+constexpr int64_t MINING_LEASE_SECONDS = 600;
+
+// Borrow RPC hex directly; decoding needs no geometrically growing wire copy.
+class MiningHexReader {
+    const std::string& hex;
+    size_t position{0};
+public:
+    explicit MiningHexReader(const std::string& value) : hex(value) {}
+    int GetType() const { return SER_NETWORK; }
+    int GetVersion() const { return PROTOCOL_VERSION; }
+    bool empty() const { return position == hex.size(); }
+    void read(char* output, size_t count) {
+        if (count > (hex.size() - position) / 2) throw std::ios_base::failure("truncated mixed block");
+        for (size_t i = 0; i < count; ++i, position += 2)
+            output[i] = (HexDigit(hex[position]) << 4) | HexDigit(hex[position + 1]);
+    }
+};
+
+struct MiningLease {
+    std::string id;
+    CBlock block;
+    std::map<uint256, size_t> positions;
+    size_t bytes;
+    int64_t created;
+    std::chrono::steady_clock::time_point deadline;
+};
+std::list<MiningLease> miningLeases GUARDED_BY(cs_main);
+size_t miningLeaseBytes GUARDED_BY(cs_main) = 0;
+
+size_t TransactionBodyMemory(const CTransactionRef& tx)
+{
+    return RecursiveDynamicUsage(tx) + memusage::DynamicUsage(tx->vExtraPayload);
+}
+
+void ExpireMiningLeases() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    AssertLockHeld(cs_main);
+    const auto now = std::chrono::steady_clock::now();
+    const auto wallTime = GetTime();
+    for (auto it = miningLeases.begin(); it != miningLeases.end();) {
+        if (now >= it->deadline || (wallTime >= it->created && wallTime - it->created >= MINING_LEASE_SECONDS)) {
+            miningLeaseBytes -= it->bytes;
+            it = miningLeases.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+const MiningLease* FindMiningLease(const std::string& id) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    ExpireMiningLeases();
+    for (const auto& lease : miningLeases) if (lease.id == id) return &lease;
+    return nullptr;
+}
+
+int64_t MiningLeaseSecondsLeft(const MiningLease& lease) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    const auto steadyMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        lease.deadline - std::chrono::steady_clock::now()).count();
+    const int64_t steady = (steadyMs + 999) / 1000;
+    const int64_t wall = MINING_LEASE_SECONDS - std::max<int64_t>(0, GetTime() - lease.created);
+    return std::max<int64_t>(0, std::min<int64_t>(steady, wall));
+}
+
+std::string RetainMiningTemplate(const CBlock& block) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    ExpireMiningLeases();
+    MiningLease lease;
+    lease.id = GetRandHash().GetHex();
+    lease.block = block;
+    lease.created = GetTime();
+    lease.deadline = std::chrono::steady_clock::now() + std::chrono::seconds(MINING_LEASE_SECONDS);
+    lease.bytes = sizeof(MiningLease) + 2 * sizeof(void*) + lease.id.capacity() + 1;
+    lease.bytes += memusage::DynamicUsage(lease.block.vtx);
+    lease.bytes += RecursiveDynamicUsage(lease.block.txoutFounder);
+    for (size_t i = 0; i < block.vtx.size(); ++i) {
+        lease.positions.emplace(block.vtx[i]->GetHash(), i);
+        // Charge full bodies even when the mempool or buspool shares ownership.
+        lease.bytes += TransactionBodyMemory(block.vtx[i]);
+    }
+    lease.bytes += memusage::DynamicUsage(lease.positions);
+    if (lease.bytes > MAX_MINING_LEASE_BYTES)
+        throw JSONRPCError(RPC_OUT_OF_MEMORY, "Mining template exceeds retention limit");
+    while (!miningLeases.empty() && (miningLeases.size() >= MAX_MINING_LEASES ||
+           miningLeaseBytes + lease.bytes > MAX_MINING_LEASE_BYTES)) {
+        miningLeaseBytes -= miningLeases.front().bytes;
+        miningLeases.pop_front();
+    }
+    miningLeaseBytes += lease.bytes;
+    miningLeases.push_back(std::move(lease));
+    return miningLeases.back().id;
+}
+
+void RequireDecoupledMining()
+{
+    if (!IsBusPoolEnabled())
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Transaction decoupling is not enabled");
+}
+} // namespace
+
 static UniValue getblocktemplate(const JSONRPCRequest &request) {
     RPCHelpMan{"getblocktemplate",
                "\nIf the request parameters include a 'mode' key, that is used to explicitly select between the default 'template' request or a 'proposal'.\n"
                "It returns data needed to construct a block to work on.\n"
+               "With -txdecoupling on regtest, capability 'decoupled-v1' returns eligible transaction IDs in vtxids.\n"
+               "vtxidmetadata provides canonical index, depends, fee, specialTxfee, sigops and size. Full entries also carry index.\n"
+               "workid retains all bodies for up to 600 seconds (expires), subject to eight-template / 32 MiB eviction.\n"
+               "Use getdecoupledblocktransactions to retrieve retained bodies. Certified positions and payload must remain unchanged.\n"
                "For full specification, see BIPs 22, 23, and 9:\n"
                "    https://github.com/bitcoin/bips/blob/master/bip-0022.mediawiki\n"
                "    https://github.com/bitcoin/bips/blob/master/bip-0023.mediawiki\n"
@@ -444,7 +558,7 @@ static UniValue getblocktemplate(const JSONRPCRequest &request) {
                                  RPCArg::Optional::OMITTED_NAMED_ARG, "A list of strings",
                                  {
                                          {"support", RPCArg::Type::STR, RPCArg::Optional::OMITTED,
-                                          "client side supported feature, 'longpoll', 'coinbasetxn', 'coinbasevalue', 'proposal', 'serverlist', 'workid'"},
+                                          "client side supported feature, 'longpoll', 'coinbasetxn', 'coinbasevalue', 'proposal', 'serverlist', 'workid', 'decoupled-v1' (experimental regtest mixed transactions)"},
                                  },
                                 },
                                 {"rules", RPCArg::Type::ARR, /* default_val */ "", "A list of strings",
@@ -492,7 +606,7 @@ static UniValue getblocktemplate(const JSONRPCRequest &request) {
                                                  {RPCResult::Type::ARR, "depends", "array of numbers",
                                                   {
                                                           {RPCResult::Type::NUM, "",
-                                                           "transactions before this one (by 1-based index in 'transactions' list) that must be present in the final block if this one is"},
+                                                           "transactions before this one (by 1-based index in 'transactions' list, or by canonical block index when decoupled-v1 returns vtxids) that must be present in the final block if this one is"},
                                                   }},
                                                  {RPCResult::Type::NUM, "fee",
                                                   "difference in value between transaction inputs and outputs (in satoshis); for coinbase transactions, this is a negative Number of the total collected block fees (ie, not including the block subsidy); if key is not present, fee is unknown and clients MUST NOT assume there isn't one"},
@@ -500,6 +614,16 @@ static UniValue getblocktemplate(const JSONRPCRequest &request) {
                                                   "total number of SigOps, as counted for purposes of block limits; if key is not present, sigop count is unknown and clients MUST NOT assume there aren't any"},
                                          }},
                                 }},
+                               {RPCResult::Type::ARR, "vtxids", /* optional */ true,
+                                "decoupled-v1 only: referenced transaction ids; their bodies are omitted from 'transactions'",
+                                {{RPCResult::Type::STR_HEX, "", "transaction id"}}},
+                               {RPCResult::Type::ARR, "vtxidmetadata", /* optional */ true,
+                                "decoupled-v1 only: entries aligned with vtxids; same fields as 'transactions' without data, plus canonical 'index'",
+                                {{RPCResult::Type::ELISION, "", ""}}},
+                               {RPCResult::Type::STR, "workid", /* optional */ true,
+                                "decoupled-v1 only: identifier of the retained template bodies"},
+                               {RPCResult::Type::NUM, "expires", /* optional */ true,
+                                "decoupled-v1 only: seconds for which workid remains retained, subject to eviction"},
                                {RPCResult::Type::OBJ, "coinbaseaux",
                                 "data that should be included in the coinbase's scriptSig content",
                                 {
@@ -565,6 +689,7 @@ static UniValue getblocktemplate(const JSONRPCRequest &request) {
 
     LOCK(cs_main);
 
+    bool decoupled = false;
     std::string strMode = "template";
     UniValue lpval = NullUniValue;
     std::set <std::string> setClientRules;
@@ -579,6 +704,13 @@ static UniValue getblocktemplate(const JSONRPCRequest &request) {
         } else
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid mode");
         lpval = find_value(oparam, "longpollid");
+        const UniValue& capabilities = find_value(oparam, "capabilities");
+        if (capabilities.isArray()) {
+            for (const auto& capability : capabilities.getValues()) {
+                if (capability.isStr() && capability.get_str() == "decoupled-v1") decoupled = true;
+            }
+        }
+        decoupled = decoupled && IsBusPoolEnabled();
 
         if (strMode == "proposal") {
             const UniValue &dataval = find_value(oparam, "data");
@@ -643,7 +775,10 @@ static UniValue getblocktemplate(const JSONRPCRequest &request) {
         && CSuperblock::IsValidBlockHeight(::ChainActive().Height() + 1))
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Raptoreum Core is syncing with network...");
 
-    static unsigned int nTransactionsUpdatedLast;
+    // One cached template per presentation, so alternating clients do not force rebuilds.
+    // Without -txdecoupling, decoupled is always false and only the first slot is used.
+    static unsigned int cachedTransactionsUpdated[2];
+    unsigned int& nTransactionsUpdatedLast = cachedTransactionsUpdated[decoupled];
     const CTxMemPool &mempool = EnsureMemPool(request.context);
 
     if (!lpval.isNull()) {
@@ -687,13 +822,19 @@ static UniValue getblocktemplate(const JSONRPCRequest &request) {
     }
 
     // Update block
-    static CBlockIndex *pindexPrev;
-    static int64_t nStart;
-    static std::unique_ptr <CBlockTemplate> pblocktemplate;
+    static CBlockIndex *cachedPrev[2];
+    static int64_t cachedStart[2];
+    static std::unique_ptr <CBlockTemplate> cachedTemplate[2];
+    // Repeated calls for an unchanged mixed template share one lease.
+    static std::string cachedWorkId;
+    CBlockIndex*& pindexPrev = cachedPrev[decoupled];
+    int64_t& nStart = cachedStart[decoupled];
+    std::unique_ptr<CBlockTemplate>& pblocktemplate = cachedTemplate[decoupled];
     if (pindexPrev != ::ChainActive().Tip() ||
         (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 5)) {
         // Clear pindexPrev so future calls make a new block, despite any failures from here on
         pindexPrev = nullptr;
+        if (decoupled) cachedWorkId.clear();
 
         // Store the ::ChainActive().Tip() used before CreateNewBlock, to avoid races
         nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
@@ -702,7 +843,7 @@ static UniValue getblocktemplate(const JSONRPCRequest &request) {
 
         // Create new block
         CScript scriptDummy = CScript() << OP_TRUE;
-        pblocktemplate = BlockAssembler(mempool, Params()).CreateNewBlock(scriptDummy);
+        pblocktemplate = BlockAssembler(mempool, Params()).CreateNewBlock(scriptDummy, decoupled);
         if (!pblocktemplate)
             throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
 
@@ -718,7 +859,12 @@ static UniValue getblocktemplate(const JSONRPCRequest &request) {
 
     UniValue aCaps(UniValue::VARR);
     aCaps.push_back("proposal");
+    if (IsBusPoolEnabled()) aCaps.push_back("decoupled-v1");
 
+    const bool mixed = decoupled && !pblocktemplate->referenceIDs.empty() &&
+        pblock->vtx.size() <= CDecoupledBlock::MAX_TRANSACTIONS;
+    UniValue references(UniValue::VARR);
+    UniValue referenceMetadata(UniValue::VARR);
     UniValue transactions(UniValue::VARR);
     std::map <uint256, int64_t> setTxIndex;
     int i = 0;
@@ -732,7 +878,9 @@ static UniValue getblocktemplate(const JSONRPCRequest &request) {
 
         UniValue entry(UniValue::VOBJ);
 
-        entry.pushKV("data", EncodeHexTx(tx));
+        const bool referenced = mixed && pblocktemplate->referenceIDs.count(txHash);
+        if (!referenced) entry.pushKV("data", EncodeHexTx(tx));
+        if (mixed) entry.pushKV("index", i - 1);
 
         entry.pushKV("hash", txHash.GetHex());
 
@@ -748,7 +896,13 @@ static UniValue getblocktemplate(const JSONRPCRequest &request) {
         entry.pushKV("specialTxfee", pblocktemplate->vSpecialTxFees[index_in_template]);
         entry.pushKV("sigops", pblocktemplate->vTxSigOps[index_in_template]);
 
-        transactions.push_back(entry);
+        if (referenced) {
+            entry.pushKV("size", uint64_t(tx.GetTotalSize()));
+            references.push_back(txHash.GetHex());
+            referenceMetadata.push_back(entry);
+        } else {
+            transactions.push_back(entry);
+        }
     }
 
     UniValue aux(UniValue::VOBJ);
@@ -758,8 +912,13 @@ static UniValue getblocktemplate(const JSONRPCRequest &request) {
 
     UniValue aMutable(UniValue::VARR);
     aMutable.push_back("time");
-    aMutable.push_back("transactions");
-    aMutable.push_back("prevblock");
+    CCbTx coinbasePayload;
+    const bool hasManifest = GetTxPayload(*pblock->vtx[0], coinbasePayload) &&
+        coinbasePayload.nVersion == CCbTx::TX_CERTIFICATE_VERSION;
+    if (!hasManifest) {
+        aMutable.push_back("transactions");
+        aMutable.push_back("prevblock");
+    }
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("capabilities", aCaps);
@@ -819,6 +978,18 @@ static UniValue getblocktemplate(const JSONRPCRequest &request) {
 
     result.pushKV("previousblockhash", pblock->hashPrevBlock.GetHex());
     result.pushKV("transactions", transactions);
+    if (mixed) {
+        const MiningLease* lease = cachedWorkId.empty() ? nullptr : FindMiningLease(cachedWorkId);
+        if (!lease) {
+            cachedWorkId = RetainMiningTemplate(*pblock);
+            lease = FindMiningLease(cachedWorkId);
+            CHECK_NONFATAL(lease);
+        }
+        result.pushKV("vtxids", references);
+        result.pushKV("vtxidmetadata", referenceMetadata);
+        result.pushKV("workid", lease->id);
+        result.pushKV("expires", MiningLeaseSecondsLeft(*lease));
+    }
     result.pushKV("coinbaseaux", aux);
     result.pushKV("coinbasevalue", (int64_t) pblock->vtx[0]->GetValueOut());
     result.pushKV("longpollid", ::ChainActive().Tip()->GetBlockHash().GetHex() + i64tostr(nTransactionsUpdatedLast));
@@ -900,30 +1071,9 @@ protected:
     }
 };
 
-static UniValue submitblock(const JSONRPCRequest &request) {
-    // We allow 2 arguments for compliance with BIP22. Argument 2 is ignored.
-    RPCHelpMan{"submitblock",
-               "\nAttempts to submit new block to network.\n"
-               "See https://en.bitcoin.it/wiki/BIP_0022 for full specification.\n",
-               {
-                       {"hexdata", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hex-encoded block data to submit"},
-                       {"dummy", RPCArg::Type::STR, /* default */ "ignored",
-                        "dummy value, for compatibility with BIP22. This value is ignored."},
-               },
-               RPCResult{RPCResult::Type::NONE, "",
-                         "Returns JSON Null when valid, a string according to BIP22 otherwise"},
-               RPCExamples{
-                       HelpExampleCli("submitblock", "\"mydata\"")
-                       + HelpExampleRpc("submitblock", "\"mydata\"")
-               },
-    }.Check(request);
-
-    std::shared_ptr <CBlock> blockptr = std::make_shared<CBlock>();
-    CBlock &block = *blockptr;
-    if (!DecodeHexBlk(block, request.params[0].get_str())) {
-        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
-    }
-
+static UniValue ProcessSubmittedBlock(const JSONRPCRequest& request, const std::shared_ptr<CBlock>& blockptr)
+{
+    CBlock& block = *blockptr;
     if (block.vtx.empty() || !block.vtx[0]->IsCoinBase()) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block does not start with a coinbase");
     }
@@ -959,6 +1109,154 @@ static UniValue submitblock(const JSONRPCRequest &request) {
         return "inconclusive";
     }
     return BIP22ValidationResult(sc.state);
+}
+
+static UniValue submitblock(const JSONRPCRequest &request) {
+    // We allow 2 arguments for compliance with BIP22. Argument 2 is ignored.
+    RPCHelpMan{"submitblock",
+               "\nAttempts to submit new block to network.\n"
+               "See https://en.bitcoin.it/wiki/BIP_0022 for full specification.\n",
+               {
+                       {"hexdata", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hex-encoded block data to submit"},
+                       {"dummy", RPCArg::Type::STR, /* default */ "ignored",
+                        "dummy value, for compatibility with BIP22. This value is ignored."},
+               },
+               RPCResult{RPCResult::Type::NONE, "",
+                         "Returns JSON Null when valid, a string according to BIP22 otherwise"},
+               RPCExamples{
+                       HelpExampleCli("submitblock", "\"mydata\"")
+                       + HelpExampleRpc("submitblock", "\"mydata\"")
+               },
+    }.Check(request);
+
+    std::shared_ptr <CBlock> blockptr = std::make_shared<CBlock>();
+    CBlock &block = *blockptr;
+    if (!DecodeHexBlk(block, request.params[0].get_str())) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
+    }
+
+    return ProcessSubmittedBlock(request, blockptr);
+}
+
+static UniValue getdecoupledblocktransactions(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"getdecoupledblocktransactions", "Retrieve complete bodies retained by an opt-in mining template.\n",
+        {{"workid", RPCArg::Type::STR, RPCArg::Optional::NO, "Template work identifier"},
+         {"indexes", RPCArg::Type::ARR, RPCArg::Optional::NO, "Unique canonical transaction indexes, including coinbase at zero",
+          {{"index", RPCArg::Type::NUM, RPCArg::Optional::NO, "Canonical index"}}}},
+        RPCResult{RPCResult::Type::OBJ, "", "Retained bodies in requested order",
+          {{RPCResult::Type::STR, "workid", "Template work identifier"},
+           {RPCResult::Type::ARR, "transactions", "Complete transaction bodies",
+             {{RPCResult::Type::OBJ, "", "Body", {
+               {RPCResult::Type::NUM, "index", "Canonical index"},
+               {RPCResult::Type::STR_HEX, "txid", "Transaction identifier"},
+               {RPCResult::Type::STR_HEX, "data", "Serialized transaction"}}}}}}},
+        RPCExamples{HelpExampleCli("getdecoupledblocktransactions", "\"workid\" '[1,2]'")}}.Check(request);
+    RequireDecoupledMining();
+    LOCK(cs_main);
+    const auto* lease = FindMiningLease(request.params[0].get_str());
+    if (!lease) throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown or expired workid");
+    const auto& indexes = request.params[1].get_array();
+    if (indexes.size() > lease->block.vtx.size())
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Too many transaction indexes");
+    std::set<size_t> requested;
+    UniValue transactions(UniValue::VARR);
+    for (const auto& value : indexes.getValues()) {
+        const int64_t index = value.get_int64();
+        if (index < 0 || uint64_t(index) >= lease->block.vtx.size() || !requested.insert(index).second)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid or duplicate transaction index");
+        const auto& tx = lease->block.vtx[index];
+        UniValue entry(UniValue::VOBJ);
+        entry.pushKV("index", index);
+        entry.pushKV("txid", tx->GetHash().GetHex());
+        entry.pushKV("data", EncodeHexTx(*tx));
+        transactions.push_back(entry);
+    }
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("workid", lease->id);
+    result.pushKV("transactions", transactions);
+    return result;
+}
+
+static UniValue submitdecoupledblock(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"submitdecoupledblock", "Reconstruct and submit an experimental mixed block. Missing bodies return an incomplete result.\n",
+        {{"hexdata", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Version-1 mixed block encoding"},
+         {"workid", RPCArg::Type::STR, /* default */ "\"\"", "Retained template identifier; empty uses only the current mempool and buspool bodies"}},
+        {
+            RPCResult{"if the block was reconstructed and accepted", RPCResult::Type::NONE, "", ""},
+            RPCResult{"if the reconstructed block was rejected", RPCResult::Type::STR, "", "A rejection reason according to BIP22"},
+            RPCResult{"if referenced bodies are unavailable", RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::STR, "status", "\"incomplete\""},
+                    {RPCResult::Type::ARR, "missing", "Missing canonical positions",
+                        {
+                            {RPCResult::Type::OBJ, "", "",
+                                {
+                                    {RPCResult::Type::NUM, "index", "Canonical block index (coinbase is 0)"},
+                                    {RPCResult::Type::STR_HEX, "txid", "Referenced transaction id"},
+                                }},
+                        }},
+                }},
+        },
+        RPCExamples{HelpExampleCli("submitdecoupledblock", "\"hex\" \"workid\"")}}.Check(request);
+    RequireDecoupledMining();
+    const auto& hex = request.params[0].get_str();
+    if (hex.size() > 2 * MAX_PROTOCOL_MESSAGE_LENGTH || !IsHex(hex))
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Decoupled block decode failed");
+    CDecoupledReadBudget budget(MAX_DECOUPLED_SUBMISSION_BYTES);
+    std::shared_ptr<CBlock> block;
+    try {
+        budget.ChargeArray(hex.capacity() + 1, sizeof(char));
+        MiningHexReader source(hex);
+        CDecoupledBudgetedReader<MiningHexReader> reader(source, budget);
+        CDecoupledBlock encoded;
+        reader >> encoded;
+        if (!source.empty()) throw std::ios_base::failure("trailing data");
+        budget.ChargeShared(sizeof(CBlock));
+        block = std::make_shared<CBlock>();
+        LOCK(cs_main);
+        const std::string workid = request.params[1].isNull() ? std::string() : request.params[1].get_str();
+        const MiningLease* lease = workid.empty() ? nullptr : FindMiningLease(workid);
+        // Expired work may still be reconstructed from the current candidate/body caches.
+        auto& pool = EnsureMemPool(request.context);
+        auto lookup = [&](const uint256& txid) {
+            CTransactionRef tx;
+            if (lease) {
+                const auto it = lease->positions.find(txid);
+                if (it != lease->positions.end()) tx = lease->block.vtx[it->second];
+            }
+            if (!tx) tx = pool.get(txid);
+            if (!tx && busPoolManager) tx = busPoolManager->GetTransaction(txid);
+            return tx;
+        };
+        PartiallyDownloadedDecoupledBlock partial;
+        if (partial.InitData(encoded, lookup, &budget) != READ_STATUS_OK)
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Invalid decoupled block layout");
+        const auto missing = partial.GetMissingIndexes(&budget);
+        if (!missing.empty()) {
+            // Include DOM nodes, strings and vector growth before constructing the response.
+            budget.ChargeArray(missing.size(), 8 * sizeof(UniValue) + 256);
+            budget.ChargeBytes(1024);
+            UniValue result(UniValue::VOBJ), entries(UniValue::VARR);
+            size_t refIndex = 0;
+            for (const auto index : missing) {
+                while (encoded.vtxids[refIndex].index != index) ++refIndex;
+                UniValue entry(UniValue::VOBJ);
+                entry.pushKV("index", index);
+                entry.pushKV("txid", encoded.vtxids[refIndex].txid.GetHex());
+                entries.push_back(entry);
+            }
+            result.pushKV("status", "incomplete");
+            result.pushKV("missing", entries);
+            return result;
+        }
+        if (partial.FillBlock(*block, {}, &budget) != READ_STATUS_OK)
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Decoupled block reconstruction failed");
+    } catch (const std::ios_base::failure& error) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("Decoupled block decode failed: %s", error.what()));
+    }
+    return ProcessSubmittedBlock(request, block);
 }
 
 static UniValue submitheader(const JSONRPCRequest &request) {
@@ -1264,6 +1562,8 @@ static const CRPCCommand commands[] =
                 {"mining", "prioritisetransaction", &prioritisetransaction, {"txid", "fee_delta"}},
                 {"mining", "getblocktemplate", &getblocktemplate, {"template_request"}},
                 {"mining", "submitblock", &submitblock, {"hexdata", "dummy"}},
+                {"mining", "getdecoupledblocktransactions", &getdecoupledblocktransactions, {"workid", "indexes"}},
+                {"mining", "submitdecoupledblock", &submitdecoupledblock, {"hexdata", "workid"}},
                 {"mining", "submitheader", &submitheader, {"hexdata"}},
 
 #if ENABLE_MINER

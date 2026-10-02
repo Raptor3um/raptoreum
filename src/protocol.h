@@ -235,6 +235,10 @@ namespace NetMsgType {
  * @since protocol version 70209 as described by BIP 152
  */
     extern const char *BLOCKTXN;
+    // Negotiated regtest-only transaction decoupling, version 1.
+    extern const char *SENDDBLOCK;
+    extern const char *DBLOCK;
+    extern const char *TXCERT;
 
 // Raptoreum message types
 // NOTE: do NOT declare non-implmented here, we don't want them to be exposed to the outside
@@ -433,6 +437,9 @@ enum GetDataMsg {
     MSG_CLSIG = 29,
     MSG_ISLOCK = 30,
     MSG_ISDLOCK = 31,
+    // Private experimental inventory; handlers require regtest opt-in and negotiation.
+    MSG_DECOUPLED_BLOCK = 0x8001,
+    MSG_TX_CERTIFICATE = 0x8002,
 };
 
 /** inv message data */

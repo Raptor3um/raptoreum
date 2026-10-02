@@ -283,6 +283,9 @@ namespace llmq {
     private:
         void ProcessTx(const CTransaction &tx, bool fRetroactive, const Consensus::Params &params);
 
+        friend struct InstantSendSigningTestAccess;
+        bool HasValidSigningContext(const CTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
         bool CheckCanLock(const CTransaction &tx, bool printDebug, const Consensus::Params &params) const;
 
         bool CheckCanLock(const COutPoint &outpoint, bool printDebug, const uint256 &txHash,
@@ -304,6 +307,10 @@ namespace llmq {
         void TrySignInstantSendLock(const CTransaction &tx)
 
         LOCKS_EXCLUDED(cs_creating);
+
+        bool TrySignInputLocksImpl(const CTransaction &tx, bool allowResigning, Consensus::LLMQType llmqType)
+        LOCKS_EXCLUDED(cs_inputRequests);
+        void TrySignInstantSendLockImpl(const CTransaction &tx) LOCKS_EXCLUDED(cs_creating);
 
         void ProcessMessageInstantSendLock(const CNode *pfrom, const CInstantSendLockPtr &islock);
 

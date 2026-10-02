@@ -24,7 +24,7 @@ import time
 from test_framework.siphash import siphash256
 from test_framework.util import hex_str_to_bytes, bytes_to_hex_str
 
-import dash_hash
+import raptoreum_hash
 
 MIN_VERSION_SUPPORTED = 60001
 MY_VERSION = 70220  # ISDLOCK_PROTO_VERSION
@@ -32,7 +32,16 @@ MY_SUBVERSION = b"/python-mininode-tester:0.0.3%s/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
 
 MAX_INV_SZ = 50000
+# src/consensus/consensus.h. MaxBlockSize() returns the DIP0001 limit wherever
+# DIP0001 is active, which on every Raptoreum network it is; MAX_BLOCK_SIZE is
+# only the pre-DIP0001 legacy value.
+MAX_LOCATOR_SZ = 101  # net.h
 MAX_BLOCK_SIZE = 1000000
+MAX_DIP0001_BLOCK_SIZE = 2000000
+# src/policy/policy.h. A policy limit in Bitcoin, but CheckTransaction enforces
+# it as consensus once DIP0001 is active ("bad-txns-oversize"), so no single
+# transaction can fill a block.
+MAX_STANDARD_TX_SIZE = 100000
 
 COIN = 100000000 # 1 btc in satoshis
 
@@ -50,7 +59,7 @@ def hash256(s):
     return sha256(sha256(s))
 
 def dashhash(s):
-    return dash_hash.getPoWHash(s)
+    return raptoreum_hash.getPoWHash(s)
 
 def ser_compact_size(l):
     r = b""
@@ -252,12 +261,21 @@ class CAddress():
                                                          self.ip, self.port)
 
 
+MSG_ERROR = 0
+MSG_TX = 1
+MSG_BLOCK = 2
+MSG_DECOUPLED_BLOCK = 0x8001
+MSG_TX_CERTIFICATE = 0x8002
+
+
 class CInv():
     typemap = {
         0: "Error",
         1: "TX",
         2: "Block",
-        20: "CompactBlock"
+        20: "CompactBlock",
+        MSG_DECOUPLED_BLOCK: "DecoupledBlock",
+        MSG_TX_CERTIFICATE: "TxCertificate"
     }
 
     def __init__(self, t=0, h=0):
@@ -414,6 +432,7 @@ class CTransaction():
     def rehash(self):
         self.sha256 = None
         self.calc_sha256()
+        return self.hash
 
     def calc_sha256(self):
         if self.sha256 is None:
@@ -467,7 +486,7 @@ class CBlockHeader():
         self.sha256 = None
         self.hash = None
 
-    def serialize(self):
+    def serialize_header(self):
         r = b""
         r += struct.pack("<i", self.nVersion)
         r += ser_uint256(self.hashPrevBlock)
@@ -477,17 +496,28 @@ class CBlockHeader():
         r += struct.pack("<I", self.nNonce)
         return r
 
+    def serialize(self):
+        return self.serialize_header()
+
     def calc_sha256(self):
+        """The block's identity hash.
+
+        Raptoreum splits the two hashes that Dash keeps as one: src/primitives/
+        block.cpp has GetHash() = SerializeHash(*this), i.e. SHA256d, while
+        GhostRider (ComputeHash/HashGR) is reached only through GetPOWHash and
+        is used for proof of work alone. Hashing the header with GhostRider here
+        would give every locally built block an id the node does not agree with,
+        so no getdata or getbestblockhash comparison would ever match.
+        """
         if self.sha256 is None:
-            r = b""
-            r += struct.pack("<i", self.nVersion)
-            r += ser_uint256(self.hashPrevBlock)
-            r += ser_uint256(self.hashMerkleRoot)
-            r += struct.pack("<I", self.nTime)
-            r += struct.pack("<I", self.nBits)
-            r += struct.pack("<I", self.nNonce)
-            self.sha256 = uint256_from_str(dashhash(r))
-            self.hash = encode(dashhash(r)[::-1], 'hex_codec').decode('ascii')
+            r = self.serialize_header()
+            self.sha256 = uint256_from_str(hash256(r))
+            self.hash = encode(hash256(r)[::-1], 'hex_codec').decode('ascii')
+
+    def calc_pow_hash(self):
+        """GhostRider, the hash proof of work is measured against
+        (CBlockHeader::ComputeHash)."""
+        return uint256_from_str(dashhash(self.serialize_header()))
 
     def rehash(self):
         self.sha256 = None
@@ -536,7 +566,10 @@ class CBlock(CBlockHeader):
     def is_valid(self):
         self.calc_sha256()
         target = uint256_from_compact(self.nBits)
-        if self.sha256 > target:
+        # The proof of work is over the GhostRider hash, not the block's identity
+        # hash; CBlockHeader::GetHash() and ComputeHash() are different functions
+        # in Raptoreum.
+        if self.calc_pow_hash() > target:
             return False
         for tx in self.vtx:
             if not tx.is_valid():
@@ -548,7 +581,7 @@ class CBlock(CBlockHeader):
     def solve(self):
         self.rehash()
         target = uint256_from_compact(self.nBits)
-        while self.sha256 > target:
+        while self.calc_pow_hash() > target:
             self.nNonce += 1
             self.rehash()
 
@@ -849,10 +882,10 @@ class CFinalCommitment:
         self.quorumHash = 0
         self.signers = []
         self.validMembers = []
-        self.quorumPublicKey = b'\\x0' * 48
+        self.quorumPublicKey = b'\x00' * 48
         self.quorumVvecHash = 0
-        self.quorumSig = b'\\x0' * 96
-        self.membersSig = b'\\x0' * 96
+        self.quorumSig = b'\x00' * 96
+        self.membersSig = b'\x00' * 96
 
     def deserialize(self, f):
         self.nVersion = struct.unpack("<H", f.read(2))[0]
@@ -876,6 +909,32 @@ class CFinalCommitment:
         r += ser_uint256(self.quorumVvecHash)
         r += self.quorumSig
         r += self.membersSig
+        return r
+
+
+class CFinalCommitmentTxPayload:
+    """Payload of a TRANSACTION_QUORUM_COMMITMENT (nType 6) special transaction.
+
+    src/llmq/quorums_commitment.h. nHeight must equal the height of the block
+    carrying it, or the node answers "bad-qc-height".
+    """
+
+    def __init__(self):
+        self.nVersion = 1
+        self.nHeight = 0
+        self.commitment = CFinalCommitment()
+
+    def deserialize(self, f):
+        self.nVersion = struct.unpack("<H", f.read(2))[0]
+        self.nHeight = struct.unpack("<I", f.read(4))[0]
+        self.commitment = CFinalCommitment()
+        self.commitment.deserialize(f)
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<H", self.nVersion)
+        r += struct.pack("<I", self.nHeight)
+        r += self.commitment.serialize()
         return r
 
 
@@ -1125,6 +1184,22 @@ class msg_addr():
 
     def __repr__(self):
         return "msg_addr(addrs=%s)" % (repr(self.addrs))
+
+
+class msg_notfound():
+    command = b"notfound"
+
+    def __init__(self, vec=None):
+        self.vec = vec or []
+
+    def deserialize(self, f):
+        self.vec = deser_vector(f, CInv)
+
+    def serialize(self):
+        return ser_vector(self.vec)
+
+    def __repr__(self):
+        return "msg_notfound(vec=%s)" % (repr(self.vec))
 
 
 class msg_inv():
@@ -1433,6 +1508,97 @@ class msg_cmpctblock():
 
     def __repr__(self):
         return "msg_cmpctblock(HeaderAndShortIDs=%s)" % repr(self.header_and_shortids)
+
+class CDecoupledTxRef():
+    def __init__(self, index=0, txid=0):
+        self.index = index
+        self.txid = txid
+
+    def deserialize(self, f):
+        self.index = struct.unpack("<H", f.read(2))[0]
+        self.txid = deser_uint256(f)
+
+    def serialize(self):
+        return struct.pack("<H", self.index) + ser_uint256(self.txid)
+
+
+class CDecoupledBlock():
+    def __init__(self, block=None, references=()):
+        self.version = 1
+        self.header = CBlockHeader(block)
+        self.vtx = []
+        self.vtxids = []
+        if block is not None:
+            for index, tx in enumerate(block.vtx):
+                tx.calc_sha256()
+                if index in references:
+                    self.vtxids.append(CDecoupledTxRef(index, tx.sha256))
+                else:
+                    self.vtx.append(tx)
+
+    def deserialize(self, f):
+        self.version = struct.unpack("<H", f.read(2))[0]
+        self.header.deserialize(f)
+        self.vtx = deser_vector(f, CTransaction)
+        self.vtxids = deser_vector(f, CDecoupledTxRef)
+
+    def serialize(self):
+        return struct.pack("<H", self.version) + self.header.serialize() + ser_vector(self.vtx) + ser_vector(self.vtxids)
+
+
+class CTxValidationCertificate():
+    """Opaque fixed-size statement, shared with the certificate RPC encoding."""
+    def __init__(self, data=bytes(236)):
+        if len(data) != 236:
+            raise ValueError("Invalid certificate size")
+        self.data = data
+
+    def deserialize(self, f):
+        self.data = f.read(236)
+        if len(self.data) != 236:
+            raise ValueError("Truncated certificate")
+
+    def serialize(self):
+        return self.data
+
+    def get_hash(self):
+        return uint256_from_str(hash256(self.data))
+
+
+class msg_senddblock(msg_sendcmpct):
+    command = b"senddblock"
+
+    def __repr__(self):
+        return "msg_senddblock(announce=%s, version=%lu)" % (self.announce, self.version)
+
+
+class msg_dblock():
+    command = b"dblock"
+
+    def __init__(self, block=None):
+        self.block = block if block is not None else CDecoupledBlock()
+
+    def deserialize(self, f):
+        self.block.deserialize(f)
+
+    def serialize(self):
+        return self.block.serialize()
+
+
+class msg_txcert():
+    command = b"txcert"
+
+    def __init__(self, certificate=None, tx=None):
+        self.certificate = certificate if certificate is not None else CTxValidationCertificate()
+        self.tx = tx if tx is not None else CTransaction()
+
+    def deserialize(self, f):
+        self.certificate.deserialize(f)
+        self.tx.deserialize(f)
+
+    def serialize(self):
+        return self.certificate.serialize() + self.tx.serialize()
+
 
 class msg_getblocktxn():
     command = b"getblocktxn"

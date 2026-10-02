@@ -3,6 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <coins.h>
+#include <assets/assets.h>
+#include <key_io.h>
 #include <script/standard.h>
 #include <uint256.h>
 #include <undo.h>
@@ -94,6 +96,46 @@ BOOST_FIXTURE_TEST_SUITE(coins_tests, TestingSetup
 )
 
 static const unsigned int NUM_SIMULATION_ITERATIONS = 40000;
+
+
+BOOST_AUTO_TEST_CASE(update_coins_optional_asset_cache)
+{
+    struct RestoreAssetIndex {
+        const bool previous{fAssetIndex};
+        ~RestoreAssetIndex() { fAssetIndex = previous; }
+    } restore;
+    fAssetIndex = true;
+    uint160 ownerHash;
+    ownerHash.SetHex("0000000000000000000000000000000000000001");
+    const CKeyID owner(ownerHash);
+    const std::string assetId = uint256S("01").ToString();
+    CScript assetScript = GetScriptForDestination(owner);
+    CAssetTransfer(assetId, COIN).BuildAssetTransaction(assetScript);
+    BOOST_REQUIRE(assetScript.IsAssetScript());
+
+    for (bool supplyAssetCache : {false, true}) {
+        CCoinsViewTest base;
+        CCoinsViewCache view(&base);
+        const COutPoint prevout(uint256S("02"), 0);
+        view.AddCoin(prevout, Coin(CTxOut(0, assetScript), 1, false, TRANSACTION_NORMAL, {}), false);
+        CMutableTransaction spend;
+        spend.vin.emplace_back(prevout);
+        spend.vout.emplace_back(0, GetScriptForDestination(owner));
+        const CTransaction tx(spend);
+        CTxUndo undo;
+        CAssetsCache assets;
+        const auto balanceKey = std::make_pair(assetId, EncodeDestination(owner));
+        assets.mapAssetAddressAmount[balanceKey] = COIN;
+
+        UpdateCoins(tx, view, undo, 2, supplyAssetCache ? &assets : nullptr);
+
+        BOOST_CHECK(!view.HaveCoin(prevout));
+        BOOST_CHECK(view.HaveCoin(COutPoint(tx.GetHash(), 0)));
+        BOOST_REQUIRE_EQUAL(undo.vprevout.size(), 1U);
+        BOOST_CHECK(undo.vprevout[0].out.scriptPubKey == assetScript);
+        BOOST_CHECK(assets.mapAssetAddressAmount.at(balanceKey) == (supplyAssetCache ? 0 : COIN));
+    }
+}
 
 // This is a large randomized insert/remove simulation test on a variable-size
 // stack of caches on top of CCoinsViewTest.

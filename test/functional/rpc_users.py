@@ -15,6 +15,7 @@ import os
 import http.client
 import urllib.parse
 import subprocess
+import sys
 from random import SystemRandom
 import string
 import configparser
@@ -36,16 +37,16 @@ class HTTPBasicsTest(BitcoinTestFramework):
         config = configparser.ConfigParser()
         config.read_file(open(self.options.configfile))
         gen_rpcauth = config['environment']['RPCAUTH']
-        p = subprocess.Popen([gen_rpcauth, self.user], stdout=subprocess.PIPE, universal_newlines=True)
-        lines = p.stdout.read().splitlines()
+        lines = subprocess.check_output([sys.executable, gen_rpcauth, self.user],
+                                        universal_newlines=True).splitlines()
         rpcauth3 = lines[1]
         self.password = lines[3]
 
-        with open(os.path.join(get_datadir_path(self.options.tmpdir, 0), "dash.conf"), 'a', encoding='utf8') as f:
+        with open(os.path.join(get_datadir_path(self.options.tmpdir, 0), "raptoreum.conf"), 'a', encoding='utf8') as f:
             f.write(rpcauth+"\n")
             f.write(rpcauth2+"\n")
             f.write(rpcauth3+"\n")
-        with open(os.path.join(get_datadir_path(self.options.tmpdir, 1), "dash.conf"), 'a', encoding='utf8') as f:
+        with open(os.path.join(get_datadir_path(self.options.tmpdir, 1), "raptoreum.conf"), 'a', encoding='utf8') as f:
             f.write(rpcuser+"\n")
             f.write(rpcpassword+"\n")
 

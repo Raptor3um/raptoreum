@@ -465,6 +465,13 @@ void SetupServerArgs() {
     const auto testnetChainParams = CreateChainParams(CBaseChainParams::TESTNET);
     const auto regtestChainParams = CreateChainParams(CBaseChainParams::REGTEST);
 
+    gArgs.AddArg("-buspoolmaxcount=<n>", "Maximum experimental buspool records (1..100000, default: 10000)", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
+    gArgs.AddArg("-buspoolmaxbytes=<n>", "Maximum experimental buspool bytes (1..1073741824, default: 67108864)", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
+    gArgs.AddArg("-txdecoupling", "Enable experimental transaction decoupling on regtest (default: 0)",
+                 ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
+    gArgs.AddArg("-txdecouplingheight=<n>", "Activate experimental script certificates at this regtest height (default: disabled; requires -txdecoupling=1)",
+                 ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
+
     // Hidden Options
     std::vector <std::string> hidden_args = {"-h", "-help", "-dbcrashratio", "-forcecompactdb", "-printcrashinfo",
             // GUI Args. These will be overwritten by SetupUIArgs for the GUI
@@ -606,6 +613,10 @@ void SetupServerArgs() {
                  ArgsManager::ALLOW_ANY, OptionsCategory::CONNECTION);
     gArgs.AddArg("-allowprivatenet", strprintf("Allow RFC1918 addresses to be relayed and connected to (default: %u)",
                                                DEFAULT_ALLOWPRIVATENET), ArgsManager::ALLOW_ANY,
+                 OptionsCategory::CONNECTION);
+    gArgs.AddArg("-asmap=<file>",
+                 strprintf("Specify asn mapping used for bucketing of the peers (default: %s). Relative paths will be prefixed by the net-specific datadir location.",
+                           DEFAULT_ASMAP_FILENAME), ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY,
                  OptionsCategory::CONNECTION);
     gArgs.AddArg("-banscore=<n>",
                  strprintf("Threshold for disconnecting misbehaving peers (default: %u)", DEFAULT_BANSCORE_THRESHOLD),
@@ -1495,6 +1506,15 @@ bool AppInitBasicSetup() {
 }
 
 bool AppInitParameterInteraction() {
+    for (const auto& limit : {std::make_pair("-buspoolmaxcount", int64_t{100000}),
+                              std::make_pair("-buspoolmaxbytes", int64_t{1073741824})}) {
+        if (!gArgs.IsArgSet(limit.first)) continue;
+        int64_t value;
+        if (!ParseInt64(gArgs.GetArg(limit.first, ""), &value) || value < 1 || value > limit.second) {
+            return InitError(strprintf("%s must be between 1 and %d", limit.first, limit.second));
+        }
+        if (!gArgs.GetBoolArg("-txdecoupling", false)) return InitError("Buspool limits require -txdecoupling=1");
+    }
     const CChainParams &chainparams = Params();
     // ********************************************************* Step 2: parameter interactions
 
@@ -1743,6 +1763,18 @@ bool AppInitParameterInteraction() {
     if (fDisableGovernance) {
         InitWarning(_("You are starting with governance validation disabled.") +
                     (fPruneMode ? " " + _("This is expected because you are running a pruned node.") : ""));
+    }
+
+    // Without this a malformed value is only caught by CQuorumManager, long
+    // after startup.
+    try {
+        const bool fRecoveryEnabled{llmq::CLLMQUtils::QuorumDataRecoveryEnabled()};
+        const bool fQuorumVvecRequestsEnabled{llmq::CLLMQUtils::GetEnabledQuorumVvecSyncEntries().size() > 0};
+        if (!fRecoveryEnabled && fQuorumVvecRequestsEnabled) {
+            InitWarning("-llmq-qvvec-sync set but recovery is disabled due to -llmq-data-recovery=0");
+        }
+    } catch (const std::invalid_argument &e) {
+        return InitError(e.what());
     }
 
     return true;

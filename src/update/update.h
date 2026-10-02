@@ -345,6 +345,7 @@ public:
     const Update *GetUpdate(enum EUpdate eUpdate) const;
 
     bool IsActive(enum EUpdate eUpdate, const CBlockIndex *blockIndex);
+    bool IsActiveForNextBlock(enum EUpdate eUpdate, const CBlockIndex *parent);
 
     bool IsAssetsActive(const CBlockIndex *blockIndex);
 
@@ -366,6 +367,22 @@ private :
     FinalStateMap finalStates;
     UpdateMap updates;             // Update parameters (does not contain states)
     std::map <UpdateCacheKey, StateInfo> states;
+    // Successor activation per parent. A block hash commits to the whole ancestry.
+    std::map<std::pair<EUpdate, uint256>, bool> nextBlockActive;
+    static constexpr size_t MAX_NEXT_BLOCK_ACTIVE = 1024;
+    // Real block at which successor activation first became final on a branch.
+    // State() evaluates every round with the requested round's thresholds, so a
+    // descendant reuses the result only when those thresholds are equal.
+    struct FinalAncestor {
+        int height;
+        uint256 hash;
+        int64_t minerThreshold;
+        int64_t nodeThreshold;
+        bool active;
+    };
+    std::map<EUpdate, FinalAncestor> nextBlockFinal;
+    uint64_t roundsWalked{0}; // Rounds walked back by State(); read by tests only.
+    friend struct UpdateManagerTestAccess;
 
 };
 

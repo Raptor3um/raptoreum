@@ -52,6 +52,8 @@ class CConnman;
 
 class CScriptCheck;
 
+class CTxValidationCertificate;
+
 class CBlockPolicyEstimator;
 
 class CTxMemPool;
@@ -314,7 +316,26 @@ void PruneBlockFilesManual(int nManualPruneHeight);
 /** (try to) add transaction to memory pool */
 bool AcceptToMemoryPool(CTxMemPool &pool, CValidationState &state, const CTransactionRef &tx,
                         bool *pfMissingInputs, bool bypass_limits,
-                        const CAmount nAbsurdFee, bool fDryRun = false);
+                        const CAmount nAbsurdFee, bool fDryRun = false,
+                        const CTxValidationCertificate* certificate = nullptr);
+
+// Executes both script rule sets locally; never substitutes a remote certificate.
+// Requires cs_main and confirmed ordinary-payment inputs at the active tip.
+bool CheckTxForCertificate(const CTransaction& tx, CValidationState& state, uint32_t consensusFlags);
+/** Execute a mempool transaction's scripts exactly as ordinary admission does. Inputs may be
+ *  confirmed or created by other mempool entries. Requires cs_main. */
+bool CheckMempoolTxScripts(const CTransaction& tx, CTxMemPool& pool, CValidationState& state);
+
+/**
+ * Does this transaction need a working copy of the global asset cache?
+ *
+ * True only for the three asset transaction types (NEW_ASSET/UPDATE_ASSET/MINT_ASSET);
+ * every other type CheckSpecialTx dispatches to either doesn't take an assetsCache
+ * parameter at all, or (TRANSACTION_NORMAL) never reaches the dispatcher. Kept in exact
+ * agreement with AcceptToMemoryPoolWorker's own use of it and with CheckSpecialTx's switch
+ * in evo/specialtx.cpp.
+ */
+bool TxNeedsAssetsCache(const CTransaction &tx);
 
 bool GetUTXOCoin(const COutPoint &outpoint, Coin &coin, int height);
 

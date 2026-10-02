@@ -21,6 +21,9 @@ void RegisterMiscRPCCommands(CRPCTable &tableRPC);
 /** Register mining RPC commands */
 void RegisterMiningRPCCommands(CRPCTable &tableRPC);
 
+/** Register experimental transaction validation RPC commands */
+void RegisterBusPoolRPCCommands(CRPCTable &tableRPC);
+
 /** Register raw transaction RPC commands */
 void RegisterRawTransactionRPCCommands(CRPCTable &tableRPC);
 
@@ -48,6 +51,7 @@ static inline void RegisterAllCoreRPCCommands(CRPCTable &t) {
     RegisterMiscRPCCommands(t);
     RegisterMiningRPCCommands(t);
     RegisterRawTransactionRPCCommands(t);
+    RegisterBusPoolRPCCommands(t);
     RegisterSmartnodeRPCCommands(t);
     RegisterCoinJoinRPCCommands(t);
     RegisterGovernanceRPCCommands(t);
