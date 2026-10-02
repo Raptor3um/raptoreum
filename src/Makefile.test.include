@@ -48,6 +48,7 @@ BITCOIN_TESTS =\
   test/bloom_tests.cpp \
   test/bls_tests.cpp \
   test/bswap_tests.cpp \
+  test/chainparams_tests.cpp \
   test/checkdatasig_tests.cpp \
   test/checkqueue_tests.cpp \
   test/cachemap_tests.cpp \
@@ -84,6 +85,7 @@ BITCOIN_TESTS =\
   test/policyestimator_tests.cpp \
   test/pow_tests.cpp \
   test/prevector_tests.cpp \
+  test/quorums_dkgsessionmgr_tests.cpp \
   test/raii_event_tests.cpp \
   test/random_tests.cpp \
   test/ref_tests.cpp \
