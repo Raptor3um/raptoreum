@@ -8,6 +8,7 @@
 #include <consensus/validation.h>
 #include <core_memusage.h>
 #include <llmq/quorums_instantsend.h>
+#include <streams.h>
 #include <txdecoupling.h>
 #include <txmempool.h>
 #include <util/system.h>
@@ -332,6 +333,12 @@ void CBusPoolManager::RevalidateDelegated()
     }
 }
 
+void CBusPoolManager::InitializeCurrentBlockTip()
+{
+    LOCK(cs_main);
+    lastTip = ChainActive().Tip();
+}
+
 void CBusPoolManager::SynchronousUpdatedBlockTip(const CBlockIndex* tip, const CBlockIndex*, bool)
 {
     LOCK(cs_main);
@@ -368,4 +375,23 @@ void CBusPoolManager::NotifyTransactionLock(const CTransactionRef& tx,
 {
     LOCK(cs_main);
     if (pool.exists(tx->GetHash()) && RetainTransaction(tx)) pool.AddTransactionsUpdated(1);
+}
+
+RelayedProofRead ReadRelayedProof(CDataStream& s, const uint256& identity, const CBlockIndex* tip,
+                                  const Consensus::Params& consensus, CTxValidationCertificate& cert)
+{
+    s >> cert.version >> cert.txid >> cert.parentHash >> cert.prevoutsDigest >> cert.consensusFlags >>
+        cert.policyFlags >> cert.quorumType >> cert.quorumHash >> cert.result;
+    if (!tip || cert.parentHash != tip->GetBlockHash() || !IsTxDecouplingActive(tip, consensus))
+        return RelayedProofRead::STALE;
+    try {
+        s >> cert.sig;
+    } catch (const std::ios_base::failure&) {
+        return RelayedProofRead::MALFORMED;
+    }
+    // Re-serialization also proves the field-by-field read matches the certificate format.
+    if (GetSerializeSize(cert, SER_NETWORK, PROTOCOL_VERSION) != CTxValidationCertificate::V1_SIZE ||
+        SerializeHash(cert) != identity)
+        return RelayedProofRead::MALFORMED;
+    return RelayedProofRead::CURRENT;
 }

@@ -263,6 +263,9 @@ bool UpdateManager::Add(Update update) {
     if (it != updates.end())
         updates.erase(it);
     updates.emplace(update.UpdateId(), update);
+    // Successor results computed with the previous parameters no longer apply.
+    nextBlockActive.clear();
+    nextBlockFinal.erase(update.UpdateId());
     // LogPrint(BCLog::UPDATES, "Updates: UpdateManager Added: %s\n", update.ToString());
     LogPrintf("Updates: UpdateManager Added: %s\n", update.ToString());
     return true;
@@ -289,6 +292,15 @@ bool UpdateManager::IsActiveForNextBlock(enum EUpdate eUpdate, const CBlockIndex
     const auto key = std::make_pair(eUpdate, parent->GetBlockHash());
     const auto cached = nextBlockActive.find(key);
     if (cached != nextBlockActive.end()) return cached->second;
+    const int64_t round = (int64_t(parent->nHeight) + 1 - update->StartHeight()) / update->RoundSize();
+    const int64_t minerThreshold = update->MinerThreshold().GetThreshold(round);
+    const int64_t nodeThreshold = update->NodeThreshold().GetThreshold(round);
+    const auto final = nextBlockFinal.find(eUpdate);
+    if (final != nextBlockFinal.end() && final->second.minerThreshold == minerThreshold &&
+        final->second.nodeThreshold == nodeThreshold && parent->nHeight >= final->second.height &&
+        parent->GetAncestor(final->second.height)->GetBlockHash() == final->second.hash) {
+        return final->second.active;
+    }
     CBlockIndex next;
     next.pprev = const_cast<CBlockIndex*>(parent);
     next.nHeight = parent->nHeight + 1;
@@ -298,6 +310,24 @@ bool UpdateManager::IsActiveForNextBlock(enum EUpdate eUpdate, const CBlockIndex
     UpdateManager isolated;
     isolated.updates.emplace(eUpdate, *update);
     const bool active = isolated.IsActive(eUpdate, &next);
+    roundsWalked += isolated.roundsWalked;
+    // Rounds up to the first terminal state depend only on that block's ancestry,
+    // and every later round keeps it. Only a real ancestor can be remembered.
+    const CBlockIndex* terminal = nullptr;
+    EUpdateState terminalState = EUpdateState::Unknown;
+    for (const auto& item : isolated.states) {
+        const CBlockIndex* block = item.first.second;
+        const EUpdateState state = item.second.State;
+        if (block && block != &next && (state == EUpdateState::Active || state == EUpdateState::Failed) &&
+            (!terminal || block->nHeight < terminal->nHeight)) {
+            terminal = block;
+            terminalState = state;
+        }
+    }
+    if (terminal) {
+        nextBlockFinal[eUpdate] = {terminal->nHeight, terminal->GetBlockHash(), minerThreshold, nodeThreshold,
+                                   terminalState == EUpdateState::Active};
+    }
     if (nextBlockActive.size() >= MAX_NEXT_BLOCK_ACTIVE) nextBlockActive.clear();
     nextBlockActive.emplace(key, active);
     return active;
@@ -398,6 +428,7 @@ StateInfo UpdateManager::State(enum EUpdate eUpdate, const CBlockIndex *blockInd
         }
 
         vToCompute.push_back(pIndexPrev);
+        ++roundsWalked;
         pIndexPrev = pIndexPrev->GetAncestor(pIndexPrev->nHeight - roundSize);
     }
     LogPrint(BCLog::UPDATES, "Updates: Lookback complete.  Rounds to compute: %d\n", vToCompute.size());

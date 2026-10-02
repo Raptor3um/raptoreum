@@ -453,24 +453,38 @@ class DecoupledBlocksTest(TxValidationTest):
 
         peer = self.exercise_reconstruction_limits(peer, alternate, coins[9])
 
-        self.log.info("Unsolicited or malformed BLS prefixes cannot reuse an expensive in-flight decode")
-        malformed_proof = CTxValidationCertificate(b"\xff" * 236)
-        malformed_message = msg_txcert(malformed_proof, CTransaction())
+        self.log.info("Unsolicited, stale or malformed BLS proofs cannot reuse an expensive in-flight decode")
+        stale_proof = CTxValidationCertificate(b"\xff" * 236)
+        stale_message = msg_txcert(stale_proof, CTransaction())
         # An unsolicited proof is ignored before any decoding or penalty.
         score = sum(item.get("banscore", 0) for item in receiver.getpeerinfo())
-        peer.send_and_ping(malformed_message)
+        peer.send_and_ping(stale_message)
         assert_equal(sum(item.get("banscore", 0) for item in receiver.getpeerinfo()), score)
         assert peer.is_connected
+        # A requested proof for another parent is dropped unpenalized, before its signature is decoded.
+        stale_hash = stale_proof.get_hash()
+        peer.send_and_ping(msg_inv([CInv(MSG_TX_CERTIFICATE, stale_hash)]))
+        peer.wait_request(MSG_TX_CERTIFICATE, stale_hash)
+        peer.send_and_ping(stale_message)
+        assert_equal(sum(item.get("banscore", 0) for item in receiver.getpeerinfo()), score)
+        # The same signature bytes bound to the current parent are a penalized format failure,
+        # suppressed by certificate identity.
+        current = bytearray(stale_proof.serialize())
+        current[34:66] = bytes.fromhex(receiver.getbestblockhash())[::-1]
+        malformed_proof = CTxValidationCertificate(bytes(current))
+        malformed_message = msg_txcert(malformed_proof, CTransaction())
         malformed_hash = malformed_proof.get_hash()
         peer.send_and_ping(msg_inv([CInv(MSG_TX_CERTIFICATE, malformed_hash)]))
         peer.wait_request(MSG_TX_CERTIFICATE, malformed_hash)
         peer.send_and_ping(malformed_message)
+        assert_equal(sum(item.get("banscore", 0) for item in receiver.getpeerinfo()), score + 20)
         count = peer.requests.count((MSG_TX_CERTIFICATE, malformed_hash))
         peer.send_and_ping(malformed_message)
         peer.send_and_ping(msg_inv([CInv(MSG_TX_CERTIFICATE, malformed_hash)]))
         self.bump_mocktime(61)
         peer.sync_with_ping()
         assert_equal(peer.requests.count((MSG_TX_CERTIFICATE, malformed_hash)), count)
+        assert_equal(sum(item.get("banscore", 0) for item in receiver.getpeerinfo()), score + 20)
         assert peer.is_connected
 
         self.log.info("Real recovered proofs relay to an ordinary node by certificate hash")

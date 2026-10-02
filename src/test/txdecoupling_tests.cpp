@@ -12,6 +12,9 @@
 #include <llmq/quorums_commitment.h>
 #include <miner.h>
 #include <pow.h>
+#include <streams.h>
+#include <txmempool.h>
+#include <update/update.h>
 #include <txdecoupling.h>
 #include <validation.h>
 #include <compat/endian.h>
@@ -177,6 +180,73 @@ BOOST_AUTO_TEST_CASE(successor_flags_predict_activation_without_temporary_indexe
     BOOST_CHECK(GetTxValidationNextScriptFlags(&parent, Params().GetConsensus(), flags));
     parent.nTime = 1333238398;
     BOOST_CHECK(!GetTxValidationNextScriptFlags(&parent, Params().GetConsensus(), flags));
+}
+
+BOOST_AUTO_TEST_CASE(inactive_manifest_rejected_before_certificate_decoding)
+{
+    CCbTx payload;
+    payload.nVersion = CCbTx::TX_CERTIFICATE_VERSION;
+    payload.nHeight = 9;
+    payload.txCertificates.resize(1);
+    payload.txCertificates[0].index = 1;
+    CMutableTransaction tx = CoinbasePayload(2, 9);
+    SetTxPayload(tx, payload);
+    // The last bytes are the certificate signature; these are not a BLS point.
+    std::fill(tx.vExtraPayload.end() - CBLSSignature::SerSize, tx.vExtraPayload.end(), 0xff);
+    CCbTx decoded;
+    BOOST_REQUIRE(!GetTxPayload(tx, decoded));
+    CBlockIndex parent;
+    parent.nHeight = 8;
+    CValidationState inactive;
+    BOOST_CHECK(!CheckCbTx(CTransaction(tx), &parent, inactive));
+    BOOST_CHECK_EQUAL(inactive.GetRejectReason(), "bad-cbtx-version");
+    // The active rule still decodes every certificate.
+    parent.nHeight = 9;
+    CValidationState active;
+    BOOST_CHECK(!CheckCbTx(CTransaction(tx), &parent, active));
+    BOOST_CHECK_EQUAL(active.GetRejectReason(), "bad-cbtx-payload");
+    tx.vExtraPayload.assign(1, 0x01);
+    CValidationState truncated;
+    BOOST_CHECK(!CheckCbTx(CTransaction(tx), &parent, truncated));
+    BOOST_CHECK_EQUAL(truncated.GetRejectReason(), "bad-cbtx-payload");
+}
+
+BOOST_AUTO_TEST_CASE(relayed_proof_context_checked_before_signature)
+{
+    const uint256 tipHash = uint256S("02");
+    CBlockIndex tip;
+    tip.nHeight = 20;
+    tip.phashBlock = &tipHash;
+    CBLSSecretKey key;
+    key.MakeNewKey();
+    CTxValidationCertificate cert;
+    cert.txid = uint256S("01");
+    cert.parentHash = tipHash;
+    cert.sig = key.Sign(uint256S("03"));
+    size_t unread = 0;
+    const auto read = [&](const CTxValidationCertificate& proof, bool malformed) {
+        CDataStream wire(SER_NETWORK, PROTOCOL_VERSION);
+        wire << proof;
+        BOOST_REQUIRE_EQUAL(wire.size(), CTxValidationCertificate::V1_SIZE);
+        if (malformed) std::fill(wire.end() - CBLSSignature::SerSize, wire.end(), char(0xff));
+        const uint256 identity = Hash(wire.begin(), wire.end());
+        CTxValidationCertificate decoded;
+        const auto result = ReadRelayedProof(wire, identity, &tip, Params().GetConsensus(), decoded);
+        unread = wire.size();
+        return result;
+    };
+    BOOST_CHECK(read(cert, false) == RelayedProofRead::CURRENT);
+    BOOST_CHECK_EQUAL(unread, 0U);
+    // The handler penalizes this result, as it does other proof format failures.
+    BOOST_CHECK(read(cert, true) == RelayedProofRead::MALFORMED);
+    // A stale parent or an inactive rule returns with the signature still unread.
+    auto stale = cert;
+    stale.parentHash = uint256S("04");
+    BOOST_CHECK(read(stale, true) == RelayedProofRead::STALE);
+    BOOST_CHECK_EQUAL(unread, size_t{CBLSSignature::SerSize});
+    tip.nHeight = 8;
+    BOOST_CHECK(read(cert, true) == RelayedProofRead::STALE);
+    BOOST_CHECK_EQUAL(unread, size_t{CBLSSignature::SerSize});
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -815,4 +885,107 @@ BOOST_FIXTURE_TEST_CASE(txcertificate_successor_activation_is_per_branch, TestCh
         differed |= results[0] != results[1];
     }
     BOOST_CHECK(differed);
+}
+
+namespace {
+// Delivers a tip notification as the validation interface would.
+struct BusPoolTipAccess : CBusPoolManager {
+    using CBusPoolManager::CBusPoolManager;
+    using CBusPoolManager::SynchronousUpdatedBlockTip;
+};
+}
+
+// A started node's first notification can report the loaded tip unchanged, for
+// example when a new block is rejected during connection.
+BOOST_FIXTURE_TEST_CASE(txcertificate_unchanged_loaded_tip_keeps_certificates, CertificateBlockSetup)
+{
+    LOCK(cs_main);
+    // The buspool is constructed before the chain is loaded and started afterwards.
+    BusPoolTipAccess manager(*m_node.mempool);
+    manager.InitializeCurrentBlockTip();
+    CMutableTransaction payment;
+    payment.nVersion = 3;
+    payment.vin.emplace_back(m_coinbase_txns[0]->GetHash(), 0);
+    const CAmount inputValue = ChainstateActive().CoinsTip().AccessCoin(payment.vin[0].prevout).out.nValue;
+    payment.vout.emplace_back(inputValue - 100000, CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG);
+    // No ECDSA signature: only the remote certificate admits this candidate.
+    const auto tx = MakeTransactionRef(payment);
+    const auto certificate = Certify(*tx, ChainstateActive().CoinsTip(), ChainActive().Tip(), keys);
+    CValidationState state;
+    BOOST_REQUIRE_MESSAGE(manager.SubmitTransaction(tx, certificate, state), state.GetRejectReason());
+    manager.SynchronousUpdatedBlockTip(ChainActive().Tip(), nullptr, false);
+    CTxValidationCertificate retained;
+    BOOST_CHECK(manager.GetCertificate(tx->GetHash(), ChainActive().Tip(), retained));
+    BOOST_CHECK(SerializeHash(retained) == SerializeHash(certificate));
+    BOOST_CHECK(m_node.mempool->exists(tx->GetHash()));
+}
+
+struct UpdateManagerTestAccess {
+    static uint64_t RoundsWalked(const UpdateManager& manager) { return manager.roundsWalked; }
+    static void EvictParents(UpdateManager& manager) { manager.nextBlockActive.clear(); }
+    static void EvictAll(UpdateManager& manager)
+    {
+        manager.nextBlockActive.clear();
+        manager.nextBlockFinal.clear();
+    }
+};
+
+// Once successor activation is final on a branch, a new parent must not walk the
+// round history again. Results still match a fresh manager on both branches.
+BOOST_FIXTURE_TEST_CASE(txcertificate_successor_activation_work_stops_at_finality, TestChain100Setup)
+{
+    // Voting ends at 120: signalling activates by 130, silence fails at 130.
+    const Update update(EUpdate::DEPLOYMENT_V17, "v17", 0, 10, 100, 1, 3, 1, false,
+                        VoteThreshold(100, 100, 1), VoteThreshold(0, 0, 1));
+    {
+        LOCK(cs_main);
+        Updates().Add(update);
+    }
+    const CScript script = CScript() << OP_TRUE;
+    const auto mine = [&](bool signal) {
+        CBlock block = CreateBlock({}, script);
+        block.nVersion = signal ? (block.nVersion | update.BitMask()) : (block.nVersion & ~update.BitMask());
+        while (!CheckProofOfWork(block.GetPOWHash(), block.nBits, Params().GetConsensus())) ++block.nNonce;
+        BOOST_REQUIRE(g_chainman.ProcessNewBlock(Params(), std::make_shared<const CBlock>(block), true, nullptr));
+        LOCK(cs_main);
+        BOOST_REQUIRE(ChainActive().Tip()->GetBlockHash() == block.GetHash());
+        return ChainActive().Tip();
+    };
+    std::vector<const CBlockIndex*> signalling, silent;
+    for (int i = 0; i < 45; ++i) signalling.push_back(mine(true));
+    {
+        CValidationState state;
+        BOOST_REQUIRE(InvalidateBlock(state, Params(), const_cast<CBlockIndex*>(signalling.front())));
+    }
+    for (int i = 0; i < 45; ++i) silent.push_back(mine(false));
+
+    LOCK(cs_main);
+    const auto oracle = [&](const CBlockIndex* parent) {
+        CBlockIndex next;
+        next.pprev = const_cast<CBlockIndex*>(parent);
+        next.nHeight = parent->nHeight + 1;
+        next.BuildSkip();
+        UpdateManager fresh;
+        fresh.Add(update);
+        return fresh.IsActive(EUpdate::DEPLOYMENT_V17, &next);
+    };
+    const auto check = [&](const std::vector<const CBlockIndex*>& branch) {
+        uint64_t settled = 0;
+        for (const CBlockIndex* parent : branch) {
+            BOOST_CHECK_EQUAL(Updates().IsActiveForNextBlock(EUpdate::DEPLOYMENT_V17, parent), oracle(parent));
+            if (parent->nHeight == 134) settled = UpdateManagerTestAccess::RoundsWalked(Updates());
+        }
+        // Each later parent is a new hash, yet none walks a round.
+        BOOST_CHECK_EQUAL(UpdateManagerTestAccess::RoundsWalked(Updates()), settled);
+    };
+    BOOST_REQUIRE_EQUAL(signalling.back()->nHeight, 145);
+    BOOST_REQUIRE(oracle(signalling.back()) && !oracle(silent.back()));
+    check(signalling);
+    check(silent);
+    UpdateManagerTestAccess::EvictParents(Updates());
+    check(signalling);
+    check(silent);
+    UpdateManagerTestAccess::EvictAll(Updates());
+    check(silent);
+    check(signalling);
 }

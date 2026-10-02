@@ -15,6 +15,7 @@
 #include <memory>
 
 class CBlockIndex;
+class CDataStream;
 class CTxMemPool;
 class CValidationState;
 
@@ -57,6 +58,9 @@ public:
     CBusPoolManager(CTxMemPool& poolIn, size_t maxCountIn = DEFAULT_MAX_COUNT,
                     size_t maxBytesIn = DEFAULT_MAX_BYTES);
 
+    // Call after the chain is loaded and before registration: a later notification
+    // for this same tip must not discard certificates.
+    void InitializeCurrentBlockTip();
     bool RetainTransaction(const CTransactionRef& tx);
     // Borrowers must charge the complete body to their own bounded lifetime
     // (template or reconstruction), even after this cache releases its copy.
@@ -82,6 +86,14 @@ public:
     bool GetStatement(const uint256& txid, CTxValidationCertificate& statement, bool& recovered) const;
     void HandleNewRecoveredSig(const llmq::CRecoveredSig& recoveredSig) override;
 };
+
+enum class RelayedProofRead { STALE, MALFORMED, CURRENT };
+
+// Reads a relayed proof whose V1_SIZE-byte wire identity was requested. Fixed fields
+// come first: a stale parent or inactive rule returns STALE before any BLS decoding.
+// MALFORMED means the proof itself is invalid for the current context.
+RelayedProofRead ReadRelayedProof(CDataStream& s, const uint256& identity, const CBlockIndex* tip,
+                                  const Consensus::Params& consensus, CTxValidationCertificate& cert);
 
 bool IsBusPoolEnabled();
 extern std::shared_ptr<CBusPoolManager> busPoolManager;

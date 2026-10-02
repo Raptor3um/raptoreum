@@ -141,3 +141,17 @@ ReadStatus PartiallyDownloadedDecoupledBlock::FillBlock(
     missing.clear();
     return READ_STATUS_OK;
 }
+
+std::map<uint256, CTransactionRef> IndexExtraTransactions(
+    const std::vector<std::pair<uint256, CTransactionRef>>& extra, const CDecoupledBlock& block,
+    CDecoupledReadBudget& budget)
+{
+    std::map<uint256, CTransactionRef> index;
+    if (block.vtxids.empty()) return index;
+    budget.ChargeArray(extra.size(),
+        memusage::MallocUsage(sizeof(memusage::stl_tree_node<std::pair<const uint256, CTransactionRef>>)));
+    for (const auto& item : extra) {
+        if (item.second) index.emplace(item.first, item.second);
+    }
+    return index;
+}

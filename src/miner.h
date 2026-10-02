@@ -200,8 +200,11 @@ private:
     /** Perform checks on each transaction in a package:
       * locktime
       * These checks should always succeed, and they're here
-      * only as an extra check in case of suboptimal node configuration */
-    bool TestPackageTransactions(const CTxMemPool::setEntries &package) const;
+      * only as an extra check in case of suboptimal node configuration.
+      * Decoupled templates also return the package in block order; otherwise
+      * sortedEntries is left empty. */
+    bool TestPackageTransactions(const CTxMemPool::setEntries &package,
+                                 std::vector<CTxMemPool::txiter> &sortedEntries) const;
 
     /** Return true if given transaction from mapTx has already been evaluated,
       * or if the transaction's cached data in mapTx is incorrect. */

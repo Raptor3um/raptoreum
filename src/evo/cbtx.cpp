@@ -17,6 +17,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <consensus/merkle.h>
+#include <crypto/common.h>
 
 bool CheckCbTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state) {
     if (tx.nType != TRANSACTION_COINBASE) {
@@ -29,6 +30,13 @@ bool CheckCbTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidatio
         return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-invalid");
     }
 
+    // Reject an inactive experimental manifest by its version prefix, before
+    // its certificates and BLS signatures are decoded.
+    if (tx.vExtraPayload.size() >= sizeof(uint16_t) &&
+        ReadLE16(tx.vExtraPayload.data()) == CCbTx::TX_CERTIFICATE_VERSION &&
+        !IsTxDecouplingActive(pindexPrev, Params().GetConsensus()))
+        return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-version");
+
     CCbTx cbTx;
     if (!GetTxPayload(tx, cbTx)) {
         std::cout << "fail to check GetTxPayload " << tx.ToString() << std::endl;
@@ -37,8 +45,6 @@ bool CheckCbTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidatio
 
     const bool experimental = cbTx.nVersion == CCbTx::TX_CERTIFICATE_VERSION;
     if (experimental) {
-        if (!IsTxDecouplingActive(pindexPrev, Params().GetConsensus()))
-            return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-version");
         if (tx.vExtraPayload.size() > MAX_TX_EXTRA_PAYLOAD)
             return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-payload-size");
         uint16_t previous = 0;

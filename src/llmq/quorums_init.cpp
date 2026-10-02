@@ -70,6 +70,7 @@ namespace llmq {
 
     void StartLLMQSystem() {
         if (busPoolManager) {
+            busPoolManager->InitializeCurrentBlockTip();
             RegisterSharedValidationInterface(busPoolManager);
             quorumSigningManager->RegisterRecoveredSigsListener(busPoolManager.get());
         }

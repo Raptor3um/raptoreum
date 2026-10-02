@@ -25,6 +25,7 @@ Do not increase transaction or block limits in this implementation. Removing a b
 - Do not reuse `VERSIONBITS_TOP_BITS`. The 80-byte header remains unchanged; transport format is negotiated, and the experimental coinbase payload commits delegated validation evidence through the existing merkle root.
 - Ordinary GBT and `submitblock` retain their interface. Peers without transport negotiation receive complete blocks or existing compact blocks.
 - Transport-only blocks remain valid under existing rules. A block using the delegated consensus extension is intentionally incompatible with nodes lacking that rule; compatibility tests must not label that as an accidental transport regression.
+- One correction is not gated by these options. Compact-block reconstruction accepts a prefilled quorum commitment without inputs or outputs (transaction version 3, type `TRANSACTION_QUORUM_COMMITMENT`), the shape of every valid commitment. It applies on every network, including mainnet and testnet, with or without `-txdecoupling`: such a compact block was previously dropped and its sender penalized, and it is now reconstructed and validated as an ordinary full block. Null prefilled transactions and every other empty shape are still rejected.
 
 ## One candidate graph, two transaction sources
 

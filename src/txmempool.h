@@ -78,10 +78,11 @@ private:
     const int64_t nTime;            //!< Local time when entering the mempool
     const unsigned int entryHeight; //!< Chain height when entering the mempool
     const bool spendsCoinbase;      //!< keep track of transactions that spend a coinbase
+    // Fills existing padding: provenance must not change mempool memory accounting.
+    bool scriptsLocallyValidated{true}; //!< Remote certificates never prove local script execution
     const unsigned int sigOpCount;  //!< Legacy sig ops plus P2SH sig op count
     int64_t feeDelta{0};            //!< Used for determining the priority of the transaction for mining in a block
     LockPoints lockPoints;          //!< Track the height and time at which tx was final
-    bool scriptsLocallyValidated{true}; //!< Remote certificates never prove local script execution
 
     // Information about descendants of this transaction that are in the
     // mempool; if we remove this transaction we must remove all of these

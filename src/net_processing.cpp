@@ -3345,17 +3345,22 @@ bool static ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStr
                                                  busPoolManager->GetMaxBytes()));
             // BLS serialization uses fixed temporary byte vectors internally.
             allocation->budget.ChargeArray(4, memusage::MallocUsage(CBLSSignature::SerSize));
-            CDecoupledBudgetedReader<CDataStream> reader(vRecv, allocation->budget);
             CTxValidationCertificate certificate;
-            reader >> certificate;
-            if (GetSerializeSize(certificate, SER_NETWORK, PROTOCOL_VERSION) != CERTIFICATE_V1_SIZE ||
-                SerializeHash(certificate) != inv.hash)
-                throw std::ios_base::failure("non-canonical transaction certificate");
-            if (!::ChainActive().Tip() || certificate.parentHash != ::ChainActive().Tip()->GetBlockHash()) {
+            switch (ReadRelayedProof(vRecv, inv.hash, ::ChainActive().Tip(), chainparams.GetConsensus(),
+                                     certificate)) {
+            case RelayedProofRead::STALE:
                 retry();
                 return true;
+            case RelayedProofRead::MALFORMED:
+                // Like the other proof format failures; suppressed by identity, never by txid.
+                EraseObjectRequest(state, inv);
+                Misbehaving(pfrom->GetId(), 20, "malformed transaction certificate");
+                return true;
+            case RelayedProofRead::CURRENT:
+                break;
             }
             currentContext = true;
+            CDecoupledBudgetedReader<CDataStream> reader(vRecv, allocation->budget);
             CTransactionRef tx;
             reader >> tx;
             if (!vRecv.empty()) throw std::ios_base::failure("trailing certificate transaction bytes");
@@ -3396,8 +3401,7 @@ bool static ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStr
                 retry();
                 Misbehaving(pfrom->GetId(), 20, "malformed certificate transaction");
             } else {
-                // Suppress malformed proofs by certificate identity, never by txid.
-                // In particular, a malformed BLS object cannot reuse an in-flight request.
+                // Suppress a failed proof read by certificate identity, never by txid.
                 EraseObjectRequest(state, inv);
             }
             LogPrint(BCLog::NET, "Certificate decode dropped peer=%d: %s\n", pfrom->GetId(), error.what());
@@ -3695,11 +3699,8 @@ bool static ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStr
                     CDecoupledBlock encoded;
                     reader >> encoded;
                     if (!vRecv.empty()) throw std::ios_base::failure("trailing decoupled block bytes");
-                    // Index the small extra cache once instead of scanning it per reference.
-                    std::map<uint256, CTransactionRef> extraTxn;
-                    for (const auto& extra : vExtraTxnForCompact) {
-                        if (extra.second) extraTxn.emplace(extra.first, extra.second);
-                    }
+                    // Index the extra cache once instead of scanning it per reference.
+                    const auto extraTxn = IndexExtraTransactions(vExtraTxnForCompact, encoded, download.budget);
                     auto lookup = [&mempool, &extraTxn](const uint256& txid) {
                         CTransactionRef tx = mempool.get(txid);
                         if (!tx) tx = busPoolManager->GetTransaction(txid);

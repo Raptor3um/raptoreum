@@ -10,6 +10,7 @@
 
 #include <functional>
 #include <limits>
+#include <map>
 #include <set>
 
 /** Budget for one authenticated submitdecoupledblock call. It must cover the most
@@ -172,5 +173,12 @@ public:
     ReadStatus FillBlock(CBlock& block, const std::vector<CTransactionRef>& vtx_missing,
                          CDecoupledReadBudget* budget = nullptr);
 };
+
+/** Indexes the compact-block extra cache for reference lookups. Charges a node for
+ * every cache slot before the first is allocated; a block without references needs
+ * no index. Bodies stay shared with the cache. */
+std::map<uint256, CTransactionRef> IndexExtraTransactions(
+    const std::vector<std::pair<uint256, CTransactionRef>>& extra, const CDecoupledBlock& block,
+    CDecoupledReadBudget& budget);
 
 #endif // BITCOIN_DECOUPLEDBLOCK_H

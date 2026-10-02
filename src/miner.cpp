@@ -304,7 +304,9 @@ bool BlockAssembler::TestPackage(uint64_t packageSize, unsigned int packageSigOp
 // Perform transaction-level checks before adding to block:
 // - transaction finality (locktime)
 // - safe TXs in regard to ChainLocks
-bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries &package) const {
+bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries &package,
+                                             std::vector<CTxMemPool::txiter> &sortedEntries) const {
+    sortedEntries.clear();
     if (!allowDecoupled) {
         // No manifest: package bytes are already checked by TestPackage.
         for (CTxMemPool::txiter it: package) {
@@ -317,19 +319,17 @@ bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries &packa
     }
     size_t certificateCount = certificates.size();
     uint64_t packageBytes = 0;
-    std::vector<CTxMemPool::txiter> sorted;
-    SortForBlock(package, sorted);
-    for (CTxMemPool::txiter it: sorted) {
+    SortForBlock(package, sortedEntries);
+    for (CTxMemPool::txiter it: sortedEntries) {
         if (!IsFinalTx(it->GetTx(), nHeight, nLockTimeCutoff))
             return false;
         if (!llmq::chainLocksHandler->IsTxSafeForMining(it->GetTx().GetHash()))
             return false;
         packageBytes += it->GetTxSize();
         CTxValidationCertificate cert;
-        const bool certified = allowDecoupled && busPoolManager &&
+        const bool certified = allowDecoupled && busPoolManager && certificateCount < CCbTx::MAX_CERTIFICATES &&
             IsTxDecouplingActive(parent, chainparams.GetConsensus()) &&
-            busPoolManager->GetCertificate(it->GetTx().GetHash(), parent, cert) &&
-            certificateCount < CCbTx::MAX_CERTIFICATES;
+            busPoolManager->GetCertificate(it->GetTx().GetHash(), parent, cert);
         if (!it->AreScriptsLocallyValidated() && !certified)
             return false;
         if (certified) {
@@ -534,7 +534,8 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
         ancestors.insert(iter);
 
         // Test if all tx's are Final and safe
-        if (!TestPackageTransactions(ancestors)) {
+        std::vector <CTxMemPool::txiter> sortedEntries;
+        if (!TestPackageTransactions(ancestors, sortedEntries)) {
             if (fUsingModified) {
                 mapModifiedTx.get<ancestor_score>().erase(modit);
                 failedTx.insert(iter);
@@ -546,8 +547,7 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
         nConsecutiveFailed = 0;
 
         // Package can be added. Sort the entries in a valid order.
-        std::vector <CTxMemPool::txiter> sortedEntries;
-        SortForBlock(ancestors, sortedEntries);
+        if (sortedEntries.empty()) SortForBlock(ancestors, sortedEntries);
 
         for (size_t i = 0; i < sortedEntries.size(); ++i) {
             AddToBlock(sortedEntries[i]);

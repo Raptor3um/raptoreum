@@ -930,6 +930,32 @@ BOOST_AUTO_TEST_CASE(DecoupledBudgetChargesLayoutScratch)
     BOOST_CHECK_EQUAL(lookups, 0U);
 }
 
+BOOST_AUTO_TEST_CASE(DecoupledBudgetChargesExtraIndexBeforeAllocation)
+{
+    const CBlock block(BuildBlockTestCase());
+    std::vector<std::pair<uint256, CTransactionRef>> extra(1000);
+    extra[0] = {block.vtx[1]->GetHash(), block.vtx[1]};
+    extra[1] = {block.vtx[2]->GetHash(), block.vtx[2]};
+    const size_t node = memusage::MallocUsage(
+        sizeof(memusage::stl_tree_node<std::pair<const uint256, CTransactionRef>>));
+    const size_t cost = memusage::MallocUsage(extra.size() * node);
+
+    // Without references no index is built or charged.
+    CDecoupledReadBudget none(0);
+    BOOST_CHECK(IndexExtraTransactions(extra, CDecoupledBlock(block, {}), none).empty());
+
+    // Every cache slot is charged, filled or not, before the first node exists.
+    const CDecoupledBlock encoded(block, {block.vtx[1]->GetHash()});
+    CDecoupledReadBudget tight(cost - 1);
+    BOOST_CHECK_THROW(IndexExtraTransactions(extra, encoded, tight), CDecoupledReadBudget::Exceeded);
+    BOOST_CHECK_EQUAL(tight.GetUsed(), 0U);
+    CDecoupledReadBudget enough(cost);
+    const auto index = IndexExtraTransactions(extra, encoded, enough);
+    BOOST_CHECK_EQUAL(enough.GetUsed(), cost);
+    BOOST_CHECK_EQUAL(index.size(), 2U);
+    BOOST_CHECK(index.at(block.vtx[1]->GetHash()) == block.vtx[1]);
+}
+
 BOOST_AUTO_TEST_CASE(DecoupledBudgetChargesRetainedBodiesAndReconstruction)
 {
     CBlock block(BuildBlockTestCase());
