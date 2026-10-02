@@ -12,6 +12,10 @@
 #include <limits>
 #include <set>
 
+/** Budget for one authenticated submitdecoupledblock call. It must cover the most
+ * expensive valid block; blockencodings_tests measures the worst known shapes. */
+static constexpr size_t MAX_DECOUPLED_SUBMISSION_BYTES = 64 * 1024 * 1024;
+
 /** Conservative allocation reservations for one experimental decode/reconstruction.
  * Charges are not refunded: old/new buffers and temporary structures can overlap.
  * Charge externally owned input buffers before allocating or retaining them. Use

@@ -285,6 +285,10 @@ bool UpdateManager::IsActiveForNextBlock(enum EUpdate eUpdate, const CBlockIndex
     if (!update || !parent || parent->nHeight == std::numeric_limits<int>::max()) return false;
     if (update->HeightActivated() >= 0)
         return !update->Failed() && int64_t(parent->nHeight) + 1 >= update->HeightActivated();
+    LOCK2(cs_main, updateMutex);
+    const auto key = std::make_pair(eUpdate, parent->GetBlockHash());
+    const auto cached = nextBlockActive.find(key);
+    if (cached != nextBlockActive.end()) return cached->second;
     CBlockIndex next;
     next.pprev = const_cast<CBlockIndex*>(parent);
     next.nHeight = parent->nHeight + 1;
@@ -292,8 +296,11 @@ bool UpdateManager::IsActiveForNextBlock(enum EUpdate eUpdate, const CBlockIndex
     // The local manager is destroyed first, including every cached pointer to next.
     // Existing global final-state caches cannot determine another branch's rules.
     UpdateManager isolated;
-    isolated.Add(*update);
-    return isolated.IsActive(eUpdate, &next);
+    isolated.updates.emplace(eUpdate, *update);
+    const bool active = isolated.IsActive(eUpdate, &next);
+    if (nextBlockActive.size() >= MAX_NEXT_BLOCK_ACTIVE) nextBlockActive.clear();
+    nextBlockActive.emplace(key, active);
+    return active;
 }
 
 bool UpdateManager::IsAssetsActive(const CBlockIndex *blockIndex) {

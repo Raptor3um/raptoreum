@@ -563,6 +563,8 @@ namespace {
 
     bool CanRelayLegacyTransaction(const CTxMemPool& pool, const uint256& hash)
     {
+        // Delegated-only candidates exist only when transaction decoupling is enabled.
+        if (!busPoolManager) return true;
         LOCK(pool.cs);
         const auto candidate = pool.mapTx.find(hash);
         return candidate == pool.mapTx.end() || candidate->AreScriptsLocallyValidated();
@@ -702,14 +704,16 @@ namespace {
 
     // Only an already validated canonical block may be presented this way.
     // Retention decides compression, never eligibility or contextual validity.
-    void SendDecoupledBlock(CNode* peer, CConnman* connman, const CBlock& block)
+    // Returns whether a reference block was sent. Without fullFallback, an
+    // unsolicited announcement never degrades into an unrequested full block.
+    bool SendDecoupledBlock(CNode* peer, CConnman* connman, const CBlock& block, bool fullFallback = true)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     {
         AssertLockHeld(cs_main);
         const CNetMsgMaker maker(peer->GetSendVersion());
         if (block.vtx.empty() || block.vtx.size() > CDecoupledBlock::MAX_TRANSACTIONS) {
-            connman->PushMessage(peer, maker.Make(NetMsgType::BLOCK, block));
-            return;
+            if (fullFallback) connman->PushMessage(peer, maker.Make(NetMsgType::BLOCK, block));
+            return false;
         }
         try {
             auto allocation = NewDecoupledDownload(peer->GetId());
@@ -733,13 +737,14 @@ namespace {
                     budget.ChargeArray(block.vtx.size(), memusage::MallocUsage(sizeof(memusage::stl_tree_node<uint256>)));
                     budget.ChargeArray(2, wireSize);
                     connman->PushMessage(peer, maker.Make(NetMsgType::DBLOCK, encoded));
-                    return;
+                    return true;
                 }
             }
         } catch (const std::ios_base::failure&) {
             // Local resource pressure changes the encoding, not block validity.
         }
-        connman->PushMessage(peer, maker.Make(NetMsgType::BLOCK, block));
+        if (fullFallback) connman->PushMessage(peer, maker.Make(NetMsgType::BLOCK, block));
+        return false;
     }
 
     void ProcessReconstructedDecoupledBlock(CNode* peer, const CChainParams& params,
@@ -1086,7 +1091,9 @@ EXCLUSIVE_LOCKS_REQUIRED(cs_main)
             const size_t recordBytes = 4 * memusage::MallocUsage(
                 sizeof(memusage::stl_tree_node<std::pair<CInv, std::chrono::microseconds>>));
             const size_t limit = std::min(busPoolManager->GetMaxCount(), busPoolManager->GetMaxBytes() / recordBytes);
-            if (state->certificateAnnouncements >= limit || certificateAnnouncements >= limit) return;
+            // One peer may hold only a share of the global capacity.
+            const size_t peerLimit = std::max<size_t>(1, limit / 8);
+            if (state->certificateAnnouncements >= peerLimit || certificateAnnouncements >= limit) return;
             ++state->certificateAnnouncements;
             ++certificateAnnouncements;
         }
@@ -3314,7 +3321,7 @@ bool static ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStr
             chainman.ActiveChainstate().IsInitialBlockDownload()) return true;
         // Version 1 has fixed-size proof framing. Hash the wire prefix before
         // constructing a BLS object: its ordinary decoder is not lazy.
-        static constexpr size_t CERTIFICATE_V1_SIZE = 236;
+        static constexpr size_t CERTIFICATE_V1_SIZE = CTxValidationCertificate::V1_SIZE;
         if (vRecv.size() < CERTIFICATE_V1_SIZE) return true;
         const CInv inv(MSG_TX_CERTIFICATE, Hash(vRecv.begin(), vRecv.begin() + CERTIFICATE_V1_SIZE));
         auto* state = State(pfrom->GetId());
@@ -3383,10 +3390,16 @@ bool static ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStr
             // Resource pressure permits a later attempt from another source.
             retry();
         } catch (const std::ios_base::failure& error) {
-            // Suppress malformed proofs by certificate identity, never by txid.
-            // In particular, a malformed BLS object cannot reuse an in-flight request.
-            EraseObjectRequest(state, inv);
-            if (currentContext) Misbehaving(pfrom->GetId(), 20, "malformed certificate transaction");
+            if (currentContext) {
+                // The proof matched its identity; only this peer's body was wrong.
+                // Another peer may still serve the same certificate.
+                retry();
+                Misbehaving(pfrom->GetId(), 20, "malformed certificate transaction");
+            } else {
+                // Suppress malformed proofs by certificate identity, never by txid.
+                // In particular, a malformed BLS object cannot reuse an in-flight request.
+                EraseObjectRequest(state, inv);
+            }
             LogPrint(BCLog::NET, "Certificate decode dropped peer=%d: %s\n", pfrom->GetId(), error.what());
         }
         return true;
@@ -3682,13 +3695,17 @@ bool static ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStr
                     CDecoupledBlock encoded;
                     reader >> encoded;
                     if (!vRecv.empty()) throw std::ios_base::failure("trailing decoupled block bytes");
-                    auto lookup = [&mempool](const uint256& txid) {
+                    // Index the small extra cache once instead of scanning it per reference.
+                    std::map<uint256, CTransactionRef> extraTxn;
+                    for (const auto& extra : vExtraTxnForCompact) {
+                        if (extra.second) extraTxn.emplace(extra.first, extra.second);
+                    }
+                    auto lookup = [&mempool, &extraTxn](const uint256& txid) {
                         CTransactionRef tx = mempool.get(txid);
                         if (!tx) tx = busPoolManager->GetTransaction(txid);
                         if (!tx) {
-                            for (const auto& extra : vExtraTxnForCompact) {
-                                if (extra.first == txid) return extra.second;
-                            }
+                            const auto extra = extraTxn.find(txid);
+                            if (extra != extraTxn.end()) tx = extra->second;
                         }
                         return tx;
                     };
@@ -4949,13 +4966,25 @@ bool PeerLogicValidation::SendMessages(CNode *pto) {
                 }
             }
             if (!fRevertToInv && !vHeaders.empty()) {
+                bool sentDecoupled = false;
                 if (vHeaders.size() == 1 && state.fPreferDecoupled && CanExchangeDecoupled(pto) &&
                     !::ChainstateActive().IsInitialBlockDownload() && pBestIndex->IsValid(BLOCK_VALID_SCRIPTS)) {
+                    std::shared_ptr<const CBlock> cached;
+                    {
+                        LOCK(cs_most_recent_block);
+                        if (most_recent_block_hash == pBestIndex->GetBlockHash()) cached = most_recent_block;
+                    }
                     CBlock block;
-                    bool ret = ReadBlockFromDisk(block, pBestIndex, consensusParams);
-                    assert(ret);
-                    SendDecoupledBlock(pto, connman, block);
-                    state.pindexBestHeaderSent = pBestIndex;
+                    if (!cached) {
+                        bool ret = ReadBlockFromDisk(block, pBestIndex, consensusParams);
+                        assert(ret);
+                    }
+                    // A failed encoding falls through to the ordinary announcement below.
+                    sentDecoupled = SendDecoupledBlock(pto, connman, cached ? *cached : block, /*fullFallback=*/false);
+                    if (sentDecoupled) state.pindexBestHeaderSent = pBestIndex;
+                }
+                if (sentDecoupled) {
+                    // Announced as a reference block.
                 } else if (vHeaders.size() == 1 && state.fPreferHeaderAndIDs) {
                     // We only send up to 1 block as header-and-ids, as otherwise
                     // probably means we're doing an initial-ish-sync or they're slow

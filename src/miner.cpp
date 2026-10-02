@@ -305,6 +305,16 @@ bool BlockAssembler::TestPackage(uint64_t packageSize, unsigned int packageSigOp
 // - transaction finality (locktime)
 // - safe TXs in regard to ChainLocks
 bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries &package) const {
+    if (!allowDecoupled) {
+        // No manifest: package bytes are already checked by TestPackage.
+        for (CTxMemPool::txiter it: package) {
+            if (!IsFinalTx(it->GetTx(), nHeight, nLockTimeCutoff) ||
+                !llmq::chainLocksHandler->IsTxSafeForMining(it->GetTx().GetHash()) ||
+                !it->AreScriptsLocallyValidated())
+                return false;
+        }
+        return true;
+    }
     size_t certificateCount = certificates.size();
     uint64_t packageBytes = 0;
     std::vector<CTxMemPool::txiter> sorted;

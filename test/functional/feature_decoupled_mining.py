@@ -112,8 +112,14 @@ def exercise_certified_mining(test, node, raw, certificate, eviction_bodies=()):
     assert_equal(int.from_bytes(bytes.fromhex(template["coinbase_payload"])[:2], "little"), 0x8001)
     assert_equal(template["expires"], 600)
     first_id = template["workid"]
+    # Polling an unchanged template keeps its lease instead of evicting other work.
+    assert_equal(node.getblocktemplate(request)["workid"], first_id)
     for _ in range(8):
+        # Each rebuilt template gets its own lease; the ninth lease evicts the first.
+        test.bump_mocktime(6)
+        node.prioritisetransaction(child_id, 0)
         template = node.getblocktemplate(request)
+        assert template["workid"] != first_id
     assert_raises_rpc_error(-8, "Unknown or expired workid", node.getdecoupledblocktransactions, first_id, [])
     assert_raises_rpc_error(-8, "Invalid or duplicate transaction index",
                             node.getdecoupledblocktransactions, template["workid"], [-1])
@@ -212,7 +218,11 @@ def exercise_transport_mining_limits(test):
     test.bump_mocktime(601)
     parent_tip, fixed_time, started = node.getbestblockhash(), test.mocktime, time.monotonic()
     large_workids = []
-    for _ in range(8):
+    for i in range(8):
+        if i:
+            # Rebuild the template: an unchanged one would reuse its lease.
+            test.bump_mocktime(6)
+            node.prioritisetransaction(child_id, 0)
         template = node.getblocktemplate(request)
         assert_equal(template["vtxids"], [child_id])
         assert set(large_ids).issubset(entry["hash"] for entry in template["transactions"])
@@ -222,7 +232,8 @@ def exercise_transport_mining_limits(test):
     # though their serialized block fits below 2 MB. Do not assume which lease
     # first crosses the byte bound: allocation sizes can vary by platform.
     assert_equal(len(set(large_workids)), 8)
-    assert_equal(test.mocktime, fixed_time)
+    assert_equal(node.getblocktemplate(request)["workid"], large_workids[-1])
+    assert test.mocktime - fixed_time < 600
     assert time.monotonic() - started < 600
     assert_equal(node.getbestblockhash(), parent_tip)
     assert_raises_rpc_error(-8, "Unknown or expired workid", node.getdecoupledblocktransactions,
@@ -236,13 +247,16 @@ def exercise_transport_mining_limits(test):
     test.bump_mocktime(601)
     fixed_time, started = test.mocktime, time.monotonic()
     small_workids = []
-    for _ in range(8):
+    for i in range(8):
+        if i:
+            test.bump_mocktime(6)
+            node.prioritisetransaction(child_id, 0)
         template = node.getblocktemplate(request)
         assert_equal(template["vtxids"], [child_id])
         assert not set(large_ids).intersection(entry["hash"] for entry in template["transactions"])
         small_workids.append(template["workid"])
     assert_equal(len(set(small_workids)), 8)
-    assert_equal(test.mocktime, fixed_time)
+    assert test.mocktime - fixed_time < 600
     assert time.monotonic() - started < 600
     assert_equal(node.getbestblockhash(), parent_tip)
     assert_equal(node.getdecoupledblocktransactions(small_workids[0], [0])["transactions"][0]["index"], 0)
@@ -278,6 +292,16 @@ class DecoupledMiningTest(BitcoinTestFramework):
         self.setup_clean_chain = False
 
     def run_test(self):
+        self.log.info("Buspool limits are validated at startup")
+        self.stop_node(1)
+        for args, message in (
+                (["-txdecoupling=1", "-buspoolmaxcount=0"], "-buspoolmaxcount must be between 1 and 100000"),
+                (["-txdecoupling=1", "-buspoolmaxcount=100001"], "-buspoolmaxcount must be between 1 and 100000"),
+                (["-txdecoupling=1", "-buspoolmaxcount=abc"], "-buspoolmaxcount must be between 1 and 100000"),
+                (["-txdecoupling=1", "-buspoolmaxbytes=0"], "-buspoolmaxbytes must be between 1 and 1073741824"),
+                (["-buspoolmaxcount=10"], "Buspool limits require -txdecoupling=1")):
+            self.nodes[1].assert_start_raises_init_error(args, "Error: " + message, partial_match=True)
+        self.start_node(1)
         node = self.nodes[0]
         assert_raises_rpc_error(-8, "Transaction decoupling is not enabled",
                                 node.getdecoupledblocktransactions, "missing", [])

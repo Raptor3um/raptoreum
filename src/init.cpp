@@ -465,8 +465,8 @@ void SetupServerArgs() {
     const auto testnetChainParams = CreateChainParams(CBaseChainParams::TESTNET);
     const auto regtestChainParams = CreateChainParams(CBaseChainParams::REGTEST);
 
-    gArgs.AddArg("-buspoolmaxcount=<n>", "Maximum experimental buspool records (1..100000, default: 10000)", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
-    gArgs.AddArg("-buspoolmaxbytes=<n>", "Maximum experimental buspool bytes (1..1073741824, default: 67108864)", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+    gArgs.AddArg("-buspoolmaxcount=<n>", "Maximum experimental buspool records (1..100000, default: 10000)", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
+    gArgs.AddArg("-buspoolmaxbytes=<n>", "Maximum experimental buspool bytes (1..1073741824, default: 67108864)", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-txdecoupling", "Enable experimental transaction decoupling on regtest (default: 0)",
                  ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-txdecouplingheight=<n>", "Activate experimental script certificates at this regtest height (default: disabled; requires -txdecoupling=1)",

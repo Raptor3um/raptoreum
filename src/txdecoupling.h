@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef RAPTOREUM_TXDECOUPLING_H
-#define RAPTOREUM_TXDECOUPLING_H
+#ifndef BITCOIN_TXDECOUPLING_H
+#define BITCOIN_TXDECOUPLING_H
 
 #include <primitives/txcertificate.h>
 #include <script/interpreter.h>
@@ -51,4 +51,4 @@ bool CheckBlockTxCertificates(const CBlock& block, const CCoinsViewCache& view,
                               uint32_t blockFlags, std::set<uint16_t>& certified,
                               CValidationState& state);
 
-#endif
+#endif // BITCOIN_TXDECOUPLING_H

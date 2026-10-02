@@ -131,8 +131,8 @@ BITCOIN_CORE_H = \
   bip39.h \
   bip39_english.h \
   blockencodings.h \
-  decoupledblock.h \
   bloom.h \
+  buspool.h \
   cachemap.h \
   cachemultimap.h \
   blockfilter.h \
@@ -202,6 +202,7 @@ BITCOIN_CORE_H = \
   key_io.h \
   keystore.h \
   dbwrapper.h \
+  decoupledblock.h \
   limitedmap.h \
   llmq/quorums.h \
   llmq/quorums_blockprocessor.h \
@@ -287,6 +288,7 @@ BITCOIN_CORE_H = \
   timedata.h \
   torcontrol.h \
   txdb.h \
+  txdecoupling.h \
   txmempool.h \
   ui_interface.h \
   undo.h \
@@ -357,8 +359,8 @@ libraptoreum_server_a_SOURCES = \
   assets/assetsdb.cpp \
   batchedlogger.cpp \
   blockencodings.cpp \
-  decoupledblock.cpp \
   blockfilter.cpp \
+  buspool.cpp \
   chain.cpp \
   checkpoints.cpp \
   coinjoin/coinjoin.cpp \
@@ -366,9 +368,8 @@ libraptoreum_server_a_SOURCES = \
   coinjoin/coinjoin-server.cpp \
   consensus/tx_verify.cpp \
   dbwrapper.cpp \
+  decoupledblock.cpp \
   dsnotificationinterface.cpp \
-  txdecoupling.cpp \
-  buspool.cpp \
   evo/cbtx.cpp \
   evo/deterministicmns.cpp \
   evo/evodb.cpp \
@@ -446,6 +447,7 @@ libraptoreum_server_a_SOURCES = \
   timedata.cpp \
   torcontrol.cpp \
   txdb.cpp \
+  txdecoupling.cpp \
   txmempool.cpp \
   ui_interface.cpp \
   validation.cpp \
@@ -649,8 +651,6 @@ libraptoreum_consensus_a_SOURCES = \
   primitives/powcache.cpp \
   primitives/powcache.h \
   primitives/transaction.cpp \
-  txdecoupling.h \
-  buspool.h \
   primitives/transaction.h \
   pubkey.cpp \
   pubkey.h \

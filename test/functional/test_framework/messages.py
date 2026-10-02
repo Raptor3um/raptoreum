@@ -1568,6 +1568,9 @@ class CTxValidationCertificate():
 class msg_senddblock(msg_sendcmpct):
     command = b"senddblock"
 
+    def __repr__(self):
+        return "msg_senddblock(announce=%s, version=%lu)" % (self.announce, self.version)
+
 
 class msg_dblock():
     command = b"dblock"

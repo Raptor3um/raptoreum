@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef RAPTOREUM_BUSPOOL_H
-#define RAPTOREUM_BUSPOOL_H
+#ifndef BITCOIN_BUSPOOL_H
+#define BITCOIN_BUSPOOL_H
 
 #include <llmq/quorums_signing.h>
 #include <primitives/transaction.h>
@@ -34,7 +34,8 @@ class CBusPoolManager : public CValidationInterface, public llmq::CRecoveredSigs
     CTxMemPool& pool;
     const size_t maxCount;
     const size_t maxBytes;
-    size_t memoryUsage{0};
+    size_t memoryUsage GUARDED_BY(cs_main){0};
+    const CBlockIndex* lastTip GUARDED_BY(cs_main){nullptr};
     std::list<uint256> order GUARDED_BY(cs_main);
     std::map<uint256, Entry> entries GUARDED_BY(cs_main);
     std::map<uint256, uint256> requests GUARDED_BY(cs_main);
@@ -85,4 +86,4 @@ public:
 bool IsBusPoolEnabled();
 extern std::shared_ptr<CBusPoolManager> busPoolManager;
 
-#endif
+#endif // BITCOIN_BUSPOOL_H

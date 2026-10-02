@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef RAPTOREUM_PRIMITIVES_TXCERTIFICATE_H
-#define RAPTOREUM_PRIMITIVES_TXCERTIFICATE_H
+#ifndef BITCOIN_PRIMITIVES_TXCERTIFICATE_H
+#define BITCOIN_PRIMITIVES_TXCERTIFICATE_H
 
 #include <bls/bls.h>
 #include <consensus/params.h>
@@ -13,6 +13,8 @@
 class CTxValidationCertificate {
 public:
     static constexpr uint16_t CURRENT_VERSION = 1;
+    //! Serialized size of a version-1 certificate; P2P relay frames it by this prefix.
+    static constexpr size_t V1_SIZE = 236;
     static constexpr uint8_t NEGATIVE = 0;
     static constexpr uint8_t POSITIVE = 1;
 
@@ -45,4 +47,4 @@ struct CTxCertificateEntry {
     }
 };
 
-#endif
+#endif // BITCOIN_PRIMITIVES_TXCERTIFICATE_H

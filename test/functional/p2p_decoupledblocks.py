@@ -80,7 +80,8 @@ class DecoupledBlocksTest(TxValidationTest):
     def set_test_params(self):
         args = [["-txdecoupling=1", "-txdecouplingheight=1", "-buspoolmaxcount=8",
                  "-blockreconstructionextratxn=0"] for _ in range(7)]
-        args[1] += ["-buspoolmaxcount=2", "-mempoolexpiry=1"]
+        args[1][2] = "-buspoolmaxcount=2"
+        args[1].append("-mempoolexpiry=1")
         self.set_raptoreum_test_params(7, 5, extra_args=args, fast_dip3_enforcement=True)
         self.set_raptoreum_llmq_test_params(5, 3)
 
@@ -98,6 +99,10 @@ class DecoupledBlocksTest(TxValidationTest):
         encoded = HeaderAndShortIDs()
         encoded.initialize_from_block(block, prefill_list=list(range(len(block.vtx))))
         peer.send_and_ping(msg_cmpctblock(encoded.to_p2p()))
+
+    def assert_headers_only(self, node, block):
+        # Missing or refused block data must not make a valid header invalid.
+        assert_equal({tip["hash"]: tip["status"] for tip in node.getchaintips()}[block.hash], "headers-only")
 
     def assert_tip(self, block):
         wait_until(lambda: self.nodes[1].getbestblockhash() == block.hash)
@@ -221,6 +226,7 @@ class DecoupledBlocksTest(TxValidationTest):
         self.deliver(peer, variants[2], [index])
         peer.wait_request(MSG_BLOCK, variants[2].sha256)
         assert variants[2].sha256 not in peer.missing
+        self.assert_headers_only(receiver, variants[2])
         assert peer.is_connected
         self.close_peers([peer])
 
@@ -236,6 +242,7 @@ class DecoupledBlocksTest(TxValidationTest):
         self.deliver(owners[8], overflow, [index])
         owners[8].wait_request(MSG_BLOCK, overflow.sha256)
         assert overflow.sha256 not in owners[8].missing
+        self.assert_headers_only(receiver, overflow)
         assert all(owner.is_connected for owner in owners)
         self.close_peers(owners)
 
@@ -257,11 +264,29 @@ class DecoupledBlocksTest(TxValidationTest):
                        (MSG_BLOCK, variant.sha256) in owner.requests, lock=mininode_lock)
             if (MSG_BLOCK, variant.sha256) in owner.requests:
                 assert 0 < i < 16
+                self.assert_headers_only(receiver, variant)
                 bounded = True
                 break
         assert bounded
         assert all(owner.is_connected for owner in owners)
         self.close_peers(owners)
+
+        self.log.info("One peer cannot exceed its byte share with two large partial blocks")
+        owner = receiver.add_p2p_connection(TransportPeer())
+        owner.negotiate()
+        large = self.variants(block, 2, first=200)
+        for variant in large:
+            encoded = CDecoupledBlock(variant)
+            encoded.vtx = [variant.vtx[0]]
+            encoded.vtxids = [CDecoupledTxRef(n, n) for n in range(1, 20001)]
+            owner.send_and_ping(msg_dblock(encoded))
+        # Two objects are within the per-peer count; the second exceeds the byte share.
+        wait_until(lambda: large[0].sha256 in owner.missing, lock=mininode_lock)
+        owner.wait_request(MSG_BLOCK, large[1].sha256)
+        assert large[1].sha256 not in owner.missing
+        self.assert_headers_only(receiver, large[1])
+        assert owner.is_connected
+        self.close_peers([owner])
         alternate.send_and_ping(msg_block(block))
         self.assert_tip(block)
         peer = receiver.add_p2p_connection(TransportPeer())
@@ -270,28 +295,38 @@ class DecoupledBlocksTest(TxValidationTest):
 
     def exercise_announcement_limits(self, peer, alternate):
         receiver = self.nodes[1]
+        # -buspoolmaxcount=2 gives a global capacity of two pending announcements
+        # and a per-peer share of one.
         hashes = [0x100000 + i for i in range(4)]
-        peer.send_and_ping(msg_inv([CInv(MSG_TX_CERTIFICATE, h) for h in hashes[:3]]))
-        for h in hashes[:2]:
-            peer.wait_request(MSG_TX_CERTIFICATE, h)
-        assert (MSG_TX_CERTIFICATE, hashes[2]) not in peer.requests
+        peer.send_and_ping(msg_inv([CInv(MSG_TX_CERTIFICATE, h) for h in hashes[:2]]))
+        peer.wait_request(MSG_TX_CERTIFICATE, hashes[0])
+        assert (MSG_TX_CERTIFICATE, hashes[1]) not in peer.requests
+        # One peer cannot take the whole capacity: another peer is still served.
+        alternate.send_and_ping(msg_inv([CInv(MSG_TX_CERTIFICATE, hashes[2])]))
+        alternate.wait_request(MSG_TX_CERTIFICATE, hashes[2])
+        third = receiver.add_p2p_connection(TransportPeer())
+        third.negotiate()
+        third.send_and_ping(msg_inv([CInv(MSG_TX_CERTIFICATE, hashes[3])]))
+        assert (MSG_TX_CERTIFICATE, hashes[3]) not in third.requests
         # Request expiry runs on the existing randomized object timer, at most
         # 900 seconds after its last check. It must return announcement capacity.
         self.bump_mocktime(901)
         peer.sync_with_ping()
-        peer.send_and_ping(msg_inv([CInv(MSG_TX_CERTIFICATE, hashes[2])]))
-        peer.wait_request(MSG_TX_CERTIFICATE, hashes[2])
-        peer.send_and_ping(msg_inv([CInv(MSG_TX_CERTIFICATE, hashes[3])]))
-        peer.wait_request(MSG_TX_CERTIFICATE, hashes[3])
-        self.close_peers([peer])
+        third.send_and_ping(msg_inv([CInv(MSG_TX_CERTIFICATE, hashes[3])]))
+        third.wait_request(MSG_TX_CERTIFICATE, hashes[3])
+        peer.send_and_ping(msg_inv([CInv(MSG_TX_CERTIFICATE, hashes[1])]))
+        peer.wait_request(MSG_TX_CERTIFICATE, hashes[1])
+        # FinalizeNode must release the global count as well as the peer count.
+        self.close_peers([peer, third])
         peer = receiver.add_p2p_connection(TransportPeer())
         peer.negotiate()
-        # FinalizeNode must release the global count as well as the peer count.
         fresh = [0x200000, 0x200001]
-        peer.send_and_ping(msg_inv([CInv(MSG_TX_CERTIFICATE, h) for h in fresh]))
-        for h in fresh:
-            peer.wait_request(MSG_TX_CERTIFICATE, h)
-        peer.send_and_ping(msg_notfound([CInv(MSG_TX_CERTIFICATE, h) for h in fresh]))
+        peer.send_and_ping(msg_inv([CInv(MSG_TX_CERTIFICATE, fresh[0])]))
+        peer.wait_request(MSG_TX_CERTIFICATE, fresh[0])
+        alternate.send_and_ping(msg_inv([CInv(MSG_TX_CERTIFICATE, fresh[1])]))
+        alternate.wait_request(MSG_TX_CERTIFICATE, fresh[1])
+        peer.send_and_ping(msg_notfound([CInv(MSG_TX_CERTIFICATE, fresh[0])]))
+        alternate.send_and_ping(msg_notfound([CInv(MSG_TX_CERTIFICATE, fresh[1])]))
         refresh = self.mine()
         alternate.send_and_ping(msg_block(refresh))
         self.assert_tip(refresh)
@@ -421,9 +456,11 @@ class DecoupledBlocksTest(TxValidationTest):
         self.log.info("Unsolicited or malformed BLS prefixes cannot reuse an expensive in-flight decode")
         malformed_proof = CTxValidationCertificate(b"\xff" * 236)
         malformed_message = msg_txcert(malformed_proof, CTransaction())
-        rejects = peer.message_count["reject"]
+        # An unsolicited proof is ignored before any decoding or penalty.
+        score = sum(item.get("banscore", 0) for item in receiver.getpeerinfo())
         peer.send_and_ping(malformed_message)
-        assert_equal(peer.message_count["reject"], rejects)
+        assert_equal(sum(item.get("banscore", 0) for item in receiver.getpeerinfo()), score)
+        assert peer.is_connected
         malformed_hash = malformed_proof.get_hash()
         peer.send_and_ping(msg_inv([CInv(MSG_TX_CERTIFICATE, malformed_hash)]))
         peer.wait_request(MSG_TX_CERTIFICATE, malformed_hash)
@@ -444,6 +481,9 @@ class DecoupledBlocksTest(TxValidationTest):
         self.bump_mocktime(1)
         producer.generate(1)
         self.sync_blocks()
+        # Enabled nodes announce the reference encoding to each other, not only to test peers.
+        assert any(info["bytesrecv_per_msg"].get("dblock", 0) > 0 for info in receiver.getpeerinfo()
+                   if "python" not in info["subver"])
         producer.spork("SPORK_3_INSTANTSEND_BLOCK_FILTERING", 0)
         producer.spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         producer.spork("SPORK_23_QUORUM_ALL_CONNECTED", 0)
@@ -465,6 +505,21 @@ class DecoupledBlocksTest(TxValidationTest):
         peer.wait_request(MSG_TX_CERTIFICATE, bad_flags.get_hash())
         peer.send_and_ping(msg_txcert(bad_flags, FromHex(CTransaction(), raw)))
         assert certified_id not in receiver.getrawmempool()
+        # A correct proof with a wrong body penalizes only its sender. The same
+        # certificate must remain requestable from another peer. A separate peer
+        # is used because announcing the hash marks it as known to the announcer.
+        liar = receiver.add_p2p_connection(TransportPeer())
+        liar.negotiate()
+        liar.send_and_ping(msg_inv([CInv(MSG_TX_CERTIFICATE, cert_hash)]))
+        liar.wait_request(MSG_TX_CERTIFICATE, cert_hash)
+        wrong_body = FromHex(CTransaction(), raw)
+        wrong_body.nLockTime += 1
+        score = sum(item.get("banscore", 0) for item in receiver.getpeerinfo())
+        liar.send_and_ping(msg_txcert(encoded, wrong_body))
+        assert certified_id not in receiver.getrawmempool()
+        assert_equal(sum(item.get("banscore", 0) for item in receiver.getpeerinfo()), score + 20)
+        assert liar.is_connected
+        self.close_peers([liar])
         # Rejecting a proof must never add the otherwise valid txid to recentRejects.
         producer.submitbuspooltransaction(raw, certificate["hex"])
 
@@ -504,11 +559,22 @@ class DecoupledBlocksTest(TxValidationTest):
         # the ordinary request interval to avoid repeated expensive validation.
         signer_peer.send_and_ping(msg_inv([CInv(MSG_TX_CERTIFICATE, proof.get_hash())]))
         assert_equal(signer_peer.requests.count((MSG_TX_CERTIFICATE, proof.get_hash())), 1)
+
+        def txcert_bytes(node):
+            return sum(info["bytesrecv_per_msg"].get("txcert", 0) for info in node.getpeerinfo())
+        received = {mn.nodeIdx: txcert_bytes(mn.node) for mn in self.mninfo[1:]}
         peer.send_and_ping(msg_inv([CInv(MSG_TX_CERTIFICATE, proof.get_hash())]))
         peer.wait_request(MSG_TX_CERTIFICATE, proof.get_hash())
         peer.send_and_ping(msg_txcert(proof, body))
         wait_until(lambda: malicious_id in receiver.getrawmempool())
         self.assert_legacy_hidden(legacy, receiver, malicious_id, control_id)
+        # The ordinary producer relays the proof onward; every other smartnode must
+        # have received and declined it before the negative check means anything.
+
+        def smartnodes_checked():
+            self.bump_mocktime(1)
+            return all(txcert_bytes(mn.node) > received[mn.nodeIdx] for mn in self.mninfo[1:])
+        wait_until(smartnodes_checked, timeout=60)
         assert all(malicious_id not in mn.node.getrawmempool() for mn in self.mninfo)
 
         self.log.info("A parent transition retires old proof inventory without poisoning the transaction ID")
@@ -538,7 +604,7 @@ class DecoupledBlocksTest(TxValidationTest):
         wait_until(current_relayed, timeout=60)
         assert peer.is_connected and legacy.is_connected
 
-        self.log.info("Block-only mode does not request, accept or serve the negotiated certificate channel")
+        self.log.info("Block-only mode does not request or serve the negotiated certificate channel")
         fresh_raw, fresh_id = self.payment(coins[10])
         fresh = self.recover(fresh_raw)
         fresh_proof = CTxValidationCertificate(bytes.fromhex(fresh["hex"]))
@@ -554,6 +620,14 @@ class DecoupledBlocksTest(TxValidationTest):
         receiver.submitbuspooltransaction(fresh_raw, fresh["hex"])
         blocksonly.request(MSG_TX_CERTIFICATE, fresh_proof.get_hash())
         assert any(inv.hash == fresh_proof.get_hash() for inv in blocksonly.last_message["notfound"].vec)
+
+        self.log.info("Transport-only mode keeps ordinary admission and rejects script certificates")
+        receiver.disconnect_p2ps()
+        transport_args = [arg for arg in self.extra_args[1] if not arg.startswith("-txdecouplingheight")]
+        self.restart_node(1, transport_args)
+        receiver = self.nodes[1]
+        assert_raises_rpc_error(-26, "bad-txcert-inactive", receiver.submitbuspooltransaction,
+                                fresh_raw, fresh["hex"])
 
         self.log.info("A node without the experimental flag preserves the ordinary wire contract")
         receiver.disconnect_p2ps()

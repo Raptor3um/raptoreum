@@ -367,6 +367,9 @@ private :
     FinalStateMap finalStates;
     UpdateMap updates;             // Update parameters (does not contain states)
     std::map <UpdateCacheKey, StateInfo> states;
+    // Successor activation per parent. A block hash commits to the whole ancestry.
+    std::map<std::pair<EUpdate, uint256>, bool> nextBlockActive;
+    static constexpr size_t MAX_NEXT_BLOCK_ACTIVE = 1024;
 
 };
 

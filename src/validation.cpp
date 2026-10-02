@@ -590,6 +590,22 @@ bool TxNeedsAssetsCache(const CTransaction &tx) {
                                 tx.nType == TRANSACTION_MINT_ASSET);
 }
 
+bool CheckMempoolTxScripts(const CTransaction& tx, CTxMemPool& pool, CValidationState& state)
+{
+    AssertLockHeld(cs_main);
+    LOCK(pool.cs);
+    CCoinsViewMemPool viewMemPool(&::ChainstateActive().CoinsTip(), pool);
+    CCoinsViewCache view(&viewMemPool);
+    if (tx.IsCoinBase() || !view.HaveInputs(tx))
+        return state.Invalid(false, REJECT_INVALID, "bad-txns-inputs-missingorspent");
+    PrecomputedTransactionData txdata(tx);
+    if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true, false, txdata)) return false;
+    const unsigned int flags = GetBlockScriptFlags(::ChainActive().Tip(), Params().GetConsensus());
+    if (!CheckInputsFromMempoolAndCache(tx, state, view, pool, flags, true, txdata) && state.IsValid())
+        return state.Invalid(false, REJECT_INVALID, "mandatory-script-verify-flag-failed");
+    return state.IsValid();
+}
+
 bool CheckTxForCertificate(const CTransaction& tx, CValidationState& state, uint32_t consensusFlags)
 {
     AssertLockHeld(cs_main);
@@ -2093,18 +2109,22 @@ static unsigned int ScriptFlagsForRules(bool p2sh, bool dip0020, const Consensus
 }
 
 
+// BIP16 didn't become active until Apr 1 2012
+static constexpr int64_t BIP16_SWITCH_TIME = 1333238400;
+
 static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consensus::Params& consensusparams) {
     AssertLockHeld(cs_main);
     const bool dip0020 = IsTxDecouplingActive(pindex->pprev, consensusparams)
         ? Updates().IsActiveForNextBlock(EUpdate::DEPLOYMENT_V17, pindex->pprev)
         : Updates().IsActive(EUpdate::DEPLOYMENT_V17, pindex);
-    return ScriptFlagsForRules(pindex->GetBlockTime() >= 1333238400, dip0020, consensusparams);
+    return ScriptFlagsForRules(pindex->GetBlockTime() >= BIP16_SWITCH_TIME, dip0020, consensusparams);
 }
 
 bool GetTxValidationNextScriptFlags(const CBlockIndex* parent, const Consensus::Params& consensus, uint32_t& flags) {
     AssertLockHeld(cs_main);
-    // Every valid successor must use the same time-dependent BIP16 rule.
-    if (!parent || parent->GetMedianTimePast() < 1333238399) return false;
+    // Every valid successor has a time above the parent's median time past, so
+    // BIP16 applies to all of them once that median reaches the switch time minus one.
+    if (!parent || parent->GetMedianTimePast() < BIP16_SWITCH_TIME - 1) return false;
     flags = ScriptFlagsForRules(true, Updates().IsActiveForNextBlock(EUpdate::DEPLOYMENT_V17, parent), consensus);
     return true;
 }

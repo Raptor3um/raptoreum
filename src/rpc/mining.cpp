@@ -436,7 +436,6 @@ namespace {
 constexpr size_t MAX_MINING_LEASES = 8;
 constexpr size_t MAX_MINING_LEASE_BYTES = 32 * 1024 * 1024;
 constexpr int64_t MINING_LEASE_SECONDS = 600;
-constexpr size_t MAX_RPC_RECONSTRUCTION_BYTES = 8 * 1024 * 1024;
 
 // Borrow RPC hex directly; decoding needs no geometrically growing wire copy.
 class MiningHexReader {
@@ -490,6 +489,15 @@ const MiningLease* FindMiningLease(const std::string& id) EXCLUSIVE_LOCKS_REQUIR
     ExpireMiningLeases();
     for (const auto& lease : miningLeases) if (lease.id == id) return &lease;
     return nullptr;
+}
+
+int64_t MiningLeaseSecondsLeft(const MiningLease& lease) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    const auto steadyMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+        lease.deadline - std::chrono::steady_clock::now()).count();
+    const int64_t steady = (steadyMs + 999) / 1000;
+    const int64_t wall = MINING_LEASE_SECONDS - std::max<int64_t>(0, GetTime() - lease.created);
+    return std::max<int64_t>(0, std::min<int64_t>(steady, wall));
 }
 
 std::string RetainMiningTemplate(const CBlock& block) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -598,7 +606,7 @@ static UniValue getblocktemplate(const JSONRPCRequest &request) {
                                                  {RPCResult::Type::ARR, "depends", "array of numbers",
                                                   {
                                                           {RPCResult::Type::NUM, "",
-                                                           "transactions before this one (by 1-based index in 'transactions' list) that must be present in the final block if this one is"},
+                                                           "transactions before this one (by 1-based index in 'transactions' list, or by canonical block index when decoupled-v1 returns vtxids) that must be present in the final block if this one is"},
                                                   }},
                                                  {RPCResult::Type::NUM, "fee",
                                                   "difference in value between transaction inputs and outputs (in satoshis); for coinbase transactions, this is a negative Number of the total collected block fees (ie, not including the block subsidy); if key is not present, fee is unknown and clients MUST NOT assume there isn't one"},
@@ -606,6 +614,16 @@ static UniValue getblocktemplate(const JSONRPCRequest &request) {
                                                   "total number of SigOps, as counted for purposes of block limits; if key is not present, sigop count is unknown and clients MUST NOT assume there aren't any"},
                                          }},
                                 }},
+                               {RPCResult::Type::ARR, "vtxids", /* optional */ true,
+                                "decoupled-v1 only: referenced transaction ids; their bodies are omitted from 'transactions'",
+                                {{RPCResult::Type::STR_HEX, "", "transaction id"}}},
+                               {RPCResult::Type::ARR, "vtxidmetadata", /* optional */ true,
+                                "decoupled-v1 only: entries aligned with vtxids; same fields as 'transactions' without data, plus canonical 'index'",
+                                {{RPCResult::Type::ELISION, "", ""}}},
+                               {RPCResult::Type::STR, "workid", /* optional */ true,
+                                "decoupled-v1 only: identifier of the retained template bodies"},
+                               {RPCResult::Type::NUM, "expires", /* optional */ true,
+                                "decoupled-v1 only: seconds for which workid remains retained, subject to eviction"},
                                {RPCResult::Type::OBJ, "coinbaseaux",
                                 "data that should be included in the coinbase's scriptSig content",
                                 {
@@ -757,7 +775,10 @@ static UniValue getblocktemplate(const JSONRPCRequest &request) {
         && CSuperblock::IsValidBlockHeight(::ChainActive().Height() + 1))
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Raptoreum Core is syncing with network...");
 
-    static unsigned int nTransactionsUpdatedLast;
+    // One cached template per presentation, so alternating clients do not force rebuilds.
+    // Without -txdecoupling, decoupled is always false and only the first slot is used.
+    static unsigned int cachedTransactionsUpdated[2];
+    unsigned int& nTransactionsUpdatedLast = cachedTransactionsUpdated[decoupled];
     const CTxMemPool &mempool = EnsureMemPool(request.context);
 
     if (!lpval.isNull()) {
@@ -801,14 +822,19 @@ static UniValue getblocktemplate(const JSONRPCRequest &request) {
     }
 
     // Update block
-    static CBlockIndex *pindexPrev;
-    static int64_t nStart;
-    static std::unique_ptr <CBlockTemplate> pblocktemplate;
-    static bool previousDecoupled = false;
-    if (previousDecoupled != decoupled || pindexPrev != ::ChainActive().Tip() ||
+    static CBlockIndex *cachedPrev[2];
+    static int64_t cachedStart[2];
+    static std::unique_ptr <CBlockTemplate> cachedTemplate[2];
+    // Repeated calls for an unchanged mixed template share one lease.
+    static std::string cachedWorkId;
+    CBlockIndex*& pindexPrev = cachedPrev[decoupled];
+    int64_t& nStart = cachedStart[decoupled];
+    std::unique_ptr<CBlockTemplate>& pblocktemplate = cachedTemplate[decoupled];
+    if (pindexPrev != ::ChainActive().Tip() ||
         (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 5)) {
         // Clear pindexPrev so future calls make a new block, despite any failures from here on
         pindexPrev = nullptr;
+        if (decoupled) cachedWorkId.clear();
 
         // Store the ::ChainActive().Tip() used before CreateNewBlock, to avoid races
         nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
@@ -823,7 +849,6 @@ static UniValue getblocktemplate(const JSONRPCRequest &request) {
 
         // Need to update only after we know CreateNewBlock succeeded
         pindexPrev = pindexPrevNew;
-        previousDecoupled = decoupled;
     }
     CBlock *pblock = &pblocktemplate->block; // pointer for convenience
     const Consensus::Params &consensusParams = Params().GetConsensus();
@@ -834,6 +859,7 @@ static UniValue getblocktemplate(const JSONRPCRequest &request) {
 
     UniValue aCaps(UniValue::VARR);
     aCaps.push_back("proposal");
+    if (IsBusPoolEnabled()) aCaps.push_back("decoupled-v1");
 
     const bool mixed = decoupled && !pblocktemplate->referenceIDs.empty() &&
         pblock->vtx.size() <= CDecoupledBlock::MAX_TRANSACTIONS;
@@ -953,10 +979,16 @@ static UniValue getblocktemplate(const JSONRPCRequest &request) {
     result.pushKV("previousblockhash", pblock->hashPrevBlock.GetHex());
     result.pushKV("transactions", transactions);
     if (mixed) {
+        const MiningLease* lease = cachedWorkId.empty() ? nullptr : FindMiningLease(cachedWorkId);
+        if (!lease) {
+            cachedWorkId = RetainMiningTemplate(*pblock);
+            lease = FindMiningLease(cachedWorkId);
+            CHECK_NONFATAL(lease);
+        }
         result.pushKV("vtxids", references);
         result.pushKV("vtxidmetadata", referenceMetadata);
-        result.pushKV("workid", RetainMiningTemplate(*pblock));
-        result.pushKV("expires", MINING_LEASE_SECONDS);
+        result.pushKV("workid", lease->id);
+        result.pushKV("expires", MiningLeaseSecondsLeft(*lease));
     }
     result.pushKV("coinbaseaux", aux);
     result.pushKV("coinbasevalue", (int64_t) pblock->vtx[0]->GetValueOut());
@@ -1150,14 +1182,29 @@ static UniValue submitdecoupledblock(const JSONRPCRequest& request)
 {
     RPCHelpMan{"submitdecoupledblock", "Reconstruct and submit an experimental mixed block. Missing bodies return an incomplete result.\n",
         {{"hexdata", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Version-1 mixed block encoding"},
-         {"workid", RPCArg::Type::STR, RPCArg::Optional::NO, "Retained template identifier, or an empty string to use current body sources"}},
-        RPCResult{RPCResult::Type::NONE, "", "Null on acceptance, a BIP22 rejection string, or an object with status=incomplete and missing index/txid pairs"},
+         {"workid", RPCArg::Type::STR, /* default */ "\"\"", "Retained template identifier; empty uses only the current mempool and buspool bodies"}},
+        {
+            RPCResult{"if the block was reconstructed and accepted", RPCResult::Type::NONE, "", ""},
+            RPCResult{"if the reconstructed block was rejected", RPCResult::Type::STR, "", "A rejection reason according to BIP22"},
+            RPCResult{"if referenced bodies are unavailable", RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::STR, "status", "\"incomplete\""},
+                    {RPCResult::Type::ARR, "missing", "Missing canonical positions",
+                        {
+                            {RPCResult::Type::OBJ, "", "",
+                                {
+                                    {RPCResult::Type::NUM, "index", "Canonical block index (coinbase is 0)"},
+                                    {RPCResult::Type::STR_HEX, "txid", "Referenced transaction id"},
+                                }},
+                        }},
+                }},
+        },
         RPCExamples{HelpExampleCli("submitdecoupledblock", "\"hex\" \"workid\"")}}.Check(request);
     RequireDecoupledMining();
     const auto& hex = request.params[0].get_str();
     if (hex.size() > 2 * MAX_PROTOCOL_MESSAGE_LENGTH || !IsHex(hex))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Decoupled block decode failed");
-    CDecoupledReadBudget budget(MAX_RPC_RECONSTRUCTION_BYTES);
+    CDecoupledReadBudget budget(MAX_DECOUPLED_SUBMISSION_BYTES);
     std::shared_ptr<CBlock> block;
     try {
         budget.ChargeArray(hex.capacity() + 1, sizeof(char));
@@ -1169,7 +1216,7 @@ static UniValue submitdecoupledblock(const JSONRPCRequest& request)
         budget.ChargeShared(sizeof(CBlock));
         block = std::make_shared<CBlock>();
         LOCK(cs_main);
-        const auto& workid = request.params[1].get_str();
+        const std::string workid = request.params[1].isNull() ? std::string() : request.params[1].get_str();
         const MiningLease* lease = workid.empty() ? nullptr : FindMiningLease(workid);
         // Expired work may still be reconstructed from the current candidate/body caches.
         auto& pool = EnsureMemPool(request.context);

@@ -187,11 +187,8 @@ bool CBusPoolManager::EnsureLocalScripts(const uint256& txid, CValidationState& 
     const auto it = pool.mapTx.find(txid);
     if (it == pool.mapTx.end()) return state.Error("buspool-candidate-missing");
     if (it->AreScriptsLocallyValidated()) return true;
-    uint32_t flags;
-    if (!GetTxValidationNextScriptFlags(ChainActive().Tip(), Params().GetConsensus(), flags)) {
-        return state.Error("buspool-script-context-unavailable");
-    }
-    if (!CheckTxForCertificate(it->GetTx(), state, flags)) return false;
+    // Ordinary admission rules: after a reorg, inputs may come from other mempool entries.
+    if (!CheckMempoolTxScripts(it->GetTx(), pool, state)) return false;
     pool.mapTx.modify(it, [](CTxMemPoolEntry& entry) { entry.SetScriptsLocallyValidated(true); });
     pool.AddTransactionsUpdated(1);
     return true;
@@ -252,12 +249,21 @@ bool CBusPoolManager::SubmitTransaction(const CTransactionRef& tx, const CTxVali
                                        CValidationState& state)
 {
     LOCK(cs_main);
-    const auto* parent = ChainActive().Tip();
-    if (!tx || !CheckTxValidationCertificate(certificate, *tx, ChainstateActive().CoinsTip(), parent,
-                                            Params().GetConsensus(), state)) return false;
+    if (!tx) return state.Error("buspool-missing-transaction");
     if (BodyMemoryUsage(tx) > maxBytes) return state.Error("buspool-body-too-large");
-    if (!pool.exists(tx->GetHash()) &&
-        !AcceptToMemoryPool(pool, state, tx, nullptr, false, 0, false, &certificate)) return false;
+    // Admission verifies the certificate after cheaper checks; verify it here only for an existing candidate.
+    if (pool.exists(tx->GetHash())) {
+        if (!CheckTxValidationCertificate(certificate, *tx, ChainstateActive().CoinsTip(), ChainActive().Tip(),
+                                          Params().GetConsensus(), state)) return false;
+    } else {
+        bool missingInputs = false;
+        if (!AcceptToMemoryPool(pool, state, tx, &missingInputs, false, 0, false, &certificate)) {
+            // Keep a diagnostic reason: admission reports missing inputs without one.
+            if (missingInputs && state.IsValid())
+                state.Invalid(false, REJECT_INVALID, "bad-txns-inputs-missingorspent");
+            return false;
+        }
+    }
     const bool retained = RetainTransaction(tx);
     assert(retained); // Capacity was checked before admission; tx is immutable and cs_main is held.
     auto& entry = entries.at(tx->GetHash());
@@ -313,7 +319,7 @@ void CBusPoolManager::RevalidateDelegated()
 {
     AssertLockHeld(cs_main);
     LOCK(pool.cs);
-    // ponytail: scan the bounded mempool on tip changes; index delegated entries if this dominates profiling.
+    // Scans the bounded mempool on each tip change; index delegated entries if profiling shows this dominates.
     std::vector<CTransactionRef> delegated;
     for (const auto& entry : pool.mapTx) {
         if (!entry.AreScriptsLocallyValidated()) delegated.emplace_back(entry.GetSharedTx());
@@ -329,6 +335,9 @@ void CBusPoolManager::RevalidateDelegated()
 void CBusPoolManager::SynchronousUpdatedBlockTip(const CBlockIndex* tip, const CBlockIndex*, bool)
 {
     LOCK(cs_main);
+    // A rejected or invalidated side block reports an unchanged tip; certificates stay valid.
+    if (tip == lastTip) return;
+    lastTip = tip;
     RevalidateDelegated();
     requests.clear();
     certificateIndex.clear();

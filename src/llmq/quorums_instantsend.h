@@ -308,6 +308,10 @@ namespace llmq {
 
         LOCKS_EXCLUDED(cs_creating);
 
+        bool TrySignInputLocksImpl(const CTransaction &tx, bool allowResigning, Consensus::LLMQType llmqType)
+        LOCKS_EXCLUDED(cs_inputRequests);
+        void TrySignInstantSendLockImpl(const CTransaction &tx) LOCKS_EXCLUDED(cs_creating);
+
         void ProcessMessageInstantSendLock(const CNode *pfrom, const CInstantSendLockPtr &islock);
 
         static bool PreVerifyInstantSendLock(const CInstantSendLock &islock);

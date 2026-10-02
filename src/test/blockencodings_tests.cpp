@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <arith_uint256.h>
 #include <blockencodings.h>
 #include <decoupledblock.h>
 #include <consensus/consensus.h>
@@ -1027,6 +1028,82 @@ BOOST_AUTO_TEST_CASE(DecoupledBudgetRejectsOverflow)
     budget.SetLimit(128);
     budget.ChargeBytes(64);
     BOOST_CHECK_EQUAL(budget.GetUsed(), 128U);
+}
+
+// A valid block that fills the size limit with the most memory-expensive
+// shape per serialized byte: minimal transactions, or 100 kB transactions with
+// empty-script outputs.
+static CBlock BuildMaximumCostBlock(size_t outputsPerTx)
+{
+    CBlock block;
+    block.nBits = 0x207fffff;
+    CMutableTransaction coinbase;
+    coinbase.vin.resize(1);
+    coinbase.vin[0].scriptSig = CScript() << OP_TRUE << OP_TRUE;
+    coinbase.vout.resize(1);
+    block.vtx.push_back(MakeTransactionRef(std::move(coinbase)));
+    size_t size = ::GetSerializeSize(CBlockHeader(), SER_NETWORK, PROTOCOL_VERSION) + 3 +
+        ::GetSerializeSize(*block.vtx[0], SER_NETWORK, PROTOCOL_VERSION);
+    for (uint32_t n = 0; block.vtx.size() < CDecoupledBlock::MAX_TRANSACTIONS; ++n) {
+        CMutableTransaction tx;
+        tx.vin.emplace_back(COutPoint(ArithToUint256(arith_uint256(n + 1)), 0));
+        tx.vout.resize(outputsPerTx);
+        const size_t txSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+        if (size + txSize > MAX_DIP0001_BLOCK_SIZE - 1000) break;
+        size += txSize;
+        block.vtx.push_back(MakeTransactionRef(std::move(tx)));
+    }
+    block.hashMerkleRoot = BlockMerkleRoot(block);
+    return block;
+}
+
+// Mirrors submitdecoupledblock: RPC hex, decode, lookup and reconstruction share one budget.
+static size_t SubmissionBudgetUse(const CBlock& block, bool referenced)
+{
+    std::set<uint256> references;
+    if (referenced) {
+        for (size_t i = 1; i < block.vtx.size(); ++i) references.insert(block.vtx[i]->GetHash());
+    }
+    const CDecoupledBlock encoded(block, references);
+    CDataStream wire(SER_NETWORK, PROTOCOL_VERSION);
+    wire << encoded;
+    const std::vector<unsigned char> bytes(wire.begin(), wire.end());
+    CDecoupledReadBudget budget(std::numeric_limits<size_t>::max());
+    budget.ChargeArray(2 * bytes.size() + 1, sizeof(char));
+    VectorReader source(SER_NETWORK, PROTOCOL_VERSION, bytes, 0);
+    CDecoupledBudgetedReader<VectorReader> reader(source, budget);
+    CDecoupledBlock decoded;
+    reader >> decoded;
+    BOOST_REQUIRE(source.empty());
+    budget.ChargeShared(sizeof(CBlock));
+    std::map<uint256, CTransactionRef> bodies;
+    for (const auto& tx : block.vtx) bodies.emplace(tx->GetHash(), tx);
+    PartiallyDownloadedDecoupledBlock partial;
+    BOOST_REQUIRE(partial.InitData(decoded, [&bodies](const uint256& txid) {
+        const auto body = bodies.find(txid);
+        return body == bodies.end() ? CTransactionRef() : body->second;
+    }, &budget) == READ_STATUS_OK);
+    BOOST_REQUIRE(partial.GetMissingIndexes(&budget).empty());
+    CBlock rebuilt;
+    BOOST_REQUIRE(partial.FillBlock(rebuilt, {}, &budget) == READ_STATUS_OK);
+    BOOST_CHECK(rebuilt.GetHash() == block.GetHash());
+    return budget.GetUsed();
+}
+
+BOOST_AUTO_TEST_CASE(DecoupledSubmissionBudgetCoversMaximumBlocks)
+{
+    // 1: minimal transactions; 11100: about 100 kB of empty-script outputs each.
+    for (const size_t outputs : {size_t{1}, size_t{11100}}) {
+        const CBlock block = BuildMaximumCostBlock(outputs);
+        BOOST_REQUIRE_GT(::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION), MAX_DIP0001_BLOCK_SIZE - 110000);
+        BOOST_REQUIRE_LE(::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION), MAX_DIP0001_BLOCK_SIZE);
+        for (const bool referenced : {false, true}) {
+            const size_t used = SubmissionBudgetUse(block, referenced);
+            BOOST_TEST_MESSAGE("outputs=" << outputs << " referenced=" << referenced << " transactions="
+                               << block.vtx.size() << " budget=" << used);
+            BOOST_CHECK_LE(used, MAX_DECOUPLED_SUBMISSION_BYTES);
+        }
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

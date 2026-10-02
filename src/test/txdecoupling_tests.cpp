@@ -11,6 +11,7 @@
 #include <evo/evodb.h>
 #include <llmq/quorums_commitment.h>
 #include <miner.h>
+#include <pow.h>
 #include <txdecoupling.h>
 #include <validation.h>
 #include <compat/endian.h>
@@ -171,6 +172,9 @@ BOOST_AUTO_TEST_CASE(successor_flags_predict_activation_without_temporary_indexe
     parent.nHeight = 8;
     BOOST_REQUIRE(GetTxValidationNextScriptFlags(&parent, Params().GetConsensus(), flags));
     BOOST_CHECK_EQUAL(flags & SCRIPT_ENABLE_DIP0020_OPCODES, 0U);
+    // Successors of a parent with median time 1333238399 are all at or after the BIP16 switch.
+    parent.nTime = 1333238399;
+    BOOST_CHECK(GetTxValidationNextScriptFlags(&parent, Params().GetConsensus(), flags));
     parent.nTime = 1333238398;
     BOOST_CHECK(!GetTxValidationNextScriptFlags(&parent, Params().GetConsensus(), flags));
 }
@@ -256,9 +260,7 @@ struct StatementSetup : RegTestingSetup {
 };
 }
 
-BOOST_FIXTURE_TEST_SUITE(txcertificate_statement_tests, StatementSetup)
-
-BOOST_AUTO_TEST_CASE(signed_fields_prevouts_and_public_history)
+BOOST_FIXTURE_TEST_CASE(txcertificate_signed_fields_prevouts_and_public_history, StatementSetup)
 {
     LOCK(cs_main);
     const auto parent = chain.back();
@@ -332,7 +334,7 @@ BOOST_AUTO_TEST_CASE(signed_fields_prevouts_and_public_history)
     BOOST_CHECK(wrongMined.IsError());
 }
 
-BOOST_AUTO_TEST_CASE(eligibility_and_manifest_bind_the_block)
+BOOST_FIXTURE_TEST_CASE(txcertificate_eligibility_and_manifest_bind_the_block, StatementSetup)
 {
     LOCK(cs_main);
     const auto parent = chain.back();
@@ -390,8 +392,6 @@ BOOST_AUTO_TEST_CASE(eligibility_and_manifest_bind_the_block)
     CValidationState spent;
     BOOST_CHECK(!GetTxValidationPrevoutsDigest(CTransaction(tx), view, parent, digest, spent));
 }
-
-BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_FIXTURE_TEST_CASE(txcertificate_equal_height_branches, StatementSetup)
 {
@@ -513,8 +513,35 @@ BOOST_FIXTURE_TEST_CASE(txcertificate_block_preserves_non_script_rules, Certific
     ordinary.vtx[0] = MakeTransactionRef(coinbase);
     ordinary.hashMerkleRoot = BlockMerkleRoot(ordinary);
     ordinary.fChecked = false;
+    // Script failures surface as the check queue's generic reason, or directly without it.
+    const auto scriptFailure = [](const CValidationState& state) {
+        const std::string reason = state.GetRejectReason();
+        return reason == "block-validation-failed" || reason.find("mandatory-script-verify-flag-failed") == 0;
+    };
     CValidationState uncached;
     BOOST_CHECK(!TestBlockValidity(uncached, Params(), ordinary, ChainActive().Tip(), false, true));
+    BOOST_CHECK_MESSAGE(scriptFailure(uncached), uncached.GetRejectReason());
+
+    // A manifest authorizes only its own positions: an uncertified transaction in the
+    // same block still executes scripts. Its only input is unspendable (OP_FALSE).
+    CMutableTransaction locked = payment;
+    locked.vout[0].scriptPubKey = CScript() << OP_FALSE;
+    CMutableTransaction uncertified;
+    uncertified.nVersion = 3;
+    uncertified.vin.emplace_back(locked.GetHash(), 0);
+    uncertified.vout.emplace_back(locked.vout[0].nValue - 1000, CScript() << OP_TRUE);
+    CBlock mixed = CertifiedBlock({locked});
+    mixed.vtx.push_back(MakeTransactionRef(uncertified));
+    mixed.hashMerkleRoot = BlockMerkleRoot(mixed);
+    mixed.fChecked = false;
+    CValidationState mixedState;
+    BOOST_CHECK(!TestBlockValidity(mixedState, Params(), mixed, ChainActive().Tip(), false, true));
+    BOOST_CHECK_MESSAGE(scriptFailure(mixedState), mixedState.GetRejectReason());
+    // Control: the certified position alone is valid, so the uncertified script caused the failure.
+    CBlock lockedOnly = CertifiedBlock({locked});
+    CValidationState lockedState;
+    BOOST_CHECK_MESSAGE(TestBlockValidity(lockedState, Params(), lockedOnly, ChainActive().Tip(), false, true),
+                        lockedState.GetRejectReason());
 
     const auto reject = [&](const std::vector<CMutableTransaction>& txs, const std::string& reason) {
         CBlock block = CertifiedBlock(txs);
@@ -551,6 +578,10 @@ BOOST_FIXTURE_TEST_CASE(txcertificate_block_preserves_non_script_rules, Certific
     CValidationState invalidProof;
     BOOST_CHECK(!TestBlockValidity(invalidProof, Params(), corrupted, ChainActive().Tip(), false, true));
     BOOST_CHECK_EQUAL(invalidProof.GetRejectReason(), "bad-txcert-signature");
+    // The manifest is committed by the block hash, so the block carries a full DoS score.
+    int score = 0;
+    BOOST_CHECK(invalidProof.IsInvalid(score));
+    BOOST_CHECK_EQUAL(score, 100);
 
     DisableCertificates();
     CValidationState inactive;
@@ -734,4 +765,54 @@ BOOST_FIXTURE_TEST_CASE(txcertificate_mining_certificate_capacity, CertificateBl
                            expectedOrdinary.count(entry.GetTx().GetHash()) != 0;
         BOOST_CHECK_EQUAL(entry.AreScriptsLocallyValidated(), local);
     }
+}
+
+// Successor activation is cached per parent hash. Two branches at the same height
+// with different miner votes must never share a result.
+BOOST_FIXTURE_TEST_CASE(txcertificate_successor_activation_is_per_branch, TestChain100Setup)
+{
+    const Update update(EUpdate::DEPLOYMENT_V17, "v17", 0, 10, 100, 1, 9, 1, false,
+                        VoteThreshold(100, 100, 1), VoteThreshold(0, 0, 1));
+    {
+        LOCK(cs_main);
+        Updates().Add(update);
+    }
+    const CScript script = CScript() << OP_TRUE;
+    const auto mine = [&](bool signal) {
+        CBlock block = CreateBlock({}, script);
+        block.nVersion = signal ? (block.nVersion | update.BitMask()) : (block.nVersion & ~update.BitMask());
+        while (!CheckProofOfWork(block.GetPOWHash(), block.nBits, Params().GetConsensus())) ++block.nNonce;
+        BOOST_REQUIRE(g_chainman.ProcessNewBlock(Params(), std::make_shared<const CBlock>(block), true, nullptr));
+        LOCK(cs_main);
+        BOOST_REQUIRE(ChainActive().Tip()->GetBlockHash() == block.GetHash());
+        return ChainActive().Tip();
+    };
+    std::vector<const CBlockIndex*> signalling, silent;
+    for (int i = 0; i < 40; ++i) signalling.push_back(mine(true));
+    {
+        CValidationState state;
+        BOOST_REQUIRE(InvalidateBlock(state, Params(), const_cast<CBlockIndex*>(signalling.front())));
+    }
+    for (int i = 0; i < 40; ++i) silent.push_back(mine(false));
+
+    LOCK(cs_main);
+    bool differed = false;
+    for (size_t i = 0; i < signalling.size(); ++i) {
+        BOOST_REQUIRE_EQUAL(signalling[i]->nHeight, silent[i]->nHeight);
+        std::vector<bool> results;
+        for (const CBlockIndex* parent : {signalling[i], silent[i]}) {
+            // Oracle: a fresh manager without any cached state from either branch.
+            CBlockIndex next;
+            next.pprev = const_cast<CBlockIndex*>(parent);
+            next.nHeight = parent->nHeight + 1;
+            next.BuildSkip();
+            UpdateManager fresh;
+            fresh.Add(update);
+            const bool expected = fresh.IsActive(EUpdate::DEPLOYMENT_V17, &next);
+            BOOST_CHECK_EQUAL(Updates().IsActiveForNextBlock(EUpdate::DEPLOYMENT_V17, parent), expected);
+            results.push_back(expected);
+        }
+        differed |= results[0] != results[1];
+    }
+    BOOST_CHECK(differed);
 }

@@ -151,10 +151,10 @@ bool CheckTxValidationCertificate(const CTxValidationCertificate& cert, const CT
                                       CTxValidationCertificate::POSITIVE, state);
 }
 
-bool CheckBlockTxCertificates(const CBlock& block, const CCoinsViewCache& view,
-                              const CBlockIndex* parent, const Consensus::Params& consensus,
-                              uint32_t blockFlags, std::set<uint16_t>& certified,
-                              CValidationState& state)
+static bool CheckBlockTxCertificatesImpl(const CBlock& block, const CCoinsViewCache& view,
+                                         const CBlockIndex* parent, const Consensus::Params& consensus,
+                                         uint32_t blockFlags, std::set<uint16_t>& certified,
+                                         CValidationState& state)
 {
     certified.clear();
     if (block.vtx.empty() || block.vtx[0]->nType != TRANSACTION_COINBASE) return true;
@@ -174,4 +174,22 @@ bool CheckBlockTxCertificates(const CBlock& block, const CCoinsViewCache& view,
                                           parent, consensus, state)) return false;
     }
     return true;
+}
+
+bool CheckBlockTxCertificates(const CBlock& block, const CCoinsViewCache& view,
+                              const CBlockIndex* parent, const Consensus::Params& consensus,
+                              uint32_t blockFlags, std::set<uint16_t>& certified,
+                              CValidationState& state)
+{
+    if (CheckBlockTxCertificatesImpl(block, view, parent, consensus, blockFlags, certified, state)) return true;
+    // A committed manifest cannot be mutated without changing the block hash, so an
+    // invalid certificate makes the whole block invalid. The score reaches peers that
+    // deliver full blocks; reconstructed blocks are processed without punishment, as
+    // compact blocks are. Relay paths call CheckTxValidationStatement directly.
+    int score = 0;
+    if (state.IsInvalid(score) && score == 0) {
+        const std::string reason = state.GetRejectReason(), debug = state.GetDebugMessage();
+        state.DoS(100, false, REJECT_INVALID, reason, false, debug);
+    }
+    return false;
 }

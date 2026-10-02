@@ -322,6 +322,9 @@ bool AcceptToMemoryPool(CTxMemPool &pool, CValidationState &state, const CTransa
 // Executes both script rule sets locally; never substitutes a remote certificate.
 // Requires cs_main and confirmed ordinary-payment inputs at the active tip.
 bool CheckTxForCertificate(const CTransaction& tx, CValidationState& state, uint32_t consensusFlags);
+/** Execute a mempool transaction's scripts exactly as ordinary admission does. Inputs may be
+ *  confirmed or created by other mempool entries. Requires cs_main. */
+bool CheckMempoolTxScripts(const CTransaction& tx, CTxMemPool& pool, CValidationState& state);
 
 /**
  * Does this transaction need a working copy of the global asset cache?

@@ -7,7 +7,7 @@
 
 from decimal import Decimal
 
-from feature_decoupled_mining import exercise_certified_mining, exercise_transport_mining_limits
+from feature_decoupled_mining import block_from_template, exercise_certified_mining, exercise_transport_mining_limits
 
 from test_framework.messages import CTransaction, FromHex, ToHex, hash256
 from test_framework.test_framework import LLMQ_TEST_TYPE, RaptoreumTestFramework
@@ -159,11 +159,29 @@ class TxValidationTest(RaptoreumTestFramework):
         assert_raises_rpc_error(-26, "bad-txcert-context", node.submitbuspooltransaction, raw, certificate["hex"])
         original_entry = node.getmempoolentry(txid)
         current_certificate = self.recover(raw)
+        # Promotion of an existing candidate must itself refresh long-polling miners.
+        before = node.getblocktemplate()["longpollid"]
+        self.bump_mocktime(6)
         node.submitbuspooltransaction(raw, current_certificate["hex"])
+        assert node.getblocktemplate()["longpollid"] != before
         promoted_entry = node.getmempoolentry(txid)
-        for field in ("time", "ancestorcount", "descendantcount", "depends"):
+        for field in ("time", "ancestorcount", "descendantcount", "depends", "instantlock"):
             assert_equal(promoted_entry[field], original_entry[field])
         assert node.getbuspoolentry(txid)["locallyvalidated"]
+
+        self.log.info("A rejected block on the current parent keeps current certificates")
+        tip = node.getbestblockhash()
+        assert node.getbuspoolentry(txid)["certificate"]
+        rejected, _ = block_from_template(node, node.getblocktemplate())
+        rejected.vtx[0].vout[0].nValue += 1
+        rejected.vtx[0].rehash()
+        rejected.hashMerkleRoot = rejected.calc_merkle_root()
+        rejected.solve()
+        # The block is stored, then fails in ConnectBlock with the tip unchanged.
+        assert node.submitblock(rejected.serialize().hex()) is not None
+        assert_equal(node.getbestblockhash(), tip)
+        assert node.getbuspoolentry(txid)["certificate"]
+        assert node.gettxcertificate(txid)["recovered"]
 
         self.log.info("Negative certificates remain diagnostic and missing prevouts cause abstention")
         invalid, invalid_id = self.payment(coins[2], signed=False)
@@ -215,6 +233,38 @@ class TxValidationTest(RaptoreumTestFramework):
             assert_equal(certificate["txid"], payment_id)
             assert not signer.node.quorum("hasrecsig", LLMQ_TEST_TYPE, statement["requestid"], opposite)
 
+        self.log.info("A reorg keeps a delegated candidate whose parent returns to the mempool")
+        # ChainLocks would reactivate a locked tip after invalidateblock.
+        node.spork("SPORK_19_CHAINLOCKS_ENABLED", 4070908800)
+        self.wait_for_sporks_same()
+        # The confirmed output of the delayed payment is not used elsewhere.
+        delayed_coin = {"txid": delayed_id, "vout": 0,
+                        "amount": node.decoderawtransaction(delayed["hex"])["vout"][0]["value"]}
+        parent_raw, parent_id = self.payment(delayed_coin)
+        node.sendrawtransaction(parent_raw)
+        self.wait_for_instantlock(parent_id, node)
+        self.bump_mocktime(1)
+        parent_block = node.generate(1)[0]
+        self.sync_blocks()
+        assert parent_id in node.getblock(parent_block)["tx"]
+        spend = node.createrawtransaction([{"txid": parent_id, "vout": 0}],
+                                          {node.getnewaddress(): delayed_coin["amount"] - Decimal("0.002")})
+        spend = node.signrawtransactionwithwallet(spend)
+        assert spend["complete"]
+        spend_certificate = self.recover(spend["hex"])
+        spend_id = node.submitbuspooltransaction(spend["hex"], spend_certificate["hex"])
+        assert not node.getbuspoolentry(spend_id)["locallyvalidated"]
+        node.invalidateblock(parent_block)
+        assert parent_id in node.getrawmempool()
+        assert spend_id in node.getrawmempool()
+        assert node.getbuspoolentry(spend_id)["locallyvalidated"]
+        node.reconsiderblock(parent_block)
+        assert_equal(node.getbestblockhash(), parent_block)
+        assert spend_id in node.getrawmempool()
+        self.sync_blocks()
+        node.spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
+        self.wait_for_sporks_same()
+
         self.log.info("A controlled threshold proof does not poison local script checks or survive its parent")
         malicious, malicious_id = self.payment(coins[5], signed=False)
         statement = node.requesttxvalidation(malicious)
@@ -228,8 +278,9 @@ class TxValidationTest(RaptoreumTestFramework):
         assert_raises_rpc_error(-26, "script", signer.node.submitbuspooltransaction, malicious, proof.hex())
         assert_equal(node.submitbuspooltransaction(malicious, proof.hex()), malicious_id)
         assert not node.getbuspoolentry(malicious_id)["locallyvalidated"]
-        # The certificate must not populate local script-success caches: another
-        # signer still observes a negative result for exactly these bytes.
+        # The certificate must not populate local script-success caches: the admitting
+        # node and another signer still observe a negative result for these bytes.
+        assert not node.requesttxvalidation(malicious)["positive"]
         assert not signer.node.requesttxvalidation(malicious)["positive"]
         child = node.createrawtransaction([{"txid": malicious_id, "vout": 0}],
                                          {node.getnewaddress(): coins[5]["amount"] - Decimal("0.002")})
@@ -255,7 +306,7 @@ class TxValidationTest(RaptoreumTestFramework):
             assert node.getbuspoolinfo()["size"] <= 4
             assert node.getbuspoolinfo()["bytes"] <= node.getbuspoolinfo()["maxbytes"]
             assert payment_id not in node.getrawmempool()
-        assert len(retained) > 4
+        assert_equal(node.getbuspoolinfo()["size"], 4)
         assert_raises_rpc_error(-5, "not retained", node.getbuspoolentry, retained[0])
 
         self.log.info("Mine a mixed template using a real recovered certificate and retained bodies")

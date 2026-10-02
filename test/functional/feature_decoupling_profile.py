@@ -95,6 +95,30 @@ class DecouplingProfile(AssetsTest):
         self.log.info("Verified %s repetition %d: %d admitted/relayed/mined, %d bytes",
                       name, repetition, len(txids), byte_count)
 
+    def reserve_asset_inputs(self, count):
+        """Fund inputs that always leave change after an asset creation.
+
+        createasset has no recipient output. When coin selection leaves no change it
+        returns the id of a zero-output transaction that the mempool rejects
+        (bad-txns-vout-empty), so every creation spends one of these reserved inputs.
+        They stay locked until used, so payments and funding cannot spend them.
+        """
+        node = self.nodes[0]
+        funding = node.sendmany("", {node.getnewaddress(): ASSET_FEE + 5 for _ in range(count)})
+        self.mine()
+        self.asset_inputs = [{"txid": coin["txid"], "vout": coin["vout"]} for coin in node.listunspent(1)
+                             if coin["txid"] == funding and coin["amount"] == ASSET_FEE + 5]
+        assert_equal(len(self.asset_inputs), count)
+        node.lockunspent(False, self.asset_inputs)
+
+    def lock_all_but_asset_input(self):
+        node = self.nodes[0]
+        # Locked coins are not listed, so this locks every spendable coin except the reserved one.
+        others = [{"txid": coin["txid"], "vout": coin["vout"]} for coin in node.listunspent(0)]
+        node.lockunspent(False, others)
+        node.lockunspent(True, [self.asset_inputs.pop()])
+        return others
+
     def payments(self, input_count, repetition):
         node = self.nodes[0]
         count = self.options.profile_count
@@ -151,8 +175,11 @@ class DecouplingProfile(AssetsTest):
         self.test_gates()
         while node.getbalance() < ASSET_FEE * (self.options.profile_assets + 10):
             self.mine(100)
+        self.reserve_asset_inputs(self.options.profile_assets + self.options.profile_repetitions)
         for index in range(self.options.profile_assets):
+            locked = self.lock_all_but_asset_input()
             node.createasset(self.metadata("PROFILECACHE" + str(index)))
+            node.lockunspent(True, locked)
             if (index + 1) % 10 == 0:
                 self.mine()
         self.mine()
@@ -167,8 +194,11 @@ class DecouplingProfile(AssetsTest):
             for count in (1, 10):
                 self.payments(count, repetition)
             name = "PROFILEASSET" + str(repetition)
+            # Input reservation stays outside the measured stages.
+            locked = self.lock_all_but_asset_input()
             self.measure("asset_create", repetition,
                          [lambda: node.createasset(self.metadata(name))["txid"]])
+            node.lockunspent(True, locked)
             asset_id = node.getassetdetailsbyname(name)["Asset_id"]
             self.measure("asset_mint", repetition, [lambda: node.mintasset(asset_id)["txid"]])
             recipient = self.nodes[1].getnewaddress()

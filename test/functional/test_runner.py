@@ -87,6 +87,7 @@ BASE_SCRIPTS = [
     'rpc_fundrawtransaction_hd.py',
     'wallet_multiwallet.py --usecli',
     'p2p_quorum_data.py',
+    'feature_llmq_txvalidation.py',
     # vv Tests less than 2m vv
     'feature_assets_cache_copy_atmp.py',
     'p2p_instantsend.py',
@@ -105,6 +106,7 @@ BASE_SCRIPTS = [
     'feature_llmq_dkgerrors.py',
     'feature_dip4_coinbasemerkleroots.py',
     'mining_getblocktemplate_longpoll.py',
+    'p2p_decoupledblocks.py',
     # vv Tests less than 60s vv
     'p2p_sendheaders.py',
     'wallet_importmulti.py',
@@ -193,7 +195,6 @@ BASE_SCRIPTS = [
     'p2p_leak_tx.py',
     'p2p_blocksonly.py',
     'p2p_compactblocks.py',
-    'p2p_decoupledblocks.py',
     'p2p_connect_to_devnet.py',
     'feature_futures.py',
     'feature_assets.py',
@@ -248,8 +249,8 @@ EXTENDED_SCRIPTS = [
     # vv Tests less than 20m vv
     # vv Tests less than 5m vv
     'feature_decoupling_profile.py',
+    'feature_decoupling_profile.py --profile-transport-node=0 --profile-count=5 --profile-assets=5',
     'feature_decoupled_mining.py',
-    'feature_llmq_txvalidation.py',
     'feature_maxuploadtarget.py',
     'feature_dbcrash.py',
     # vv Tests less than 2m vv
