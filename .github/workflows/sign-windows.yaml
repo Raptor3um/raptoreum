@@ -125,7 +125,7 @@ jobs:
         run: |
           if (-not $env:CERT_THUMBPRINT) { throw "SIGNING_CERT_THUMBPRINT is not set" }
           Get-ChildItem staging -Directory | ForEach-Object {
-              ./scripts/sign-raptoreum.ps1 -InputPath $_.FullName -CertThumbprint $env:CERT_THUMBPRINT -AutoFindSignTool
+              ./scripts/sign-raptoreum.ps1 -InputPath $_.FullName -CertThumbprint $env:CERT_THUMBPRINT -AutoFindSignTool -SkipConfirmation
               if ($LASTEXITCODE -ne 0) { throw "signing failed for $($_.Name)" }
           }
 
