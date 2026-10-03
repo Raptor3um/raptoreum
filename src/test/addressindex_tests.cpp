@@ -118,4 +118,29 @@ BOOST_AUTO_TEST_CASE(address_type_boundary)
     }
 }
 
+BOOST_AUTO_TEST_CASE(unspent_address_type_boundary)
+{
+    SetDataDir("addressindex");
+    CBlockTreeDB db(1 << 20, /*fMemory=*/true);
+    uint160 address;
+    address.SetHex(std::string(40, 'f'));
+    BOOST_REQUIRE(db.UpdateAddressUnspentIndex({
+        {CAddressUnspentKey(1, address, uint256S("01"), 0), CAddressUnspentValue(11, CScript(), 100, 0, 0)},
+        {CAddressUnspentKey(2, address, uint256S("02"), 0), CAddressUnspentValue(22, CScript(), 100, 0, 0)},
+    }));
+
+    for (int type : {1, 2}) {
+        BOOST_TEST_CONTEXT("type=" << type) {
+            std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue>> actual;
+            BOOST_REQUIRE(db.ReadAddressUnspentIndex(address, type, actual));
+            BOOST_CHECK_EQUAL(actual.size(), 1);
+            for (const auto& entry : actual) {
+                BOOST_CHECK_EQUAL(entry.first.type, type);
+                BOOST_CHECK(entry.first.hashBytes == address);
+                BOOST_CHECK_EQUAL(entry.second.satoshis, type * 11);
+            }
+        }
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
