@@ -329,7 +329,10 @@ UniValue sendtoaddress(const JSONRPCRequest &request) {
                        {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO,
                         "The amount in " + CURRENCY_UNIT + " to send. eg 0.1"},
                        {"future", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG,
-                        "Future transaction is mature when it has enough confirmations or locktime in seconds has past from its first confirm.",
+                        "Future transaction is mature when it has enough confirmations or locktime in seconds has past from its first confirm.\n"
+                        "                             This argument is optional: to skip it positionally and still pass later\n"
+                        "                             arguments, give an empty array [] or null (an empty string \"\" is NOT valid here).\n"
+                        "                             Alternatively use named arguments, e.g. -named ... subtractfeefromamount=true.",
                         {
                                 {"future_maturity", RPCArg::Type::NUM, /* default */ "",
                                  "Number of confirmations required for this future to mature."},
@@ -391,7 +394,10 @@ UniValue sendtoaddress(const JSONRPCRequest &request) {
     bool hasFuture = false;
     int nextParamsIndex = 2;
     if (!request.params[nextParamsIndex].isNull()) {
-        if (request.params[nextParamsIndex].isObject()) {
+        // The optional "future" argument can be skipped positionally by passing an
+        // empty array, null, or an empty object. Only a non-empty object actually
+        // requests a future transaction; anything else means "no future" (issue #383).
+        if (request.params[nextParamsIndex].isObject() && !request.params[nextParamsIndex].empty()) {
             if (request.params[nextParamsIndex]["future_maturity"].isNull()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_maturity is specified "));
             }

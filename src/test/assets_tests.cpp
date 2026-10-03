@@ -657,4 +657,21 @@ BOOST_FIXTURE_TEST_CASE(assets_invalid_cases, TestChainDIP3BeforeActivationSetup
     }
 }
 
+BOOST_AUTO_TEST_CASE(validate_amount_decimal_point) {
+    // Normal range (decimalPoint 0..8): the divisor is 10^(8 - decimalPoint) and an
+    // amount is valid iff it is a whole multiple of that divisor.
+    BOOST_CHECK(validateAmount(100000000, 0));  // exactly 1 unit with 0 decimals
+    BOOST_CHECK(!validateAmount(1, 0));         // not a multiple of 1e8
+    BOOST_CHECK(validateAmount(10000, 4));      // multiple of 1e4
+    BOOST_CHECK(!validateAmount(10001, 4));     // not a multiple of 1e4
+    BOOST_CHECK(validateAmount(1, 8));          // divisor is 1, anything passes
+    BOOST_CHECK(validateAmount(0, 4));          // zero is always valid
+
+    // Out-of-range decimalPoint (> 8) must be rejected, not crash. Before the fix the
+    // divisor 10^(8 - decimalPoint) underflowed to 0 and the modulo raised SIGFPE.
+    BOOST_CHECK(!validateAmount(100000000, 9));
+    BOOST_CHECK(!validateAmount(0, 100));
+    BOOST_CHECK(!validateAmount(12345, 65535)); // max uint16_t, previously div-by-zero
+}
+
 BOOST_AUTO_TEST_SUITE_END()

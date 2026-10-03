@@ -1395,8 +1395,6 @@ UniValue protx_list(const JSONRPCRequest &request) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid height specified");
         }
 
-        std::cout << "protx_list: height" << height << ", ::ChainActive().Height(): " << ::ChainActive().Height()
-                  << ", fSpentIndex: " << fSpentIndex << std::endl;
 
         if (height != ::ChainActive().Height() && !fSpentIndex) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "specifying height requires spentindex enabled");

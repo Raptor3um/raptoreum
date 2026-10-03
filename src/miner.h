@@ -224,6 +224,14 @@ void IncrementExtraNonce(CBlock *pblock, const CBlockIndex *pindexPrev, unsigned
 
 int64_t UpdateTime(CBlockHeader *pblock, const Consensus::Params &consensusParams, const CBlockIndex *pindexPrev);
 
-int GenerateRaptoreums(bool fGenerate, int nThreads, const CChainParams &chainparams, NodeContext &node);
+/**
+ * Start/stop the built-in CPU miner.
+ *
+ * walletName optionally selects which loaded wallet receives the coinbase
+ * rewards (issue #450). When empty the miner falls back to the first loaded
+ * wallet, preserving the previous behaviour.
+ */
+int GenerateRaptoreums(bool fGenerate, int nThreads, const CChainParams &chainparams, NodeContext &node,
+                       const std::string &walletName = "");
 
 #endif // BITCOIN_MINER_H

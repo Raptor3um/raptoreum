@@ -40,6 +40,15 @@ Span<const CRPCCommand> GetWalletRPCCommands();
  */
 std::shared_ptr <CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest &request);
 
+/**
+ * Extract the wallet name from a JSONRPCRequest's /wallet/<name> endpoint, if any.
+ *
+ * @param[in]  request     JSONRPCRequest to inspect
+ * @param[out] wallet_name set to the endpoint's wallet name when present
+ * @return true if the request was made through a wallet endpoint
+ */
+bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest &request, std::string &wallet_name);
+
 void EnsureWalletIsUnlocked(CWallet *);
 
 WalletContext &EnsureWalletContext(const util::Ref &context);

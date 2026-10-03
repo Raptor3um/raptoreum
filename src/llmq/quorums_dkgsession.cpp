@@ -753,7 +753,10 @@ namespace llmq {
 
         std::set <size_t> contributionsSet;
         for (const auto &p: qj.contributions) {
-            if (p.first > members.size()) {
+            // p.first is used as an index into `members` in ReceiveMessage(); it must be
+            // strictly less than members.size(). Using '>' let p.first == members.size()
+            // through, causing an out-of-bounds access later. Reject it here.
+            if (p.first >= members.size()) {
                 logger.Batch("invalid contribution index");
                 retBan = true;
                 return false;
