@@ -11,6 +11,10 @@
 #include <pubkey.h>
 #include <assets/assetstype.h>
 
+#include <array>
+#include <map>
+#include <string>
+
 class CNewAssetTx;
 
 class CUpdateAssetTx;
@@ -148,6 +152,21 @@ public:
 
     std::map <std::pair<std::string, std::string>, CAmount128> mapAssetAddressAmount;
 
+    // Lazily-populated, SELF-CORRECTING reverse index: the 12-byte
+    // hash160(assetId) tag (the low 12 bytes of an asset's per-asset EVM
+    // precompile address, 0xA55E70..||hash160[8:20]) -> assetId. A pure
+    // performance HINT for ResolveAssetIdByTag — every hit is re-verified
+    // against mapAsset (the source of truth), so a stale or missing entry
+    // can NEVER return a wrong result; it just falls back to the
+    // authoritative O(N) scan. That self-correction is what makes it safe
+    // to carry across the consensus boundary (the resolution result is
+    // always a pure function of mapAsset, never of the hint's contents).
+    // Deliberately NOT copied by the copy ctor / operator= below: a copy
+    // starts with an empty hint and self-populates; block-local cache
+    // copies never resolve (the precompile resolves against the global
+    // passetsCache), so they pay nothing.
+    std::map <std::array<uint8_t, 12>, std::string> mAssetTagHint;
+
     CAssets(const CAssets &assets) {
         this->mapAsset = assets.mapAsset;
         this->mapAssetId = assets.mapAssetId;
@@ -169,6 +188,7 @@ public:
         mapAsset.clear();
         mapAssetId.clear();
         mapAssetAddressAmount.clear();
+        mAssetTagHint.clear();
     }
 };
 
@@ -218,6 +238,12 @@ public:
     bool GetAssetMetaData(std::string assetId, CAssetMetaData &asset);
 
     bool GetAssetId(std::string name, std::string &assetId);
+
+    // Resolve a 12-byte hash160(assetId) tag back to its assetId via the
+    // self-correcting hint index (see mAssetTagHint). Returns false if no
+    // asset in mapAsset has that tag. O(log N) on a warm hint, O(N) on a
+    // cold/stale one; the result is always validated against mapAsset.
+    bool ResolveAssetIdByTag(const std::array<uint8_t, 12> &tag, std::string &assetIdOut);
 
     bool Flush();
 

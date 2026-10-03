@@ -7,11 +7,14 @@
 #include <chainparams.h>
 #include <evo/providertx.h>
 #include <evo/specialtx.h>
+#include <hash.h>
 #include <regex>
 #include <spork.h>
 #include <validation.h>
 #include <wallet/wallet.h>
 #include <univalue.h>
+
+#include <cstring>
 
 static const std::regex name_root_characters("^[A-Z0-9._]{3,}$");
 static const std::regex name_sub_characters("^[a-zA-Z0-9 ]{3,}$");
@@ -289,6 +292,46 @@ bool CAssetsCache::GetAssetId(std::string name, std::string &assetId) {
     if (passetsdb->ReadAssetId(name, assetId)) {
         mapAssetId.insert(std::make_pair(name, assetId));
         return true;
+    }
+    return false;
+}
+
+namespace {
+// The 12-byte hash160(assetId)[8:20] tag — the low 12 bytes of an asset's
+// per-asset EVM precompile address. Pure deterministic function of the
+// assetId string (matches evm::AssetErc20Address).
+std::array<uint8_t, 12> AssetTagOf(const std::string &assetId) {
+    const uint160 h = Hash160(
+        std::vector<unsigned char>(assetId.begin(), assetId.end()));
+    std::array<uint8_t, 12> tag{};
+    std::memcpy(tag.data(), h.begin() + 8, 12);
+    return tag;
+}
+} // anonymous namespace
+
+bool CAssetsCache::ResolveAssetIdByTag(const std::array<uint8_t, 12> &tag,
+                                       std::string &assetIdOut) {
+    // Fast path: a hint entry, RE-VERIFIED against mapAsset. The verify is
+    // the safety invariant — the resolution is always a pure function of
+    // mapAsset, never of the (possibly stale) hint contents.
+    auto it = mAssetTagHint.find(tag);
+    if (it != mAssetTagHint.end()) {
+        const auto a = mapAsset.find(it->second);
+        if (a != mapAsset.end() && AssetTagOf(it->second) == tag) {
+            assetIdOut = it->second;
+            return true;
+        }
+        // Stale hint (asset gone, or corrupted) — drop it and fall through.
+        mAssetTagHint.erase(it);
+    }
+    // Authoritative path: scan mapAsset. Refresh the hint on a hit so the
+    // next lookup of this tag is O(log N).
+    for (const auto &kv : mapAsset) {
+        if (AssetTagOf(kv.first) == tag) {
+            mAssetTagHint[tag] = kv.first;
+            assetIdOut = kv.first;
+            return true;
+        }
     }
     return false;
 }

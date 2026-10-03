@@ -1,0 +1,706 @@
+// Copyright (c) 2026 The Raptoreum developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#include <evm/apply.h>
+
+#include <evm/account.h>
+#include <evm/asset_ledger.h>
+#include <evm/balance.h>
+#include <evm/hashing.h>
+#include <evm/precompiles_eth.h>
+#include <evm/state_cache.h>
+
+#include <evmc/evmc.hpp>
+#include <evmone/evmone.h>
+
+#include <cstring>
+
+namespace evm {
+
+namespace {
+
+// uint256 (Bitcoin Core layout: m_data[0] is highest-order byte to
+// match the on-wire big-endian form we use elsewhere in this module)
+// to evmc::address: take the low 20 bytes (m_data[12..31]).
+evmc::address Uint256LowToEvmcAddress(const uint256& u)
+{
+    evmc::address out{};
+    std::memcpy(out.bytes, u.begin() + 12, 20);
+    return out;
+}
+
+// uint256 to evmc::uint256be: byte-for-byte copy. m_data layout
+// matches the big-endian wire form, so no reordering needed.
+evmc::uint256be Uint256ToEvmcU256(const uint256& u)
+{
+    evmc::uint256be out{};
+    std::memcpy(out.bytes, u.begin(), 32);
+    return out;
+}
+
+} // anonymous namespace
+
+ApplyResult ApplyEvmCallTx(const CEvmCallTx& payload,
+                           CEvmStateCache& cache,
+                           const ExecutionContext& context)
+{
+    ApplyResult out;
+
+    // ----------------------------------------------------------------
+    // 1. Derive sender and recipient (EVM 20-byte) addresses from the
+    //    payload's 32-byte fields. The payload uses uint256 for both
+    //    senderHash and toAddress so the serialized form is regular;
+    //    EVM addresses live in the low 20 bytes.
+    // ----------------------------------------------------------------
+
+    const evmc::address sender = Uint256LowToEvmcAddress(payload.senderHash);
+    const evmc::address recipient = Uint256LowToEvmcAddress(payload.toAddress);
+
+    // ----------------------------------------------------------------
+    // 2. Load recipient's deployed code (if any) for evmone to execute.
+    //    A call to an account with no code is legal — evmone just
+    //    transfers value (if any) and returns success with empty data.
+    // ----------------------------------------------------------------
+
+    std::vector<uint8_t> code;
+    {
+        evm::CEvmAccount recipientAccount;
+        const uint160 recipient160(std::vector<unsigned char>(
+            recipient.bytes, recipient.bytes + 20));
+        if (cache.GetAccount(recipient160, recipientAccount) &&
+            recipientAccount.codeHash != evm::CEvmAccount::EmptyCodeHash())
+        {
+            cache.GetCode(recipientAccount.codeHash, code);
+        }
+    }
+
+    // ----------------------------------------------------------------
+    // 3. Build the host and the evmc_message, then execute via evmone.
+    // ----------------------------------------------------------------
+
+    CEvmHost host(cache, context);
+
+    // EIP-2929 / EIP-3651 access-list pre-warming. The standard
+    // Ethereum tx envelope pre-warms the sender, the recipient, the
+    // standard precompiles (0x01..0x09 historically; Cancun keeps
+    // KZG_POINT_EVALUATION at 0x0a as well), and — since Cancun via
+    // EIP-3651 — the coinbase. Without this the first access of any
+    // of these addresses would charge cold (2600) instead of warm
+    // (100), corrupting gas accounting for every tx.
+    host.WarmAddress(sender);
+    host.WarmAddress(recipient);
+    {
+        evmc::address cb{};
+        std::memcpy(cb.bytes, context.coinbase.begin(), 20);
+        host.WarmAddress(cb);
+    }
+    for (uint8_t i = 1; i <= 0x0a; ++i) {
+        evmc::address p{};
+        p.bytes[19] = i;
+        host.WarmAddress(p);
+    }
+    // EIP-2930 explicit access list pre-warming. The payload's
+    // off-wire `accessList` carries (address, [slots]) pairs; we
+    // mark both the address AND each listed slot warm so subsequent
+    // SLOAD/CALL etc. pay 100 gas instead of 2100 / 2600.
+    for (const auto& entry : payload.accessList) {
+        evmc::address a{};
+        std::memcpy(a.bytes, entry.address.begin(), 20);
+        host.WarmAddress(a);
+        for (const auto& slot : entry.storageKeys) {
+            evmc::bytes32 k{};
+            std::memcpy(k.bytes, slot.begin(), 32);
+            host.WarmStorage(a, k);
+        }
+    }
+
+    evmc_message msg{};
+    msg.kind = EVMC_CALL;
+    msg.flags = 0;
+    msg.depth = 0;
+    msg.gas = static_cast<int64_t>(payload.gasLimit);
+    msg.recipient = recipient;
+    msg.sender = sender;
+    msg.code_address = recipient;
+    // payload.value is uint64_t (RTM weis). Promote into the high bits
+    // of an evmc::uint256be — last 8 bytes are the value, big-endian.
+    {
+        evmc::uint256be v{};
+        for (int i = 0; i < 8; ++i) {
+            v.bytes[24 + i] = static_cast<uint8_t>(payload.value >> (56 - 8 * i));
+        }
+        msg.value = v;
+    }
+    msg.input_data = payload.data.empty() ? nullptr : payload.data.data();
+    msg.input_size = payload.data.size();
+
+    // Transaction-level atomicity. Ethereum semantics: a transaction
+    // that ends in REVERT / OOG / INVALID consumes gas but rolls back
+    // EVERY state mutation it made — the outer value transfer and any
+    // top-level (non-nested) SSTORE/account writes included. Nested
+    // CALL/CREATE frames are already snapshot-protected inside
+    // CEvmHost; the OUTERMOST frame had no such protection, so a
+    // failing value-bearing tx left the recipient credited and the
+    // sender debited (off by exactly `value`), and a failing tx with
+    // top-level storage writes persisted them. Snapshot here, before
+    // the value transfer, and revert the whole frame on any
+    // non-success status. The surrounding fee accounting (gas
+    // pre-debit, nonce bump, refund) lives in the caller and is
+    // intentionally OUTSIDE this snapshot, matching the spec (gas is
+    // charged even on failure).
+    const int txSnap = cache.Snapshot();
+
+    // Outer-call value transfer. evmone exposes msg.value to the
+    // contract via the CALLVALUE opcode, but does NOT move the funds
+    // itself — by spec, that's the transaction harness's job (and
+    // the host's job for nested calls; see CEvmHost::call()).
+    // Without this debit/credit pair, every tx with value > 0 leaves
+    // the recipient under-funded and the sender over-funded, exactly
+    // accounting for the missing value.
+    if (payload.value > 0) {
+        uint160 senderAddr;
+        std::memcpy(senderAddr.begin(), sender.bytes, 20);
+        uint160 recipientAddr;
+        std::memcpy(recipientAddr.begin(), recipient.bytes, 20);
+        evm::CEvmAccount senderAcc;
+        if (cache.GetAccount(senderAddr, senderAcc)) {
+            if (Uint256GreaterOrEqualUint64(senderAcc.balance, payload.value)) {
+                Uint256SubUint64(senderAcc.balance, payload.value);
+                cache.SetAccount(senderAddr, senderAcc);
+
+                evm::CEvmAccount recipientAcc;
+                if (!cache.GetAccount(recipientAddr, recipientAcc)) {
+                    recipientAcc = evm::CEvmAccount(
+                        /*nonce=*/ 0,
+                        /*balance=*/ uint256(),
+                        /*codeHash=*/ evm::CEvmAccount::EmptyCodeHash(),
+                        /*storageRoot=*/ evm::CEvmAccount::EmptyStorageRoot());
+                }
+                Uint256AddUint64(recipientAcc.balance, payload.value);
+                cache.SetAccount(recipientAddr, recipientAcc);
+            }
+            // Insufficient-balance case: evmone will hit it via the
+            // CALLVALUE/balance check inside the contract anyway;
+            // letting it run with the un-moved funds yields the same
+            // observable result for fixtures (a failing tx).
+        }
+    }
+
+    // Top-level transaction sent DIRECTLY to a standard Ethereum
+    // precompile (0x01..0x0a). evmone does not implement precompiles
+    // — it only invokes the host for them on NESTED calls (handled in
+    // CEvmHost::call). A precompile address has no stored code, so
+    // running it through vm.execute() on empty code would return
+    // EVMC_SUCCESS with zero gas consumed and skip the precompile
+    // entirely (value committed, no work, no gas). Dispatch it here
+    // through the same already-validated ExecuteEthereumPrecompile
+    // the nested path uses. Scoped inside txSnap so a failing
+    // precompile reverts the value transfer; a successful one keeps
+    // it (matches geth: value sticks even for precompile recipients).
+    {
+        evmc::Result preR;
+        if (evm::ExecuteEthereumPrecompile(msg, preR)) {
+            if (preR.status_code == EVMC_SUCCESS) {
+                cache.Commit(txSnap);
+            } else {
+                cache.Revert(txSnap);
+            }
+            out.statusCode = preR.status_code;
+            out.gasUsed =
+                static_cast<int64_t>(payload.gasLimit) - preR.gas_left;
+            out.gasRefund = preR.gas_refund;
+            if (preR.output_size > 0 && preR.output_data != nullptr) {
+                out.returnData.assign(
+                    preR.output_data,
+                    preR.output_data + preR.output_size);
+            }
+            // Precompiles emit no logs / selfdestructs / created
+            // accounts.
+            return out;
+        }
+    }
+
+    evmc::VM vm{evmc_create_evmone()};
+    evmc::Result r = vm.execute(host, EVMC_CANCUN, msg,
+                                code.empty() ? nullptr : code.data(),
+                                code.size());
+
+    // ----------------------------------------------------------------
+    // 4. Pack the result for the caller. Logs and selfdestructs come
+    //    from the host (they were captured during execution); the
+    //    caller decides whether to keep them based on the status code.
+    // ----------------------------------------------------------------
+
+    if (r.status_code == EVMC_SUCCESS) {
+        cache.Commit(txSnap);
+    } else {
+        // Roll back the value transfer + every top-level state
+        // mutation. Gas is still charged by the caller (the snapshot
+        // is scoped to the execution frame only).
+        cache.Revert(txSnap);
+    }
+
+    out.statusCode = r.status_code;
+    out.gasUsed = static_cast<int64_t>(payload.gasLimit) - r.gas_left;
+    out.gasRefund = r.gas_refund;
+    if (r.output_size > 0 && r.output_data != nullptr) {
+        out.returnData.assign(r.output_data, r.output_data + r.output_size);
+    }
+    // Logs / selfdestructs are only meaningful on success; on a
+    // reverted tx evmone won't have emitted any that survive, and the
+    // caller already gates these on statusCode == EVMC_SUCCESS.
+    out.logs = host.Logs();
+    out.selfdestructs = host.Selfdestructs();
+    out.sameTxCreated = host.SameTxCreated();
+
+    return out;
+}
+
+ApplyResult ApplyEvmDeployTx(const CEvmDeployTx& payload,
+                             CEvmStateCache& cache,
+                             const ExecutionContext& context)
+{
+    ApplyResult out;
+
+    // ----------------------------------------------------------------
+    // 1. Derive sender and the contract address.
+    // ----------------------------------------------------------------
+
+    uint160 sender;
+    std::memcpy(sender.begin(), payload.senderHash.begin() + 12, 20);
+
+    const uint160 contractAddress =
+        ContractAddressFromCreate(sender, payload.nonce);
+    out.deployedAddress = contractAddress;
+
+    // ----------------------------------------------------------------
+    // 2. CREATE-collision check. Per the Ethereum yellow paper, we
+    //    cannot deploy to an address that already has code or a
+    //    non-zero nonce. (Pre-existing accounts with only a balance
+    //    are legal — the deploy proceeds and the balance is preserved.)
+    // ----------------------------------------------------------------
+
+    evm::CEvmAccount existing;
+    if (cache.GetAccount(contractAddress, existing)) {
+        const bool hasCode =
+            existing.codeHash != evm::CEvmAccount::EmptyCodeHash();
+        // EIP-7610 (Cancun): an account with non-empty storage is
+        // also a collision target, even if code and nonce are zero —
+        // including storage that lives only in the committed DB after
+        // the pre-state flush, not just the dirty layer.
+        const bool hasStorage = cache.HasNonEmptyStorage(contractAddress);
+        if (hasCode || existing.nonce > 0 || hasStorage) {
+            out.statusCode = EVMC_FAILURE;
+            out.gasUsed = static_cast<int64_t>(payload.gasLimit);
+            return out;
+        }
+    }
+
+    // ----------------------------------------------------------------
+    // 3. Dispatch the init bytecode through evmone with EVMC_CREATE.
+    //    The init code's RETURN output becomes the runtime code that
+    //    is persisted under its keccak256 hash.
+    // ----------------------------------------------------------------
+
+    CEvmHost host(cache, context);
+
+    // Pre-warm the standard access set (same rationale as
+    // ApplyEvmCallTx — see comment there). For CREATE the recipient
+    // is the derived contract address; pre-warming it matches
+    // Ethereum's transaction harness.
+    {
+        evmc::address s{}, rcp{};
+        std::memcpy(s.bytes, sender.begin(), 20);
+        std::memcpy(rcp.bytes, contractAddress.begin(), 20);
+        host.WarmAddress(s);
+        host.WarmAddress(rcp);
+        evmc::address cb{};
+        std::memcpy(cb.bytes, context.coinbase.begin(), 20);
+        host.WarmAddress(cb);
+        for (uint8_t i = 1; i <= 0x0a; ++i) {
+            evmc::address p{};
+            p.bytes[19] = i;
+            host.WarmAddress(p);
+        }
+        for (const auto& entry : payload.accessList) {
+            evmc::address a{};
+            std::memcpy(a.bytes, entry.address.begin(), 20);
+            host.WarmAddress(a);
+            for (const auto& slot : entry.storageKeys) {
+                evmc::bytes32 k{};
+                std::memcpy(k.bytes, slot.begin(), 32);
+                host.WarmStorage(a, k);
+            }
+        }
+    }
+
+    evmc_message msg{};
+    msg.kind = EVMC_CREATE;
+    msg.flags = 0;
+    msg.depth = 0;
+    msg.gas = static_cast<int64_t>(payload.gasLimit);
+    std::memcpy(msg.recipient.bytes, contractAddress.begin(), 20);
+    std::memcpy(msg.sender.bytes, sender.begin(), 20);
+    msg.code_address = msg.recipient;
+    {
+        evmc::uint256be v{};
+        for (int i = 0; i < 8; ++i) {
+            v.bytes[24 + i] = static_cast<uint8_t>(payload.value >> (56 - 8 * i));
+        }
+        msg.value = v;
+    }
+    msg.input_data = nullptr;
+    msg.input_size = 0;
+
+    // EIP-6780 (Cancun): the new contract is eligible for
+    // SELFDESTRUCT-driven deletion in this tx.
+    {
+        evmc::address evmcContract{};
+        std::memcpy(evmcContract.bytes, contractAddress.begin(), 20);
+        host.RecordSameTxCreated(evmcContract);
+    }
+
+    // Transaction-level atomicity for the deploy. Everything from the
+    // pre-seed through the constructor must roll back as a unit if the
+    // CREATE tx fails (REVERT / OOG / INVALID / collision-at-runtime):
+    // the pre-seeded account record, the value transfer, the
+    // constructor's top-level SSTOREs, and any account it touched.
+    // This replaces the previous hand-rolled cleanup (delete the
+    // pre-seed, manually refund value) which missed top-level storage
+    // writes and mishandled a pre-existing account that carried
+    // storage (EIP-7610). Snapshot here; Revert/Commit on the
+    // execution status below.
+    const int deploySnap = cache.Snapshot();
+
+    // Seed the new contract's account record BEFORE the constructor
+    // runs, regardless of value. The constructor may do its own
+    // CREATEs whose CallCreate path reads `msg.sender`'s account
+    // (= this new contract); leaving the account missing causes
+    // those inner CREATEs to fail with EVMC_FAILURE even though
+    // they should succeed. Per EIP-161 a new contract is born with
+    // nonce=1 so it can immediately CREATE further contracts at a
+    // deterministic address.
+    {
+        evm::CEvmAccount newAcc;
+        if (!cache.GetAccount(contractAddress, newAcc)) {
+            newAcc = evm::CEvmAccount(
+                /*nonce=*/ 1,
+                /*balance=*/ uint256(),
+                /*codeHash=*/ evm::CEvmAccount::EmptyCodeHash(),
+                /*storageRoot=*/ evm::CEvmAccount::EmptyStorageRoot());
+            cache.SetAccount(contractAddress, newAcc);
+        } else if (newAcc.nonce == 0) {
+            newAcc.nonce = 1;
+            cache.SetAccount(contractAddress, newAcc);
+        }
+    }
+
+    // Outer-CREATE value transfer (same rationale as CALL):
+    // evmone exposes msg.value via CALLVALUE inside the constructor
+    // but doesn't move the funds. We debit sender, credit the
+    // new-contract address.
+    if (payload.value > 0) {
+        evm::CEvmAccount senderAcc;
+        if (cache.GetAccount(sender, senderAcc) &&
+            Uint256GreaterOrEqualUint64(senderAcc.balance, payload.value))
+        {
+            Uint256SubUint64(senderAcc.balance, payload.value);
+            cache.SetAccount(sender, senderAcc);
+
+            evm::CEvmAccount newAcc;
+            cache.GetAccount(contractAddress, newAcc); // we just seeded it above
+            Uint256AddUint64(newAcc.balance, payload.value);
+            cache.SetAccount(contractAddress, newAcc);
+        }
+    }
+
+    evmc::VM vm{evmc_create_evmone()};
+    evmc::Result r = vm.execute(host, EVMC_CANCUN, msg,
+                                payload.code.empty() ? nullptr : payload.code.data(),
+                                payload.code.size());
+
+    out.statusCode = r.status_code;
+    out.gasUsed = static_cast<int64_t>(payload.gasLimit) - r.gas_left;
+    out.gasRefund = r.gas_refund;
+    if (r.output_size > 0 && r.output_data != nullptr) {
+        out.returnData.assign(r.output_data, r.output_data + r.output_size);
+    }
+    out.logs = host.Logs();
+    out.selfdestructs = host.Selfdestructs();
+    out.sameTxCreated = host.SameTxCreated();
+
+    // ----------------------------------------------------------------
+    // 4. On success: install the runtime code + a fresh account
+    //    record. The runtime code is the init code's RETURN output;
+    //    its keccak256 becomes the account's codeHash.
+    // ----------------------------------------------------------------
+
+    if (r.status_code == EVMC_SUCCESS) {
+        const std::vector<uint8_t> runtimeCode = out.returnData;
+
+        // Code-deposit gas + EIP-3541 / EIP-170 for the TOP-LEVEL
+        // create transaction. evmone only auto-charges the runtime
+        // deposit for NESTED creates (via host.call(EVMC_CREATE) —
+        // handled in CEvmHost::CallCreate); for a top-level
+        // vm.execute(EVMC_CREATE) it runs the init code and returns
+        // the RETURN bytes but does NOT charge the 200-per-byte
+        // deposit — that's the transaction processor's job. We were
+        // skipping it, so every contract-creating TX under-consumed
+        // 200*len gas (systematic ~200-wei*priority coinbase drift
+        // across eip3860_initcode, selfdestruct, CreateResults, ...).
+        constexpr int64_t kGasCodeDeposit = 200;
+        constexpr size_t  kMaxCodeSize    = 24576;       // EIP-170
+        const bool eip3541Violation =
+            !runtimeCode.empty() && runtimeCode[0] == 0xEF; // EIP-3541
+        const int64_t depositCost =
+            static_cast<int64_t>(runtimeCode.size()) * kGasCodeDeposit;
+        const int64_t gasLeftAfterInit =
+            static_cast<int64_t>(payload.gasLimit) - out.gasUsed;
+        if (eip3541Violation || runtimeCode.size() > kMaxCodeSize ||
+            gasLeftAfterInit < depositCost)
+        {
+            // Deposit cannot be paid (or banned code) → the whole
+            // CREATE fails out-of-gas: all gas consumed, state rolled
+            // back to before the pre-seed.
+            cache.Revert(deploySnap);
+            out.statusCode = EVMC_FAILURE;
+            out.gasUsed = static_cast<int64_t>(payload.gasLimit);
+            out.gasRefund = 0;
+            out.returnData.clear();
+            out.logs.clear();
+            out.selfdestructs.clear();
+            out.sameTxCreated.clear();
+            return out;
+        }
+        out.gasUsed += depositCost;
+
+        const uint256 codeHash = Keccak256(runtimeCode);
+
+        cache.SetCode(codeHash, runtimeCode);
+
+        // Reload the contract's account so we PRESERVE any balance the
+        // value transfer (above) credited, plus any storage the
+        // constructor SSTORE'd. The deployed account is born with
+        // nonce=1 per EIP-161 (after Spurious Dragon). We do NOT
+        // reset balance to zero — that would erase the
+        // constructor-time CALLVALUE.
+        evm::CEvmAccount account;
+        if (!cache.GetAccount(contractAddress, account)) {
+            account = evm::CEvmAccount(
+                /*nonce=*/ 1,
+                /*balance=*/ uint256(),
+                /*codeHash=*/ codeHash,
+                /*storageRoot=*/ evm::CEvmAccount::EmptyStorageRoot());
+        } else {
+            // EIP-161: new contracts are born with nonce=1. The
+            // constructor may have bumped further by doing its own
+            // CREATEs — keep whatever the cache already shows, just
+            // ensure it's at least 1.
+            if (account.nonce < 1) account.nonce = 1;
+            account.codeHash = codeHash;
+            // storageRoot stays as-is so the constructor's SSTORE
+            // entries (already in cache.mStorageDirty) remain
+            // attached to this address.
+        }
+        cache.SetAccount(contractAddress, account);
+        cache.Commit(deploySnap);
+    } else {
+        // On any non-success status (revert, OOG, invalid opcode,
+        // runtime collision...) the new contract is NOT created.
+        // Reverting the snapshot taken before the pre-seed restores
+        // EXACTLY the pre-execution world: the placeholder account is
+        // gone (or, if the address pre-existed, restored verbatim
+        // including its storage per EIP-7610), the value transfer is
+        // undone, and every top-level SSTORE/account the constructor
+        // made is rolled back. Gas is still charged by the caller
+        // (the snapshot is scoped to the execution frame only).
+        cache.Revert(deploySnap);
+    }
+
+    return out;
+}
+
+// ----------------------------------------------------------------------
+// Phase 2.3c — ApplyEvmSpendTx
+// ----------------------------------------------------------------------
+//
+// Balance arithmetic on uint256 (big-endian) lives in evm/balance.{h,cpp}
+// so apply.cpp and process.cpp (Phase 2.4) share a single implementation.
+
+namespace {
+
+// Convenience: fail-and-return-result for the early-exit error paths
+// in ApplyEvmSpendTx.
+ApplyResult SpendFailure(int64_t gasLimit)
+{
+    ApplyResult out;
+    out.statusCode = EVMC_FAILURE;
+    out.gasUsed = gasLimit;
+    return out;
+}
+
+} // anonymous namespace
+
+ApplyResult ApplyEvmSpendTx(const CEvmSpendTx& payload,
+                            CEvmStateCache& cache,
+                            const ExecutionContext& /*context*/)
+{
+    const int64_t gasLimitSigned = static_cast<int64_t>(payload.gasLimit);
+
+    // 1. Precision check: weis must be an exact multiple of 10^10 so
+    //    the satoshi amount round-trips losslessly.
+    if (payload.amount == 0 || payload.amount % kWeisPerSatoshi != 0) {
+        return SpendFailure(gasLimitSigned);
+    }
+
+    // 2. Output script must not be empty.
+    if (payload.outputScript.empty()) {
+        return SpendFailure(gasLimitSigned);
+    }
+
+    // 3. Load the source account from the cache.
+    uint160 fromAddr;
+    std::memcpy(fromAddr.begin(), payload.fromAddress.begin() + 12, 20);
+
+    evm::CEvmAccount account;
+    if (!cache.GetAccount(fromAddr, account)) {
+        return SpendFailure(gasLimitSigned);
+    }
+
+    // 4. Balance must cover the requested amount.
+    if (!Uint256GreaterOrEqualUint64(account.balance, payload.amount)) {
+        return SpendFailure(gasLimitSigned);
+    }
+
+    // 5. Debit and write back. The subtraction should succeed since
+    //    we just checked >=.
+    if (!Uint256SubUint64(account.balance, payload.amount)) {
+        // Defensive: would mean the GreaterOrEqualUint64 check lied.
+        // Treat as failure rather than corrupting state.
+        return SpendFailure(gasLimitSigned);
+    }
+    cache.SetAccount(fromAddr, account);
+
+    // 6. Record the UTXO credit for the caller.
+    ApplyResult out;
+    out.statusCode = EVMC_SUCCESS;
+    // Ethereum's intrinsic gas for a simple value transfer is 21000.
+    // Real fee accounting (gasUsed * effectiveGasPrice debit) lives
+    // in Phase 2.4 ConnectBlock; this is the lower bound the caller
+    // can use today.
+    out.gasUsed = 21000;
+    ApplyResult::UtxoCredit credit;
+    credit.script = payload.outputScript;
+    credit.amount = static_cast<CAmount>(payload.amount / kWeisPerSatoshi);
+    out.utxoCredits.push_back(std::move(credit));
+    return out;
+}
+
+// ----------------------------------------------------------------------
+// AAL — ApplyEvmFundTx (UTXO -> EVM funding, inverse of SpendTx)
+// ----------------------------------------------------------------------
+
+ApplyResult ApplyEvmFundTx(const CEvmFundTx& payload,
+                           CEvmStateCache& cache,
+                           const ExecutionContext& /*context*/)
+{
+    ApplyResult out;
+
+    // 1. Precision: weis must be an exact multiple of 10^10 so the
+    //    credit matches the satoshi amount removed from the UTXO side.
+    if (payload.amount == 0 || payload.amount % kWeisPerSatoshi != 0) {
+        out.statusCode = EVMC_FAILURE;
+        return out;
+    }
+
+    // 2. Destination EVM account — force-create if absent (funding a
+    //    fresh address is the whole point of FUND).
+    uint160 toAddr;
+    std::memcpy(toAddr.begin(), payload.toAddress.begin() + 12, 20);
+
+    evm::CEvmAccount account;
+    if (!cache.GetAccount(toAddr, account)) {
+        account = evm::CEvmAccount(
+            /*nonce=*/ 0,
+            /*balance=*/ uint256(),
+            /*codeHash=*/ evm::CEvmAccount::EmptyCodeHash(),
+            /*storageRoot=*/ evm::CEvmAccount::EmptyStorageRoot());
+    }
+
+    // 3. Credit the balance (overflow-checked) and write back.
+    if (!Uint256AddUint64(account.balance, payload.amount)) {
+        // Would overflow the 256-bit balance — refuse rather than
+        // corrupt supply. (Unreachable for any real RTM amount.)
+        out.statusCode = EVMC_FAILURE;
+        return out;
+    }
+    cache.SetAccount(toAddr, account);
+
+    out.statusCode = EVMC_SUCCESS;
+    out.gasUsed = 0;  // FUND executes no EVM code
+    return out;
+}
+
+// ----------------------------------------------------------------------
+// D4 Smart-Asset mirror — ApplyWrapAssetTx / ApplyUnwrapAssetTx
+// ----------------------------------------------------------------------
+
+ApplyResult ApplyWrapAssetTx(const CWrapAssetTx& payload,
+                             CEvmStateCache& cache,
+                             const ExecutionContext& /*context*/)
+{
+    ApplyResult out;
+
+    if (payload.amount == 0 || payload.assetId.empty()) {
+        out.statusCode = EVMC_FAILURE;
+        return out;
+    }
+
+    // Credit the wrapped units to the recipient's EVM-side ERC-20 ledger
+    // (balanceOf += amount, wrappedSupply += amount). The UTXO-side burn
+    // of the same amount was validated in CheckWrapAssetTx.
+    uint160 holder;
+    std::memcpy(holder.begin(), payload.evmRecipient.begin() + 12, 20);
+
+    if (!CreditAssetLedger(cache, payload.assetId, holder, payload.amount)) {
+        // uint64 overflow of the wrapped balance/supply — unreachable for
+        // any real asset supply; refuse rather than corrupt the mirror.
+        out.statusCode = EVMC_FAILURE;
+        return out;
+    }
+
+    out.statusCode = EVMC_SUCCESS;
+    out.gasUsed = 0;  // WRAP executes no EVM code
+    return out;
+}
+
+ApplyResult ApplyUnwrapAssetTx(const CUnwrapAssetTx& payload,
+                               CEvmStateCache& cache,
+                               const ExecutionContext& /*context*/)
+{
+    ApplyResult out;
+
+    if (payload.amount == 0 || payload.assetId.empty()) {
+        out.statusCode = EVMC_FAILURE;
+        return out;
+    }
+
+    // Debit the wrapped units from the sender's EVM-side ledger. This is
+    // the authorization for the UTXO-side mint: if the sender does not hold
+    // `amount` wrapped units, the debit fails and (via the caller) the whole
+    // block is rejected, so the minted asset output can never stand alone.
+    uint160 holder;
+    std::memcpy(holder.begin(), payload.evmSender.begin() + 12, 20);
+
+    if (!DebitAssetLedger(cache, payload.assetId, holder, payload.amount)) {
+        out.statusCode = EVMC_FAILURE;  // insufficient wrapped balance
+        return out;
+    }
+
+    out.statusCode = EVMC_SUCCESS;
+    out.gasUsed = 0;  // UNWRAP executes no EVM code
+    return out;
+}
+
+} // namespace evm

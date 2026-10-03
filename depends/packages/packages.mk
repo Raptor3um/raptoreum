@@ -1,4 +1,9 @@
 packages:=boost libevent gmp backtrace cmake immer zeromq openssl
+# NOTE: evmone is intentionally NOT in the default package list.
+# Building it via depends/ is blocked by a Hunter+HTTPS issue (depends-built cmake
+# lacks HTTPS support, which Hunter requires to download intx/ethash). The Phase 0
+# spike installs evmone manually with the system cmake — see docs/evm/PHASE-0-HANDOFF.md
+# and depends/packages/evmone.mk for full background and the Phase 1 cleanup plan.
 
 qrencode_linux_packages = qrencode
 qrencode_android_packages = qrencode

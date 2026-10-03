@@ -22,6 +22,13 @@ runs:
         restore-keys: |
           depends-sources-
 
+    - name: Identify runner image
+      id: depends-environment
+      shell: bash
+      run: |
+        source /etc/os-release
+        echo "image=$ID-$VERSION_ID" >> "$GITHUB_OUTPUT"
+
     - name: Restore cached depends
       uses: actions/cache/restore@v4
       id: restore-depends
@@ -29,9 +36,9 @@ runs:
         path: |
           depends/built
           depends/${{ inputs.host }}
-        key: depends-${{ github.job }}-${{ hashFiles('depends/packages/*') }}
+        key: depends-evm-${{ runner.os }}-${{ steps.depends-environment.outputs.image }}-${{ inputs.host }}-${{ hashFiles('depends/packages/*', 'depends/patches/**', 'depends/hosts/**', 'depends/builders/**', 'depends/*.mk', 'depends/Makefile', 'depends/config.*', 'contrib/devtools/build-evmone.sh', '.github/actions/setup-depends/action.yml') }}
         restore-keys: |
-          depends-${{ github.job }}-
+          depends-evm-${{ runner.os }}-${{ steps.depends-environment.outputs.image }}-${{ inputs.host }}-
 
     - name: Build Depends
       shell: bash
@@ -40,6 +47,22 @@ runs:
         gcc --version || clang --version
         export FALLBACK_DOWNLOAD_PATH=${{ inputs.fallback-download-path }}
         make -C depends -j$(nproc) HOST=${{ inputs.host }}
+
+    - name: Build EVM dependencies
+      shell: bash
+      run: |
+        # make depends may recreate the prefix even after an exact cache hit.
+        prefix="depends/${{ inputs.host }}"
+        if [[ "${{ steps.restore-depends.outputs.cache-hit }}" != 'true' ||
+              ! -f "$prefix/lib/libevmone.a" ||
+              ! -f "$prefix/lib/libevmone-standalone.a" ||
+              ! -f "$prefix/include/evmone/evmone.h" ||
+              ! -f "$prefix/include/evmc/evmc.hpp" ||
+              ! -f "$prefix/include/evmc/mocked_host.hpp" ||
+              ! -f "$prefix/include/intx/intx.hpp" ||
+              ! -f "$prefix/include/ethash/keccak.hpp" ]]; then
+          bash contrib/devtools/build-evmone.sh "${{ inputs.host }}"
+        fi
 
     - name: Save depends cache
       uses: actions/cache/save@v4

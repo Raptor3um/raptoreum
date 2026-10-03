@@ -1,0 +1,267 @@
+// Copyright (c) 2026 The Raptoreum developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#include <evm/state_cache.h>
+
+#include <evm/state_db.h>
+#include <uint256.h>
+
+namespace evm {
+
+// ----------------------------------------------------------------------
+// Account
+// ----------------------------------------------------------------------
+
+bool CEvmStateCache::GetAccount(const uint160& address, CEvmAccount& out)
+{
+    // Deletion in dirty layer wins — the account does not exist for
+    // anyone who reads through this cache.
+    if (mAccountsDeleted.count(address)) {
+        return false;
+    }
+    auto it = mAccountsDirty.find(address);
+    if (it != mAccountsDirty.end()) {
+        out = it->second;
+        return true;
+    }
+    return db.ReadAccount(address, out);
+}
+
+bool CEvmStateCache::HasAccount(const uint160& address)
+{
+    if (mAccountsDeleted.count(address)) {
+        return false;
+    }
+    if (mAccountsDirty.count(address)) {
+        return true;
+    }
+    return db.HasAccount(address);
+}
+
+void CEvmStateCache::SetAccount(const uint160& address, const CEvmAccount& account)
+{
+    // A SetAccount supersedes any pending deletion.
+    mAccountsDeleted.erase(address);
+    mAccountsDirty[address] = account;
+}
+
+void CEvmStateCache::DeleteAccount(const uint160& address)
+{
+    mAccountsDirty.erase(address);
+    mAccountsDeleted[address] = true;
+
+    // EIP-6780: deleting an account must purge its ENTIRE storage
+    // footprint, not just the account record. Otherwise stale slots
+    // survive into later txs of the same block: (1) the EIP-7610
+    // collision predicate (HasNonEmptyStorage) would still see the
+    // destructed contract's slots and wrongly block a same-address
+    // recreate; (2) Flush() re-writes every dirty slot and never
+    // erases the committed (DB) slots, resurrecting a destructed
+    // contract's storage on disk (latent state-root divergence).
+    //
+    // (a) Drop dirty slots for this address. (b) Shadow every
+    // committed (DB) slot with an explicit dirty zero so reads,
+    // HasNonEmptyStorage() and Flush() all observe an empty account.
+    // A later SetAccount() clears mAccountsDeleted (recreate), and
+    // the dirty-zero slots then correctly read as empty storage for
+    // the freshly-created contract. The whole-map Savepoint copy
+    // means an outer Revert() restores the pre-purge storage with no
+    // extra wiring.
+    for (auto it = mStorageDirty.begin(); it != mStorageDirty.end(); ) {
+        if (it->first.first == address) {
+            it = mStorageDirty.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    db.ForEachStorage(address,
+                      [&](const uint256& slot, const uint256& /*dbVal*/) {
+        mStorageDirty[std::make_pair(address, slot)] = uint256();
+    });
+}
+
+// ----------------------------------------------------------------------
+// Code
+// ----------------------------------------------------------------------
+
+bool CEvmStateCache::GetCode(const uint256& codeHash, std::vector<uint8_t>& out)
+{
+    auto it = mCodeDirty.find(codeHash);
+    if (it != mCodeDirty.end()) {
+        out = it->second;
+        return true;
+    }
+    return db.ReadCode(codeHash, out);
+}
+
+void CEvmStateCache::SetCode(const uint256& codeHash, std::vector<uint8_t> code)
+{
+    mCodeDirty[codeHash] = std::move(code);
+}
+
+// ----------------------------------------------------------------------
+// Storage
+// ----------------------------------------------------------------------
+
+bool CEvmStateCache::GetStorage(const uint160& address, const uint256& slot, uint256& out)
+{
+    auto key = std::make_pair(address, slot);
+    auto it = mStorageDirty.find(key);
+    if (it != mStorageDirty.end()) {
+        out = it->second;
+        return true;
+    }
+    return db.ReadStorage(address, slot, out);
+}
+
+bool CEvmStateCache::GetCommittedStorage(const uint160& address,
+                                         const uint256& slot, uint256& out)
+{
+    // Deliberately skip the dirty layer: the DB holds the value as of
+    // the start of the transaction (the harness / ConnectBlock loads
+    // pre-state into the DB and only Flush()es at end of block, so no
+    // intra-tx SSTORE has reached it). That's exactly the EIP-2200
+    // "original" value.
+    return db.ReadStorage(address, slot, out);
+}
+
+bool CEvmStateCache::HasNonEmptyStorage(const uint160& address)
+{
+    // Any dirty slot for this address that is non-zero is a hit.
+    for (const auto& kv : mStorageDirty) {
+        if (kv.first.first == address && kv.second != uint256()) {
+            return true;
+        }
+    }
+    // Then the committed (DB) slots: resolve each through GetStorage
+    // so a dirty zero masks a committed non-zero (EIP-7610 looks at
+    // the effective current storage, not the raw committed value).
+    bool found = false;
+    db.ForEachStorage(address,
+                      [&](const uint256& slot, const uint256& /*dbVal*/) {
+        if (found) return;
+        uint256 eff;
+        if (GetStorage(address, slot, eff) && eff != uint256()) {
+            found = true;
+        }
+    });
+    return found;
+}
+
+void CEvmStateCache::SetStorage(const uint160& address, const uint256& slot, const uint256& value)
+{
+    mStorageDirty[std::make_pair(address, slot)] = value;
+}
+
+// ----------------------------------------------------------------------
+// Commit / discard
+// ----------------------------------------------------------------------
+
+bool CEvmStateCache::Flush()
+{
+    // Apply deletions first so a later Write(same address) wins.
+    for (const auto& kv : mAccountsDeleted) {
+        if (!db.EraseAccount(kv.first)) {
+            return false;
+        }
+    }
+    for (const auto& kv : mAccountsDirty) {
+        if (!db.WriteAccount(kv.first, kv.second)) {
+            return false;
+        }
+    }
+    // Code is content-addressed by Keccak-256, so we always write
+    // (collisions are impossible by design; rewriting the same value
+    // is a no-op for LevelDB except for the lookup cost).
+    for (const auto& kv : mCodeDirty) {
+        if (!db.WriteCode(kv.first, kv.second)) {
+            return false;
+        }
+    }
+    // SSTORE convention: a zero value clears the slot from storage
+    // (refunds gas in real EVM execution). We honor that on flush so
+    // the on-disk form stays compact.
+    for (const auto& kv : mStorageDirty) {
+        const auto& addr = kv.first.first;
+        const auto& slot = kv.first.second;
+        const auto& value = kv.second;
+        bool ok;
+        if (value.IsNull()) {
+            ok = db.EraseStorage(addr, slot);
+        } else {
+            ok = db.WriteStorage(addr, slot, value);
+        }
+        if (!ok) {
+            return false;
+        }
+    }
+
+    // Successful commit: clear dirty layer.
+    mAccountsDirty.clear();
+    mAccountsDeleted.clear();
+    mCodeDirty.clear();
+    mStorageDirty.clear();
+    return true;
+}
+
+void CEvmStateCache::Discard()
+{
+    mAccountsDirty.clear();
+    mAccountsDeleted.clear();
+    mCodeDirty.clear();
+    mStorageDirty.clear();
+    mSavepoints.clear();
+}
+
+// ----------------------------------------------------------------------
+// Snapshot / revert (Phase 2.3d, for nested CALL/CREATE)
+// ----------------------------------------------------------------------
+
+int CEvmStateCache::Snapshot()
+{
+    Savepoint sp;
+    sp.id = mNextSavepointId++;
+    sp.accountsDirty = mAccountsDirty;
+    sp.accountsDeleted = mAccountsDeleted;
+    sp.storageDirty = mStorageDirty;
+    sp.codeDirty = mCodeDirty;
+    mSavepoints.push_back(std::move(sp));
+    return mSavepoints.back().id;
+}
+
+void CEvmStateCache::Revert(int id)
+{
+    // Find the savepoint with the given id; drop everything above it
+    // (those frames are gone — outer revert subsumes inner state).
+    for (size_t i = mSavepoints.size(); i-- > 0; ) {
+        if (mSavepoints[i].id == id) {
+            // Restore from this savepoint.
+            mAccountsDirty = std::move(mSavepoints[i].accountsDirty);
+            mAccountsDeleted = std::move(mSavepoints[i].accountsDeleted);
+            mStorageDirty = std::move(mSavepoints[i].storageDirty);
+            mCodeDirty = std::move(mSavepoints[i].codeDirty);
+            // Drop this savepoint and any nested ones above it.
+            mSavepoints.resize(i);
+            return;
+        }
+    }
+    // Unknown id: silently no-op rather than throwing — the host wraps
+    // every call() in Snapshot/Revert and we don't want a programming
+    // bug here to corrupt consensus.
+}
+
+void CEvmStateCache::Commit(int id)
+{
+    // Drop the savepoint with the matching id. Inner savepoints
+    // (deeper in the stack) survive — they belong to frames that
+    // already committed within the now-also-committed outer frame.
+    for (size_t i = mSavepoints.size(); i-- > 0; ) {
+        if (mSavepoints[i].id == id) {
+            mSavepoints.erase(mSavepoints.begin() + i);
+            return;
+        }
+    }
+}
+
+} // namespace evm

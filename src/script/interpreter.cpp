@@ -1266,6 +1266,24 @@ bool EvalScript(std::vector <std::vector<unsigned char>> &stack, const CScript &
                     case OP_ASSET_ID:
                         break;
 
+                    // EVM marker opcodes (Phase 1 scaffolding).
+                    // These accompany TRANSACTION_EVM_DEPLOY/CALL/SPEND. They are
+                    // strictly markers — the actual EVM dispatch happens at the
+                    // transaction-type level in src/evo/specialtx.cpp. The script
+                    // interpreter just needs to know they are legal opcodes.
+                    // Without SCRIPT_ENABLE_EVM_OPCODES set, they are rejected.
+                    case OP_EVMCREATE:
+                    case OP_EVMCALL:
+                    case OP_EVMSPEND:
+                        if (!(flags & SCRIPT_ENABLE_EVM_OPCODES)) {
+                            return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
+                        }
+                        // No-op: stack is unchanged. Phase 2 will add a check
+                        // that the surrounding transaction has the matching
+                        // nType, but that requires tx context not available
+                        // from script-level evaluation.
+                        break;
+
                     default:
                         return set_error(serror, SCRIPT_ERR_BAD_OPCODE);
                 }
