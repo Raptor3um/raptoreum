@@ -61,6 +61,13 @@ class SmartnodePaymentFeesTest(RaptoreumTestFramework):
         assert_equal(node.smartnode("payments", blockhash), payments)
         assert_equal(self.nodes[1].smartnode("payments", blockhash), payments)
 
+        self.log.info("Historical payments remain stable after a smartnode leaves")
+        assert_equal(node.smartnode("count")["total"], 10)
+        self.remove_smartnode(0)
+        assert_equal(node.smartnode("count")["total"], 9)
+        assert_equal(node.smartnode("payments", blockhash), payments)
+        assert_equal(self.nodes[1].smartnode("payments", blockhash), payments)
+
 
 if __name__ == '__main__':
     SmartnodePaymentFeesTest().main()

@@ -485,11 +485,13 @@ UniValue smartnode_payments(const JSONRPCRequest &request) {
             specialTxFees += specialTxFee;
         }
 
-        std::vector <CTxOut> voutSmartnodePayments, voutDummy;
-        CMutableTransaction dummyTx;
+        std::vector <CTxOut> voutSmartnodePayments;
         CAmount blockReward =
                 nBlockFees + GetBlockSubsidy(pindex->pprev->nBits, pindex->pprev->nHeight, Params().GetConsensus());
-        FillBlockPayments(dummyTx, pindex->nHeight, blockReward, voutSmartnodePayments, voutDummy, specialTxFees);
+        const auto mnList = deterministicMNManager->GetListForBlock(pindex->pprev);
+        const CAmount smartnodeReward = GetSmartnodePayment(
+                pindex->nHeight, blockReward, specialTxFees, mnList.GetAllMNsCount());
+        CSmartnodePayments::GetBlockTxOuts(pindex->nHeight, smartnodeReward, voutSmartnodePayments);
 
         UniValue blockObj(UniValue::VOBJ);
         CAmount payedPerBlock{0};
@@ -514,7 +516,7 @@ UniValue smartnode_payments(const JSONRPCRequest &request) {
         // previous block, which is what GetBlockTxOuts() used to fill in the payees
         // above. Using the list at this block instead would name the smartnode due
         // to be paid by the *next* one.
-        const auto dmnPayee = deterministicMNManager->GetListForBlock(pindex->pprev).GetMNPayee();
+        const auto dmnPayee = mnList.GetMNPayee();
         protxObj.pushKV("proTxHash", dmnPayee == nullptr ? "" : dmnPayee->proTxHash.ToString());
         protxObj.pushKV("amount", payedPerSmartnode);
         protxObj.pushKV("payees", payeesArr);
