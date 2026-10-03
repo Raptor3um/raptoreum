@@ -1,6 +1,6 @@
 # EVM Integration — Bank-Grade Findings (independently verified)
 
-Status date: 2026-07-04
+Status date: 2026-10-03
 Branch: `feat/evm-integration`
 Author: JSanchezFDZ (Unknown Gravity, external contributor)
 Audience: Raptoreum core team (internal review)
@@ -27,18 +27,18 @@ Therefore:
   included.** The moment the gate opens on a network where a non-cooperating node
   exists, EVM-01 becomes theft-of-funds.
 
-This is exactly the "fix it before you turn it on" window. It is the cheapest
-possible time to fix EVM-01 and EVM-02: because no EVM transaction has ever been
-committed on mainnet or testnet, changing the EVM payload serialization has **zero
-backward-compatibility cost** — there is nothing to fork away from.
+This is the "fix it before you turn it on" window. Public activation remains
+blocked by the unresolved findings. An authorization change still needs explicit
+core-team ratification under the serialization constraints in `QUESTIONS.md`;
+the inactive public deployments are not permission to choose a new protocol.
 
 ## Severity summary
 
 | ID | Severity | Title | Gating | Status |
 |----|----------|-------|--------|--------|
-| EVM-01 | **CRITICAL** | Consensus trusts an unauthenticated `senderHash`; no signature is verified in-block | regtest-only | Verified — fix designed, **not** applied (needs core-team decision) |
-| EVM-02 | **HIGH** | Chain-id split: ingest/signing uses 7375/7374, execution hardcodes 7373 | regtest+testnet | Verified — fix designed, not applied |
-| EVM-05 | **HIGH** | EVM state is not rolled back on the `VerifyDB` / `RollbackBlock` disconnect paths | regtest-only | Verified — fix designed, not applied |
+| EVM-01 | **CRITICAL** | Consensus trusts an unauthenticated `senderHash`; no signature is verified in-block | regtest-only | Verified — authorization decision pending; correction not applied |
+| EVM-02 | **HIGH** | Chain-id split between ingest/signing and execution | regtest+testnet | Corrected — shared consensus parameter and regression coverage |
+| EVM-05 | **HIGH** | EVM verification/recovery paths omit state execution and undo | regtest-only | Integration gaps verified; correction not applied |
 | EVM-06 | MEDIUM (by design) | `value` is `uint64_t`; values ≥ 2⁶⁴ wei are unrepresentable | regtest-only | Known/by-design — documented |
 | DET-01 | UNVERIFIED | Cross-node determinism of consensus-state-reading precompiles (masternodes/chainlocks) not independently confirmed | Phase 4 | Open — needs dedicated review |
 | FUP-X.2 | LOW | `--disable-wallet` build broke on `HELP_REQUIRING_PASSPHRASE` in EVM RPC help | build-only | **FIXED this session** |
@@ -49,7 +49,7 @@ backward-compatibility cost** — there is nothing to fork away from.
 
 ### Claim
 
-An EVM transaction's Ethereum signature is verified **only** at RPC ingest and is
+For CALL/DEPLOY, the Ethereum signature is verified **only** at RPC ingest and is
 then **discarded**. The consensus object that is serialized into the block carries
 a plain, unauthenticated `senderHash` (for DEPLOY/CALL) / `fromAddress` (for SPEND)
 and no signature. No consensus code path re-derives or verifies the sender.
@@ -59,11 +59,11 @@ mempool) can **spend from, and act as, any EVM account**.
 ### Evidence — the complete chain, verified line by line
 
 **1. The signature is dropped at ingest.** `eth_sendRawTransaction`
-(`src/rpc/ethereum.cpp:1504-1550`) decodes the signed wire bytes, recovers the
+(`src/rpc/ethereum.cpp:1489-1534`) decodes the signed wire bytes, recovers the
 sender, and builds the payload with `payload.senderHash = <recovered address>`.
 It serializes **only** the payload into `mtx.vExtraPayload`
-(`ethereum.cpp:1530-1532`, `:1547-1549`). The raw signed `wire` bytes are used
-solely to compute the eth-hash for the cross-index (`ethereum.cpp:1565`) and are
+(`ethereum.cpp:1515-1517`, `:1532-1534`). The raw signed `wire` bytes are used
+solely to compute the eth-hash for the cross-index (`ethereum.cpp:1550`) and are
 then **not stored anywhere in the consensus transaction**.
 
 **2. The consensus payload has no signature field.** In `src/evm/evmtx.h`:
@@ -108,14 +108,13 @@ attacker simply reads the victim's current nonce.
    a UTXO the attacker controls.** The CALL variant additionally lets the attacker
    execute arbitrary calls _as_ the victim (drain ERC-20 mirror balances, etc.).
 
-### Fix design (recommended, not yet applied)
+### Authorization proposal (not ratified or applied)
 
-The senderHash must become a **verified-derived** value, never trusted. Two
-coherent options; recommend Option A because it reuses the existing, tested
-decode+recover path and introduces **no new signature scheme** (directly
-addressing the core team's "dual consensus, no weird sigs" constraint — this is
-bog-standard EIP-155/EIP-1559 ECDSA that already lives in `src/evm/signing.*`
-and `src/evm/rawtx.*`).
+The senderHash must become a **verified-derived** value, never trusted. The
+existing Option A proposal below reuses the decode+recover path and the
+EIP-155/EIP-1559 ECDSA implementation in `src/evm/signing.*` and
+`src/evm/rawtx.*`. Its serialization change still needs explicit ratification;
+reusing the signature scheme does not settle that separate constraint.
 
 **Option A — carry the standard signed envelope, re-verify in `Check`:**
 - Add one field to the DEPLOY/CALL payloads: the original signed Ethereum wire
@@ -125,107 +124,100 @@ and `src/evm/rawtx.*`).
   `decoded.sender == payload.senderHash` **and** that the decoded fields
   (nonce/to/value/data/gas/fees) match the payload. Recovery + EIP-155 chain-id
   enforcement already exist in `rawtx.cpp:100-103,176-178`.
-- **Crucial interaction with EVM-02:** recovery must use the chain-id the tx was
-  _signed_ with (`ActiveEvmChainId()`), which is why EVM-02 must be fixed in the
-  same batch — otherwise recovery on regtest/testnet uses the wrong id.
+- Recovery must use the same network chain-id as ingest and execution. The
+  bounded EVM-02 correction establishes that source of truth independently;
+  it does not supply or approve the missing authorization proof.
 
-**SPEND / FUND / WRAP / UNWRAP are a separate, open design question.** These are
-**not** created from an Ethereum transaction (they are wallet-authored special
-txs), so they have no eth signature to carry. Today they are authorized only by
-the wallet that builds them — there is **no consensus-level proof** that the
-builder controls `fromAddress`. They need their own authorization model, e.g. an
-secp256k1 signature by the EVM account key over the payload, verified in `Check`.
-This is the part that genuinely needs a core-team design decision before coding,
-because it defines a new (small, standard-ECDSA) authorization envelope for the
-bridge transactions.
+**Outgoing EVM debits (SPEND / UNWRAP) require a separate authorization decision.**
+These wallet-authored special transactions have no signed Ethereum envelope,
+and claiming an EVM source address is not proof that the builder controls it.
+Their authorization model needs explicit core-team ratification before coding.
+The incoming FUND / WRAP paths are different: they spend/burn UTXO inputs whose
+ordinary script authorization remains authoritative, and name an EVM recipient.
+They must not be described as unauthenticated debits of that recipient account.
 
 **Why this is not applied autonomously:** it changes consensus serialization and
 introduces in-consensus signature verification. Per the core-team contact's
 stated constraints (keep EVM in the "no weird sigs / no invasive serialization"
 box) this is a decision the team must ratify, not a change to land unilaterally.
-The design above is ready to implement on green-light.
+The options above remain proposals; the draft does not select or implement a
+new authorization format.
 
 ---
 
-## EVM-02 — HIGH — Chain-id split between signing and execution
+## EVM-02 — HIGH — Chain-id split between signing and execution (corrected)
 
-### Claim
+### Original defect and reproduction
 
-The chain-id used to validate a transaction's EIP-155 signature at ingest differs
-from the chain-id the EVM reports at execution (`CHAINID` opcode / `block.chainid`)
-on every non-mainnet network.
+The RPC mapper used 7373 on mainnet, 7374 on testnet and 7375 on regtest, while
+mining's `ComputeCoinbaseEvmCommitment` and validation's `ConnectBlock` hardcoded
+7373. On regtest, a mined and connected contract therefore saw 7373 from
+`CHAINID` even though `eth_chainId`, `eth_call` and signed-transaction ingest used
+7375. Testnet execution would similarly disagree with its RPC id if activated.
 
-### Evidence
+The new `evm_d2_consensus_tests/chainid_agrees_between_rpc_mining_and_validation`
+case reproduced the original defect: the block connected and both RPC checks
+passed, but its persistent CHAINID storage failed the expected 7375 assertion.
+It uses the production mining commitment helper and block-validation path,
+rather than an execution context assembled by the test.
 
-- Ingest/signing id — `ActiveEvmChainId()` (`src/rpc/ethereum.cpp:311-318`):
-  `main → 7373`, `test → 7374`, `regtest → 7375`. `eth_sendRawTransaction` decodes
-  with this id (`ethereum.cpp:1505-1507`); a mismatch is rejected in
-  `rawtx.cpp:102,177`.
-- Execution id — **hardcoded** `7373`:
-  - `src/evm/connectblock.cpp:263` → `mctx.chainId = 7373;`
-  - `src/validation.cpp:2597` → `evmCtx.chainId = 7373; // TODO: parameterize`
+### Applied correction
 
-So on **regtest** a user must sign for `7375` (or ingest rejects the tx), but the
-executing context reports `7373`; on **testnet**, sign `7374` / execute `7373`.
-Only mainnet is internally consistent (`7373 == 7373`).
+`Consensus::Params::evmChainId` is the shared source for
+`ActiveEvmChainId()` (`src/rpc/ethereum.cpp`), mining
+(`src/evm/connectblock.cpp`) and validation (`src/validation.cpp`).
+`src/chainparams.cpp` selects 7374 for testnet and 7375 for regtest; the default
+7373 preserves mainnet and the existing devnet fallback. The
+`chainid_network_parameters` regression pins the three network values.
 
-Note the unit tests already build their execution context with the regtest id
-(`c.chainId = 7375` in `evm_connectblock_tests.cpp:48`, `evm_process_tests.cpp:43`,
-etc.), so production (`connectblock.cpp`) and the tests **disagree**; the tests
-don't catch it because they never exercise the hardcoded production path.
-
-### Impact
-
-- Any contract that reads `block.chainid` (replay guards, EIP-712 domain
-  separators, cross-chain checks) sees the wrong network id on regtest/testnet.
-- Directly blocks the EVM-01 Option A fix (signature recovery must use the signing
-  id, not the execution id).
-
-### Fix design
-
-Implement FUP-1: add `evmChainId` to `Consensus::Params`, set it per network
-(7373/7374/7375), and read it in `connectblock.cpp:263`, `validation.cpp:2597`,
-**and** `ActiveEvmChainId()` so a single source of truth feeds signing, ingest,
-and execution. Consensus-affecting on regtest/testnet only; mainnet value is
-unchanged. Land it together with EVM-01.
+This bounded correction changes CHAINID execution on regtest and on testnet if
+activated; mainnet's value is unchanged. It neither adds an authorization proof
+nor changes payload serialization or the activation gates. EVM-01 remains a
+separate blocking decision before any shared-network activation.
+The execution regression uses a fresh regtest fixture; it does not establish
+compatibility with historical regtest EVM blocks or state databases.
 
 ---
 
-## EVM-05 — HIGH — EVM state not undone on VerifyDB / RollbackBlock
+## EVM-05 — HIGH — EVM verification and recovery omit state handling
 
-### Claim
+### Confirmed implementation gaps
 
-EVM state changes are rolled back **only** on the live-reorg path
-(`DisconnectTip`). The `VerifyDB` and `RollbackBlock` code paths call
-`DisconnectBlock` directly, which reverts UTXO and asset state but **not** EVM
-state — so a `-checkblocks`-style verify (or a rollback) over a range that
-contains EVM transactions leaves the EVM state DB inconsistent.
+`DisconnectBlock` accepts an EVM cache but explicitly ignores it
+(`src/validation.cpp:1669-1679`). The persistent EVM undo is applied only in
+`DisconnectTip` (`:3310-3322`), after the ordinary UTXO/asset disconnect.
 
-### Evidence
+`VerifyDB` performs memory-only disconnects with a temporary UTXO view and asset
+cache (`:5289-5297`, `:5343`). Its level-4 reconnect calls `ConnectBlock` without
+an EVM cache (`:5384`); the optional cache defaults to null
+(`src/validation.h:772`), and the execution/commitment checks at
+`src/validation.cpp:2582` are therefore skipped. This path neither rolls back
+nor re-executes EVM state. The previous description of VerifyDB double-debiting
+EVM balances was not supported by this call path and must not be used as an
+established reproduction.
 
-- `DisconnectTip` applies the EVM undo: reads the undo stream and calls
-  `evm::ApplyUndoToDB(evmUndo, *pevmstatedb)` (`src/validation.cpp:3316-3319`),
-  paired with `BuildUndoFromCache` on connect (`:3495-3503`).
-- `DisconnectBlock` itself (`:1669-1984`) reverts only UTXO + asset undo; it does
-  **not** touch EVM state.
-- `VerifyDB` disconnects via `DisconnectBlock` directly
-  (`src/validation.cpp:5344`) — **no** `ApplyUndoToDB`.
-- `RollbackBlock` likewise (`:5475`) — **no** `ApplyUndoToDB`.
+Crash recovery similarly disconnects via `DisconnectBlock` (`:5474`) and calls
+`RollforwardBlock` (`:5494`). The latter applies ordinary special-transaction and
+UTXO/asset processing (`:5408`) but does not invoke the EVM block-execution
+pipeline. The EVM consistency consequences need an end-to-end crash/replay test;
+the missing integration is confirmed by inspection, not by a new daemon run.
 
-At `nCheckLevel >= 3`, `VerifyDB` disconnects then rolls forward
-(`RollforwardBlock → ProcessSpecialTxsInBlock`, `:5409`), which **re-applies** the
-EVM txs on top of state that was never rolled back → double-debit / nonce skew →
-the recomputed `evmStateRoot` diverges from the committed one
-(`:2679-2697`), spuriously failing verification, or (worse, if run without the
-commitment check active) silently corrupting the EVM state DB.
+### Required correction and validation
 
-### Fix design
+Verification must use an isolated EVM state view that can apply the existing
+undo and replay the selected blocks without flushing persistent state, deleting
+undo records or writing receipts. Successful verification and every early-exit
+path must leave persistent accounts, storage, code, receipts and undo unchanged.
 
-Move the EVM undo application out of `DisconnectTip` and into `DisconnectBlock`
-(or a shared helper both call), so every disconnect path — live reorg, `VerifyDB`,
-`RollbackBlock` — restores EVM state symmetrically with UTXO/asset state. Add a
-regression test that runs `verifychain 4 <depth>` over a regtest chain containing
-EVM txs and asserts a clean result.
+Recovery needs explicit EVM rollback/rollforward integration and a regression
+that reconstructs the expected state after interrupted persistence. Keep the
+working live-reorg path covered separately.
+
+Do not simply move `ApplyUndoToDB` into `DisconnectBlock`: that helper writes the
+persistent database (`src/evm/undo.cpp:79`), while VerifyDB's disconnect is
+intentionally memory-only. This work changes state lifecycle handling, not the
+transaction authorization envelope, but requires dedicated tests before it can
+be considered fixed.
 
 ---
 
@@ -271,10 +263,11 @@ wallet-independent copy of the literal (`EVM_HELP_REQUIRING_PASSPHRASE` in
 
 ## Recommended sequencing
 
-1. **Ratify the authorization model (EVM-01 + EVM-02 together).** These are the
-   blockers. Both touch consensus; land them as one reviewed batch. EVM-02 is a
-   prerequisite for EVM-01's signature recovery.
-2. **Symmetrize EVM undo (EVM-05).** Independent of 1; can land in parallel.
+1. **Ratify and implement the authorization model (EVM-01).** EVM-02 now supplies
+   the shared chain-id; it does not authorize a sender or settle the protocol
+   decision. Review CALL/DEPLOY and outgoing SPEND/UNWRAP under the existing
+   constraints before implementation.
+2. **Integrate isolated verification and crash recovery (EVM-05).** Independent of 1; requires state-lifecycle tests before completion.
 3. **Decide value width (EVM-06)** before mainnet, not before testnet.
 4. **Dedicated determinism review (DET-01)** of the state-reading precompiles.
 5. Only after 1–2 land and are tested: schedule the `EVM` deployment on testnet

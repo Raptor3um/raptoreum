@@ -297,24 +297,9 @@ UniValue evm_executeReadOnly(const JSONRPCRequest& request)
 // where the EVM convention does so, and an explicit RPC error
 // otherwise.
 
-// EVM chain IDs reserved for Raptoreum per docs/evm/PROPOSAL-FOR-
-// CORE-TEAM.md. Hardcoded for now; FUP-1 in the project memory tracks
-// the migration into Consensus::Params.
-constexpr int64_t kRtmEvmChainIdMainnet = 7373;
-constexpr int64_t kRtmEvmChainIdTestnet = 7374;
-constexpr int64_t kRtmEvmChainIdRegtest = 7375;
-constexpr int64_t kRtmEvmChainIdDefault = kRtmEvmChainIdMainnet;
-
-// Pick the active chain id from the runtime CChainParams. We key off
-// the network's BIP70 string to avoid coupling to the chainparams
-// internals.
 int64_t ActiveEvmChainId()
 {
-    const std::string& net = Params().NetworkIDString();
-    if (net == "main") return kRtmEvmChainIdMainnet;
-    if (net == "test") return kRtmEvmChainIdTestnet;
-    if (net == "regtest") return kRtmEvmChainIdRegtest;
-    return kRtmEvmChainIdDefault;
+    return Params().GetConsensus().evmChainId;
 }
 
 UniValue eth_chainId(const JSONRPCRequest& request)

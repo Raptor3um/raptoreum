@@ -2594,8 +2594,7 @@ bool CChainState::ConnectBlock(const CBlock &block, CValidationState &state, CBl
             evmCb.nVersion >= CCbTx::EVM_COMMIT_VERSION;
 
         evm::ExecutionContext evmCtx;
-        evmCtx.chainId = 7373; // TODO: parameterize via chainparams once the
-                               //       EVM chain-id is added to Consensus::Params
+        evmCtx.chainId = chainparams.GetConsensus().evmChainId;
         evmCtx.blockHeight = static_cast<uint64_t>(pindex->nHeight);
         if (haveEvmV3) {
             // Committed exec time must lie inside the block's own

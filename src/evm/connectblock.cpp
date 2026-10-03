@@ -260,7 +260,7 @@ EvmCoinbaseCommitment ComputeCoinbaseEvmCommitment(
 
     CEvmStateCache mcache(db);  // throwaway, never flushed
     ExecutionContext mctx;
-    mctx.chainId = 7373;
+    mctx.chainId = consensus.evmChainId;
     mctx.blockHeight =
         static_cast<uint64_t>(pindexPrev ? pindexPrev->nHeight + 1 : 0);
     mctx.blockTimestamp = execTime;

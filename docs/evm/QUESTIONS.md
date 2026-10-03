@@ -51,8 +51,12 @@ shipped design satisfies all three:
   additive special-tx types, and the coinbase commitment is a
   versioned, additive `CCbTx` v3.
 
-We consider this closed unless the core team raises a specific
-residual.
+These constraints remain the design boundary. Consensus sender authorization
+is still pending explicit core-team ratification: RPC signature recovery does
+not authorize a serialized CALL/DEPLOY sender or an outgoing SPEND/UNWRAP debit.
+The inbound FUND/WRAP paths use ordinary UTXO input authorization. The proposed
+authorization options in `BANK-GRADE-FINDINGS.md` are not an approved protocol
+change; this draft does not add a signed envelope or schedule public activation.
 
 ---
 

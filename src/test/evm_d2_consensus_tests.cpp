@@ -4,18 +4,27 @@
 
 #include <chainparams.h>
 #include <consensus/validation.h>
+#include <evm/account.h>
+#include <evm/balance.h>
+#include <evm/evmtx.h>
+#include <evm/hashing.h>
 #include <evm/mpt.h>
 #include <evm/process.h>
 #include <evm/receipt.h>
+#include <evm/state_cache.h>
+#include <evm/state_db.h>
 #include <evo/cbtx.h>
 #include <evo/specialtx.h>
 #include <primitives/block.h>
+#include <rpc/server.h>
 #include <script/standard.h>
 #include <test/test_raptoreum.h>
+#include <util/ref.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
 
+#include <cstring>
 #include <vector>
 
 /**
@@ -55,6 +64,67 @@ CCbTx CoinbaseCb(const CBlock& b)
 } // anonymous namespace
 
 BOOST_FIXTURE_TEST_SUITE(evm_d2_consensus_tests, D2ChainSetup)
+
+BOOST_AUTO_TEST_CASE(chainid_network_parameters)
+{
+    BOOST_CHECK_EQUAL(CreateChainParams(CBaseChainParams::MAIN)->GetConsensus().evmChainId, 7373);
+    BOOST_CHECK_EQUAL(CreateChainParams(CBaseChainParams::TESTNET)->GetConsensus().evmChainId, 7374);
+    BOOST_CHECK_EQUAL(CreateChainParams(CBaseChainParams::REGTEST)->GetConsensus().evmChainId, 7375);
+}
+
+BOOST_AUTO_TEST_CASE(chainid_agrees_between_rpc_mining_and_validation)
+{
+    const uint160 sender(std::vector<unsigned char>(20, 0xa1));
+    const uint160 contract(std::vector<unsigned char>(20, 0xb2));
+    // CHAINID; duplicate, store at slot zero, and return the same 32-byte value.
+    const std::vector<uint8_t> code = {
+        0x46, 0x80, 0x60, 0x00, 0x55, 0x60, 0x00, 0x52,
+        0x60, 0x20, 0x60, 0x00, 0xf3,
+    };
+    {
+        evm::CEvmStateCache cache(*pevmstatedb);
+        cache.SetAccount(sender, evm::CEvmAccount(
+            0, evm::Uint256FromUint64(1'000'000'000'000'000ULL),
+            evm::CEvmAccount::EmptyCodeHash(), evm::CEvmAccount::EmptyStorageRoot()));
+        const uint256 codeHash = evm::Keccak256(code);
+        cache.SetCode(codeHash, code);
+        cache.SetAccount(contract, evm::CEvmAccount(
+            1, uint256(), codeHash, evm::CEvmAccount::EmptyStorageRoot()));
+        BOOST_REQUIRE(cache.Flush());
+    }
+
+    evm::CEvmCallTx payload;
+    std::memcpy(payload.senderHash.begin() + 12, sender.begin(), 20);
+    std::memcpy(payload.toAddress.begin() + 12, contract.begin(), 20);
+    payload.gasLimit = 100'000;
+    payload.maxFeePerGas = 1'000'000'000;
+    CMutableTransaction call;
+    call.nVersion = 3;
+    call.nType = TRANSACTION_EVM_CALL;
+    SetTxPayload(call, payload);
+
+    const CScript spk = GetScriptForDestination(coinbaseKey.GetPubKey().GetID());
+    const CBlock block = CreateAndProcessBlock({call}, spk);
+    BOOST_REQUIRE(::ChainActive().Tip()->GetBlockHash() == block.GetHash());
+    uint256 stored;
+    BOOST_REQUIRE(pevmstatedb->ReadStorage(contract, uint256(), stored));
+    BOOST_CHECK(stored == evm::Uint256FromUint64(7375));
+
+    if (RPCIsInWarmup(nullptr)) SetRPCWarmupFinished();
+    util::Ref context{m_node};
+    JSONRPCRequest request(context);
+    request.strMethod = "eth_chainId";
+    request.params = UniValue(UniValue::VARR);
+    BOOST_CHECK_EQUAL(tableRPC.execute(request).get_str(), "0x1ccf");
+
+    UniValue object(UniValue::VOBJ);
+    object.pushKV("to", "0x" + contract.GetHex());
+    request.strMethod = "eth_call";
+    request.params.push_back(object);
+    request.params.push_back("latest");
+    BOOST_CHECK_EQUAL(tableRPC.execute(request).get_str(),
+                     "0x0000000000000000000000000000000000000000000000000000000000001ccf");
+}
 
 // Mining a chain of v3 blocks: each connects (miner==validator
 // parity), commits a v3 coinbase with the expected empty-block roots,
