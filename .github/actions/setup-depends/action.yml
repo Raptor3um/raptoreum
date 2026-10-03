@@ -36,10 +36,12 @@ runs:
     - name: Build Depends
       shell: bash
       run: |
-        echo "building with $(nproc) threads"
+        # nproc is GNU coreutils and is absent on macOS; hw.ncpu is the BSD equivalent
+        NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
+        echo "building with ${NPROC} threads"
         gcc --version || clang --version
         export FALLBACK_DOWNLOAD_PATH=${{ inputs.fallback-download-path }}
-        make -C depends -j$(nproc) HOST=${{ inputs.host }}
+        make -C depends -j${NPROC} HOST=${{ inputs.host }}
 
     - name: Save depends cache
       uses: actions/cache/save@v4

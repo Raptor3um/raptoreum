@@ -1,0 +1,39 @@
+Qt 5.15.5 bundles libpng 1.6.37, whose pngpriv.h includes <fp.h> -- a Classic
+Mac OS header that no macOS SDK has shipped for twenty years -- whenever
+TARGET_OS_MAC is defined. Clang predefines TARGET_OS_MAC=1 for every Apple
+target, so that branch is always taken:
+
+    $ clang --target=arm64-apple-darwin -isysroot <sdk> -nostdlibinc -dM -E \
+        /dev/null | grep TARGET_OS_MAC
+    #define TARGET_OS_MAC 1
+
+The only thing that saves a build is the inner guard: <fp.h> is skipped if
+__MATH_H__ is already defined, which happens when a translation unit pulled in
+Apple's <math.h> first. So whether libpng compiles comes down to the include
+order of each file, and png.c, pngerror.c, pngget.c and pngmem.c lose.
+
+Drop the branch, as libpng has done upstream: on Apple platforms <math.h> is
+the correct header.
+
+--- a/qtbase/src/3rdparty/libpng/pngpriv.h
++++ b/qtbase/src/3rdparty/libpng/pngpriv.h
+@@ -528,18 +528,7 @@
+     */
+ #  include <float.h>
+ 
+-#  if (defined(__MWERKS__) && defined(macintosh)) || defined(applec) || \
+-    defined(THINK_C) || defined(__SC__) || defined(TARGET_OS_MAC)
+-   /* We need to check that <math.h> hasn't already been included earlier
+-    * as it seems it doesn't agree with <fp.h>, yet we should really use
+-    * <fp.h> if possible.
+-    */
+-#    if !defined(__MATH_H__) && !defined(__MATH_H) && !defined(__cmath__)
+-#      include <fp.h>
+-#    endif
+-#  else
+-#    include <math.h>
+-#  endif
++#  include <math.h>
+ #  if defined(_AMIGA) && defined(__SASC) && defined(_M68881)
+    /* Amiga SAS/C: We must include builtin FPU functions when compiling using
+     * MATH=68881
