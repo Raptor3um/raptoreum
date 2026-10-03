@@ -296,6 +296,8 @@ CAmount
 GetBlockSubsidy(int nBits, int nHeight, const Consensus::Params &consensusParams, bool fSuperblockPartOnly = false);
 
 CAmount GetSmartnodePayment(int nHeight, CAmount blockValue, CAmount specialTxFees);
+/** Calculate a historical payment using the smartnode count at its parent block. */
+CAmount GetSmartnodePayment(int nHeight, CAmount blockValue, CAmount specialTxFees, size_t mnCount);
 
 /** Guess verification progress (as a fraction between 0.0=genesis and 1.0=current tip). */
 double GuessVerificationProgress(const ChainTxData &data, const CBlockIndex *pindex);

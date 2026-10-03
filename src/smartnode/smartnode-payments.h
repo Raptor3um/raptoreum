@@ -44,6 +44,8 @@ class CSmartnodePayments {
 public:
     static bool GetBlockTxOuts(int nBlockHeight, CAmount blockReward, std::vector <CTxOut> &voutSmartnodePaymentsRet,
                                CAmount specialTxFee);
+    static bool GetBlockTxOuts(int nBlockHeight, CAmount smartnodeReward,
+                               std::vector <CTxOut> &voutSmartnodePaymentsRet);
 
     static bool
     IsTransactionValid(const CTransaction &txNew, int nBlockHeight, CAmount blockReward, CAmount specialTxFee);

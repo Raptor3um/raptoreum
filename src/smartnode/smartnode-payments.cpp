@@ -294,6 +294,12 @@ bool CSmartnodePayments::GetBlockTxOuts(int nBlockHeight, CAmount blockReward,
     voutSmartnodePaymentsRet.clear();
 
     CAmount smartnodeReward = GetSmartnodePayment(nBlockHeight, blockReward, specialTxFee);
+    return GetBlockTxOuts(nBlockHeight, smartnodeReward, voutSmartnodePaymentsRet);
+}
+
+bool CSmartnodePayments::GetBlockTxOuts(int nBlockHeight, CAmount smartnodeReward,
+                                        std::vector <CTxOut> &voutSmartnodePaymentsRet) {
+    voutSmartnodePaymentsRet.clear();
 
     const CBlockIndex *pindex;
     {

@@ -4,9 +4,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
+#include <consensus/tx_verify.h>
 #include <evo/deterministicmns.h>
 #include <governance/governance-classes.h>
 #include <index/txindex.h>
+#include <limits>
 #include <net.h>
 #include <netbase.h>
 #include <node/context.h>
@@ -15,6 +17,7 @@
 #include <rpc/util.h>
 #include <smartnode/activesmartnode.h>
 #include <smartnode/smartnode-payments.h>
+#include <undo.h>
 #include <univalue.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
@@ -395,14 +398,35 @@ UniValue smartnode_payments(const JSONRPCRequest &request) {
         if (pindex == nullptr) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
+        if (!::ChainActive().Contains(pindex)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Block is not in the active chain");
+        }
     }
 
-    int64_t nCount = request.params.size() > 2 ? ParseInt64V(request.params[1], "count") : 1;
+    // params[0] is the block hash and params[1] the count, so a call that supplies
+    // a count has two parameters, not more than two.
+    int64_t nCount = request.params.size() > 1 ? ParseInt64V(request.params[1], "count") : 1;
+    if (nCount == std::numeric_limits<int64_t>::min()) {
+        // Its magnitude cannot be represented by std::abs(int64_t).
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "count is out of range");
+    }
 
     // A temporary vector which is used to sort results properly (there is no "reverse" in/for UniValue)
     std::vector <UniValue> vecPayments;
 
     while (vecPayments.size() < uint64_t(std::abs(nCount)) && pindex != nullptr) {
+
+        if (pindex->pprev == nullptr) {
+            // Genesis pays no smartnode. Skip it without consuming the count
+            // or dereferencing its missing parent to calculate the subsidy.
+            if (nCount > 0) {
+                LOCK(cs_main);
+                pindex = ::ChainActive().Next(pindex);
+            } else {
+                pindex = pindex->pprev;
+            }
+            continue;
+        }
 
         CBlock block;
         if (!ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
@@ -411,28 +435,63 @@ UniValue smartnode_payments(const JSONRPCRequest &request) {
 
         // Note: we have to actually calculate block reward from scratch instead of simply querying coinbase vout
         // because miners might collect less coins than they potentially could and this would break our calculations.
+        //
+        // The value of each spent input is taken from the block's undo data (a single
+        // sequential read) rather than fetching every previous transaction individually.
+        // Besides being much faster, this also works on nodes without -txindex: the old
+        // GetTransaction() lookup returned null for confirmed prevouts on such nodes and
+        // the daemon crashed dereferencing it.
         CAmount nBlockFees{0};
-        NodeContext &node = EnsureNodeContext(request.context);
-        for (const auto &tx: block.vtx) {
-            if (tx->IsCoinBase()) {
-                continue;
+        CAmount specialTxFees{0};
+        CBlockUndo blockUndo;
+        if (!UndoReadFromDisk(blockUndo, pindex)) {
+            // The read itself is the source of truth for undo availability;
+            // IsBlockPruned() only refines the error message after a failure.
+            if (IsBlockPruned(pindex)) {
+                throw JSONRPCError(RPC_MISC_ERROR, "Undo data not available (pruned data)");
+            }
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't read undo data from disk");
+        }
+        // vtx[0] is the coinbase (no inputs); blockUndo.vtxundo is indexed for all but the coinbase.
+        if (blockUndo.vtxundo.size() != block.vtx.size() - 1) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR,
+                               strprintf("Undo data for block %s is inconsistent: %d transaction undo records for %d transactions",
+                                         pindex->GetBlockHash().ToString(), blockUndo.vtxundo.size(), block.vtx.size()));
+        }
+        // Keep the active-chain membership, height-based payee lookup and
+        // advancement consistent if a reorg occurs while the data is read.
+        LOCK(cs_main);
+        if (!::ChainActive().Contains(pindex)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Block is not in the active chain");
+        }
+        for (size_t i = 1; i < block.vtx.size(); ++i) {
+            const CTransaction &tx = *block.vtx[i];
+            const CTxUndo &txUndo = blockUndo.vtxundo[i - 1];
+            if (txUndo.vprevout.size() != tx.vin.size()) {
+                throw JSONRPCError(RPC_INTERNAL_ERROR,
+                                   strprintf("Undo data for transaction %s is inconsistent: %d spent outputs for %d inputs",
+                                             tx.GetHash().ToString(), txUndo.vprevout.size(), tx.vin.size()));
             }
             CAmount nValueIn{0};
-            for (const auto &txin: tx->vin) {
-                uint256 blockHashTmp;
-                CTransactionRef txPrev = GetTransaction(/* block_index */ nullptr, node.mempool, txin.prevout.hash,
-                                                                          Params().GetConsensus(), blockHashTmp);
-                nValueIn += txPrev->vout[txin.prevout.n].nValue;
+            for (const Coin &coin: txUndo.vprevout) {
+                nValueIn += coin.out.nValue;
             }
-            nBlockFees += nValueIn - tx->GetValueOut();
+            CAmount txFee = nValueIn - tx.GetValueOut();
+            CAmount specialTxFee{0};
+            if (!Consensus::CheckSpecialTxFee(tx, txFee, specialTxFee, false)) {
+                throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't determine special transaction fee");
+            }
+            nBlockFees += txFee;
+            specialTxFees += specialTxFee;
         }
 
-        std::vector <CTxOut> voutSmartnodePayments, voutDummy;
-        CMutableTransaction dummyTx;
-        CAmount specialTxFees;
+        std::vector <CTxOut> voutSmartnodePayments;
         CAmount blockReward =
                 nBlockFees + GetBlockSubsidy(pindex->pprev->nBits, pindex->pprev->nHeight, Params().GetConsensus());
-        FillBlockPayments(dummyTx, pindex->nHeight, blockReward, voutSmartnodePayments, voutDummy, specialTxFees);
+        const auto mnList = deterministicMNManager->GetListForBlock(pindex->pprev);
+        const CAmount smartnodeReward = GetSmartnodePayment(
+                pindex->nHeight, blockReward, specialTxFees, mnList.GetAllMNsCount());
+        CSmartnodePayments::GetBlockTxOuts(pindex->nHeight, smartnodeReward, voutSmartnodePayments);
 
         UniValue blockObj(UniValue::VOBJ);
         CAmount payedPerBlock{0};
@@ -453,7 +512,11 @@ UniValue smartnode_payments(const JSONRPCRequest &request) {
             payeesArr.push_back(obj);
         }
 
-        const auto dmnPayee = deterministicMNManager->GetListForBlock(pindex).GetMNPayee();
+        // The smartnode paid by a block is the payee of the list as it stood at the
+        // previous block, which is what GetBlockTxOuts() used to fill in the payees
+        // above. Using the list at this block instead would name the smartnode due
+        // to be paid by the *next* one.
+        const auto dmnPayee = mnList.GetMNPayee();
         protxObj.pushKV("proTxHash", dmnPayee == nullptr ? "" : dmnPayee->proTxHash.ToString());
         protxObj.pushKV("amount", payedPerSmartnode);
         protxObj.pushKV("payees", payeesArr);
@@ -467,7 +530,6 @@ UniValue smartnode_payments(const JSONRPCRequest &request) {
         vecPayments.push_back(blockObj);
 
         if (nCount > 0) {
-            LOCK(cs_main);
             pindex = ::ChainActive().Next(pindex);
         } else {
             pindex = pindex->pprev;
