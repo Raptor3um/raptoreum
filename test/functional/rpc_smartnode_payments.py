@@ -2,21 +2,7 @@
 # Copyright (c) 2024 The Raptoreum developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test the `smartnode payments` RPC around the genesis block.
-
-Regression test for a node crash.
-
-Old behaviour (before the fix):
-    `smartnode payments <genesis-hash>` computed the block reward with
-    `GetBlockSubsidy(pindex->pprev->nBits, ...)`. For the genesis block
-    `pindex->pprev` is a null pointer, so this dereferenced null and
-    crashed the whole node (segfault / lost RPC connection).
-
-New behaviour (after the fix):
-    the RPC detects that the requested block has no previous block and
-    returns a clear JSON-RPC error (RPC_INVALID_PARAMETER, -8) while the
-    node keeps running. Normal blocks are unaffected.
-"""
+"""Test payment query boundaries and spent-input fees without a txindex."""
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
@@ -24,17 +10,21 @@ from test_framework.util import assert_equal, assert_raises_rpc_error
 
 class RpcSmartnodePaymentsTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 1
+        self.num_nodes = 2
         self.setup_clean_chain = True
+        self.extra_args = [[], ["-txindex=0"]]
 
     def run_test(self):
-        node = self.nodes[0]
+        node, no_txindex = self.nodes
         genesis_hash = node.getblockhash(0)
 
-        self.log.info("Mine a few blocks so the chain has a real, non-genesis tip")
+        self.log.info("Genesis has no payment and is skipped rather than counted")
+        assert_equal(node.smartnode("payments"), [])
         node.generate(5)
         tip_hash = node.getbestblockhash()
         assert_equal(node.getblockcount(), 5)
+        assert_equal(node.smartnode("payments", genesis_hash, -1), [])
+        assert_equal([entry["height"] for entry in node.smartnode("payments", genesis_hash, 2)], [1, 2])
 
         self.log.info("`smartnode payments` on a normal block still works")
         payments = node.smartnode("payments", tip_hash)
@@ -56,16 +46,35 @@ class RpcSmartnodePaymentsTest(BitcoinTestFramework):
         assert_equal([entry["height"] for entry in fwd3], [2, 3, 4])
         # the tip cannot be extended forwards, so a large count still stops there
         assert_equal([entry["height"] for entry in node.smartnode("payments", tip_hash, 10)], [5])
+        assert_equal([entry["height"] for entry in node.smartnode("payments", tip_hash, -10)], [1, 2, 3, 4, 5])
+        assert_equal(node.smartnode("payments", tip_hash, 0), [])
+        assert_raises_rpc_error(-8, "count is out of range", node.smartnode,
+                                "payments", tip_hash, -9223372036854775808)
 
-        self.log.info("`smartnode payments` on the genesis block returns an error instead of crashing the node")
-        # Before the fix this call dereferenced a null `pprev` and took the node down.
-        assert_raises_rpc_error(-8, "genesis block", node.smartnode, "payments", genesis_hash)
+        self.log.info("Reject a still-indexed block outside the active chain")
+        # Invalidate its parent, so the queried block itself was never explicitly
+        # invalidated and its height now exceeds the active chain's height.
+        parent_hash = node.getblock(tip_hash)["previousblockhash"]
+        node.invalidateblock(parent_hash)
+        assert_raises_rpc_error(-8, "Block is not in the active chain", node.smartnode,
+                                "payments", tip_hash)
+        node.reconsiderblock(parent_hash)
+        self.sync_all()
 
-        self.log.info("The node is still alive and responsive after the genesis query")
-        # This is the crux of the regression test: on the unpatched node the call
-        # above crashes the daemon and this final RPC never returns.
+        self.log.info("The node is still responsive after the boundary queries")
         assert_equal(node.getblockcount(), 5)
         assert_equal(node.getbestblockhash(), tip_hash)
+
+        self.log.info("Read spent-input fees equally with and without the transaction index")
+        node.generate(101)
+        txid = node.sendtoaddress(node.getnewaddress(), 1)
+        node.generate(1)
+        self.sync_all()
+        blockhash = node.getbestblockhash()
+        assert txid in node.getblock(blockhash)["tx"]
+        payments = node.smartnode("payments", blockhash, -3)
+        assert_equal(len(payments), 3)
+        assert_equal(no_txindex.smartnode("payments", blockhash, -3), payments)
 
 
 if __name__ == '__main__':

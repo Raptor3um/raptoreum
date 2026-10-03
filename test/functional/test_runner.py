@@ -183,6 +183,7 @@ BASE_SCRIPTS = [
     'rpc_coinjoin.py',
     'rpc_masternode.py',
     'rpc_smartnode_payments.py',
+    'rpc_smartnode_payment_fees.py',
     'rpc_mnauth.py',
     'rpc_verifyislock.py',
     'rpc_verifychainlock.py',
