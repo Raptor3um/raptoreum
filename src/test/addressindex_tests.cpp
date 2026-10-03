@@ -84,4 +84,38 @@ BOOST_AUTO_TEST_CASE(height_ranges_across_assets)
     BOOST_CHECK(actual.empty());
 }
 
+BOOST_AUTO_TEST_CASE(address_type_boundary)
+{
+    SetDataDir("addressindex");
+    CBlockTreeDB db(1 << 20, /*fMemory=*/true);
+    uint160 address;
+    address.SetHex(std::string(40, 'f'));
+    // The last type-1 address is immediately followed by the same hash at type 2.
+    BOOST_REQUIRE(db.WriteAddressIndex({
+        {CAddressIndexKey(1, address, 100, 0, uint256S("01"), 0, false), 11},
+        {CAddressIndexKey(1, address, 200, 0, uint256S("02"), 0, false), 12},
+        {CAddressIndexKey(2, address, 100, 0, uint256S("03"), 0, false), 21},
+        {CAddressIndexKey(2, address, 200, 0, uint256S("04"), 0, false), 22},
+    }));
+
+    const struct {
+        int start;
+        int end;
+        size_t count;
+    } cases[]{{0, 0, 2}, {100, 100, 1}, {101, 199, 0}, {200, 200, 1}, {0, 100, 1}};
+    for (int type : {1, 2}) {
+        for (const auto& test : cases) {
+            BOOST_TEST_CONTEXT("type=" << type << ", start=" << test.start << ", end=" << test.end) {
+                std::vector<std::pair<CAddressIndexKey, CAmount>> actual;
+                BOOST_REQUIRE(db.ReadAddressIndex(address, type, actual, test.start, test.end));
+                BOOST_CHECK_EQUAL(actual.size(), test.count);
+                for (const auto& entry : actual) {
+                    BOOST_CHECK_EQUAL(entry.first.type, type);
+                    BOOST_CHECK(entry.first.hashBytes == address);
+                }
+            }
+        }
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
