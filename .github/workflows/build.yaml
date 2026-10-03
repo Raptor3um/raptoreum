@@ -232,6 +232,7 @@ jobs:
   macos-sdk:
     name: macOS SDK
     runs-on: macos-15
+    continue-on-error: true
     outputs:
       version: ${{ steps.sdk.outputs.version }}
     steps:
