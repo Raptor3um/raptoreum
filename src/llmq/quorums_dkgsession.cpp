@@ -1323,6 +1323,169 @@ namespace llmq {
         return finalCommitments;
     }
 
+    void CDKGSession::CheckAbsences(CDKGPendingMessages &pendingMessages) {
+        CDKGLogger logger(*this, __func__);
+
+        if (!AreWeMember()) {
+            return;
+        }
+
+        CDKGAbsenceVote qv(params);
+        qv.llmqType = params.type;
+        qv.quorumHash = m_quorum_base_block_index->GetBlockHash();
+        qv.proTxHash = myProTxHash;
+
+        for (size_t i = 0; i < members.size(); i++) {
+            const auto &m = members[i];
+            if (m->dmn->proTxHash == myProTxHash) {
+                continue; // never vote on myself
+            }
+            if (m->contributions.empty()) {
+                qv.absentMembers[i] = true;
+            }
+        }
+
+        logger.Batch("absence vote built. absentCount=%d", qv.CountAbsentMembers());
+
+        if (qv.CountAbsentMembers() == 0) {
+            // nothing to report; a vote recording no absences is not
+            // evidence of anything and would just add noise
+            return;
+        }
+
+        qv.sig = WITH_LOCK(activeSmartnodeInfoCs,
+        return activeSmartnodeInfo.blsKeyOperator->Sign(qv.GetSignHash()));
+
+        // Same pattern SendContributions() uses for its own freshly-built
+        // CDKGContribution: self-inject with NodeId -1 and let it flow
+        // through the normal PreVerifyMessage/ReceiveMessage pipeline,
+        // rather than duplicating storage+relay logic here. ReceiveMessage
+        // is what actually stores it and calls RelayInvToParticipants.
+        pendingMessages.PushPendingMessage(-1, qv);
+    }
+
+    bool CDKGSession::PreVerifyMessage(const CDKGAbsenceVote &qv, bool &retBan) const {
+        CDKGLogger logger(*this, __func__);
+
+        retBan = false;
+
+        if (qv.quorumHash != m_quorum_base_block_index->GetBlockHash()) {
+            logger.Batch("absence vote for wrong quorum, rejecting");
+            return false;
+        }
+
+        auto *member = GetMember(qv.proTxHash);
+        if (member == nullptr) {
+            logger.Batch("voter %s not a member of this quorum, rejecting absence vote", qv.proTxHash.ToString());
+            retBan = true;
+            return false;
+        }
+
+        if (!qv.sig.IsValid()) {
+            logger.Batch("invalid signature on absence vote from %s", qv.proTxHash.ToString());
+            retBan = true;
+            return false;
+        }
+
+        if (qv.absentMembers.size() != (size_t) params.size) {
+            logger.Batch("invalid absentMembers bitset size");
+            retBan = true;
+            return false;
+        }
+
+        for (size_t i = members.size(); i < qv.absentMembers.size(); i++) {
+            if (qv.absentMembers[i]) {
+                logger.Batch("absentMembers sets a bit beyond the actual member count");
+                retBan = true;
+                return false;
+            }
+        }
+
+        {
+            LOCK(invCs);
+            for (const auto &p: absenceVotes) {
+                if (p.second.proTxHash == qv.proTxHash) {
+                    // BLS signing is deterministic, so a legitimate resend of
+                    // the SAME vote already has the same hash and is filtered
+                    // by seenMessages before this ever runs. Reaching here
+                    // with a DIFFERENT vote from an already-recorded voter is
+                    // an equivocation attempt (or a bug) -- reject rather
+                    // than silently replacing and re-relaying it, same as
+                    // contributions/premature commitments stop at the first
+                    // stored message instead of accepting every revision.
+                    logger.Batch("%s already has a stored absence vote, rejecting", qv.proTxHash.ToString());
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    void CDKGSession::ReceiveMessage(const CDKGAbsenceVote &qv, bool &retBan) {
+        CDKGLogger logger(*this, __func__);
+
+        retBan = false;
+
+        logger.Batch("received absence vote from %s. absentCount=%d", qv.proTxHash.ToString(),
+                     qv.CountAbsentMembers());
+
+        const uint256 hash = ::SerializeHash(qv);
+
+        {
+            LOCK(invCs);
+            // Keyed by message hash, matching contributions/complaints/etc.,
+            // so GetAbsenceVote (the GETDATA-serving path) can look it up the
+            // same way. One-vote-per-voter is enforced in PreVerifyMessage
+            // (rejects before this point if proTxHash already has a stored
+            // vote), so a plain insert is safe here -- no duplicate to race
+            // against or replace.
+            absenceVotes.emplace(hash, qv);
+        }
+
+        CInv inv(MSG_QUORUM_ABSENCE_VOTE, hash);
+        RelayInvToParticipants(inv);
+    }
+
+    CDKGAbsenceRecordPtr CDKGSession::BuildAbsenceRecord(size_t minVotes) const {
+        auto record = std::make_unique<CDKGAbsenceRecord>();
+        record->llmqType = params.type;
+        record->quorumHash = m_quorum_base_block_index->GetBlockHash();
+
+        {
+            // Scoped so invCs is released before Verify() runs -- Verify()
+            // descends into GetAllQuorumMembers (the static cs_members lock
+            // plus the DMN manager's own locks), and invCs -> that is the
+            // only lock edge this class would otherwise create.
+            LOCK(invCs);
+
+            if (absenceVotes.size() < minVotes) {
+                return nullptr;
+            }
+
+            if (absenceVotes.empty()) {
+                record->confirmedAbsent.assign((size_t) params.size, false);
+            } else {
+                record->confirmedAbsent.assign((size_t) params.size, true);
+                for (const auto &p: absenceVotes) {
+                    record->votes.emplace_back(p.second);
+                    for (size_t i = 0; i < record->confirmedAbsent.size(); i++) {
+                        record->confirmedAbsent[i] = record->confirmedAbsent[i] && p.second.absentMembers[i];
+                    }
+                }
+            }
+        }
+
+        if (!record->Verify(m_quorum_base_block_index, params)) {
+            // should never happen if every stored vote already passed
+            // PreVerifyMessage/ReceiveMessage, but never hand back a record
+            // that fails its own self-check
+            return nullptr;
+        }
+
+        return record;
+    }
+
     CDKGMember *CDKGSession::GetMember(const uint256 &proTxHash) const {
         auto it = membersMap.find(proTxHash);
         if (it == membersMap.end()) {

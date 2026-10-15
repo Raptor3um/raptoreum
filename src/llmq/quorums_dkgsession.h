@@ -11,6 +11,7 @@
 #include <bls/bls_ies.h>
 #include <bls/bls_worker.h>
 
+#include <llmq/quorums_dkgabsence.h>
 #include <llmq/quorums_utils.h>
 #include <update/update.h>
 
@@ -307,6 +308,17 @@ namespace llmq {
         std::set <uint256> validCommitments
         GUARDED_BY(invCs);
 
+        // Phase 6 (absence): every member's own vote on who sent no
+        // contribution, keyed by message hash (same convention as
+        // contributions/complaints/justifications/prematureCommitments
+        // above, needed so GetAbsenceVote can serve GETDATA requests the
+        // same way). One-vote-per-voter is enforced earlier, in
+        // PreVerifyMessage (first-wins: a second vote from an already-seen
+        // proTxHash is rejected before it ever reaches here), so this map's
+        // own insert is a plain emplace, not an erase-then-insert.
+        std::map <uint256, CDKGAbsenceVote> absenceVotes
+        GUARDED_BY(invCs);
+
     public:
         CDKGSession(const Consensus::LLMQParams &_params, CBLSWorker &_blsWorker, CDKGSessionManager &_dkgManager,
                     CConnman &_connman) :
@@ -374,6 +386,26 @@ namespace llmq {
 
         // Phase 5: aggregate/finalize
         std::vector <CFinalCommitment> FinalizeCommitments();
+
+        // Phase 6: absence voting. Runs regardless of whether Phase 5
+        // produced anything -- its whole purpose is to leave evidence behind
+        // for sessions that never finalize. Ordered after FinalizeCommitments()
+        // in HandleDKGRound() because that's naturally where a round's
+        // outcome already gets handled, not because anything after the
+        // Contribute phase still mutates members[i].contributions.
+        void CheckAbsences(CDKGPendingMessages &pendingMessages);
+
+        bool PreVerifyMessage(const CDKGAbsenceVote &qv, bool &retBan) const;
+
+        void ReceiveMessage(const CDKGAbsenceVote &qv, bool &retBan);
+
+        // Bundles every currently-held absence vote (this node's own plus
+        // whatever it received) into a record. minVotes is the caller's own
+        // choice of how many independent votes it wants before trusting the
+        // result -- this method does not decide that number, it just builds
+        // and self-verifies whatever is asked for. Returns nullptr if fewer
+        // than minVotes distinct votes are held.
+        CDKGAbsenceRecordPtr BuildAbsenceRecord(size_t minVotes) const;
 
         bool AreWeMember() const { return !myProTxHash.IsNull(); }
 

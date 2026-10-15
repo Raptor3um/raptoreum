@@ -75,6 +75,8 @@ namespace llmq {
 
         bool GetPrematureCommitment(const uint256 &hash, CDKGPrematureCommitment &ret) const;
 
+        bool GetAbsenceVote(const uint256 &hash, CDKGAbsenceVote &ret) const;
+
         // Contributions are written while in the DKG
         void WriteVerifiedVvecContribution(Consensus::LLMQType llmqType, const CBlockIndex *pQuorumBaseBlockIndex,
                                            const uint256 &proTxHash, const BLSVerificationVectorPtr &vvec);
