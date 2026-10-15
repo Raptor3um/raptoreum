@@ -319,6 +319,18 @@ namespace llmq {
         std::map <uint256, CDKGAbsenceVote> absenceVotes
         GUARDED_BY(invCs);
 
+        // Set once, by HandleDKGRound after the absence-vote drain window
+        // closes, from whatever this node held at that point (minVotes=1 --
+        // see BuildAbsenceRecord's own comment on why the caller, not
+        // Verify(), decides that number). nullptr until then, and for a
+        // session that was never a member of. This is "agreeing" in the
+        // identify-agree-report pipeline: BuildAbsenceRecord already does the
+        // intersection; this just keeps its result around long enough to be
+        // reported (currently: quorum dkgstatus; later: the special
+        // transaction) rather than discarding it the moment it's built.
+        CDKGAbsenceRecordPtr builtAbsenceRecord
+        GUARDED_BY(invCs);
+
     public:
         CDKGSession(const Consensus::LLMQParams &_params, CBLSWorker &_blsWorker, CDKGSessionManager &_dkgManager,
                     CConnman &_connman) :
