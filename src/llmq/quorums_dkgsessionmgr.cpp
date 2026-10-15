@@ -324,6 +324,29 @@ namespace llmq {
         return false;
     }
 
+    bool CDKGSessionManager::GetAbsenceRecord(Consensus::LLMQType llmqType, CDKGAbsenceRecord &ret) const {
+        if (!IsQuorumDKGEnabled())
+            return false;
+
+        auto it = dkgSessionHandlers.find(llmqType);
+        if (it == dkgSessionHandlers.end()) {
+            return false;
+        }
+        auto &dkgType = it->second;
+        LOCK(dkgType.cs);
+        // Same lower bound as GetAbsenceVote, for the same reason: built
+        // at/after Finalize, for the lifetime of the session that built it.
+        if (dkgType.phase < QuorumPhase_Finalize) {
+            return false;
+        }
+        LOCK(dkgType.curSession->invCs);
+        if (!dkgType.curSession->builtAbsenceRecord) {
+            return false;
+        }
+        ret = *dkgType.curSession->builtAbsenceRecord;
+        return true;
+    }
+
     void CDKGSessionManager::WriteVerifiedVvecContribution(Consensus::LLMQType llmqType,
                                                            const CBlockIndex *pQuorumBaseBlockIndex,
                                                            const uint256 &proTxHash,
