@@ -8,6 +8,7 @@
 
 #include <llmq/quorums_dkgsessionhandler.h>
 #include <llmq/quorums_dkgsession.h>
+#include <llmq/quorums_parameters.h>
 #include <bls/bls.h>
 #include <bls/bls_worker.h>
 
@@ -112,6 +113,12 @@ namespace llmq {
     };
 
     bool IsQuorumDKGEnabled();
+
+    // Pure predicate extracted from CleanupOldContributions()'s own DB-iterating
+    // loop: does a contribution recorded for a quorum at nQuorumHeight count as
+    // too old to keep, given the active chain's current tip height? Testable
+    // directly with plain integers -- no DB, chain, or quorum membership needed.
+    bool IsContributionExpired(int nTipHeight, int nQuorumHeight, const Consensus::LLMQParams &params);
 
     extern CDKGSessionManager *quorumDKGSessionManager;
 

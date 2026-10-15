@@ -439,6 +439,10 @@ namespace llmq {
         return sporkManager.IsSporkActive(SPORK_17_QUORUM_DKG_ENABLED);
     }
 
+    bool IsContributionExpired(int nTipHeight, int nQuorumHeight, const Consensus::LLMQParams &params) {
+        return nTipHeight - nQuorumHeight > params.max_store_depth();
+    }
+
     void CDKGSessionManager::CleanupOldContributions() const
     {
         LOCK(cs_db);
@@ -469,7 +473,7 @@ namespace llmq {
                     }
                     cnt_all++;
                     const CBlockIndex* pindexQuorum = LookupBlockIndex(std::get<2>(k));
-                    if (pindexQuorum == nullptr || ::ChainActive().Tip()->nHeight - pindexQuorum->nHeight > params.max_store_depth()) {
+                    if (pindexQuorum == nullptr || IsContributionExpired(::ChainActive().Tip()->nHeight, pindexQuorum->nHeight, params)) {
                         LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- removing element for llmq type %d\n", __func__, uint8_t(params.type));
 
                         // not found or too old
