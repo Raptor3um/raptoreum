@@ -105,7 +105,8 @@ namespace llmq {
             pendingContributions((size_t) LlmqParamsSize(_params) * 2,MSG_QUORUM_CONTRIB), // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
             pendingComplaints((size_t) LlmqParamsSize(_params) * 2, MSG_QUORUM_COMPLAINT),
             pendingJustifications((size_t) LlmqParamsSize(_params) * 2, MSG_QUORUM_JUSTIFICATION),
-            pendingPrematureCommitments((size_t) LlmqParamsSize(_params) * 2, MSG_QUORUM_PREMATURE_COMMITMENT) {
+            pendingPrematureCommitments((size_t) LlmqParamsSize(_params) * 2, MSG_QUORUM_PREMATURE_COMMITMENT),
+            pendingAbsenceVotes((size_t) LlmqParamsSize(_params) * 2, MSG_QUORUM_ABSENCE_VOTE) {
         if (params.type == Consensus::LLMQType::LLMQ_NONE) {
             throw std::runtime_error("Can't initialize CDKGSessionHandler with LLMQ_NONE type.");
         }
@@ -148,6 +149,8 @@ namespace llmq {
             pendingJustifications.PushPendingMessage(pfrom->GetId(), vRecv);
         } else if (strCommand == NetMsgType::QPCOMMITMENT) {
             pendingPrematureCommitments.PushPendingMessage(pfrom->GetId(), vRecv);
+        } else if (strCommand == NetMsgType::QABSENCEVOTE) {
+            pendingAbsenceVotes.PushPendingMessage(pfrom->GetId(), vRecv);
         }
     }
 
@@ -520,6 +523,7 @@ void CDKGSessionHandler::HandleDKGRound() {
         pendingComplaints.Clear();
         pendingJustifications.Clear();
         pendingPrematureCommitments.Clear();
+        pendingAbsenceVotes.Clear();
         curQuorumHash = quorumHash;
         curQuorumHeight = quorumHeight;
     }
@@ -588,6 +592,37 @@ void CDKGSessionHandler::HandleDKGRound() {
     auto finalCommitments = curSession->FinalizeCommitments();
     for (const auto &fqc: finalCommitments) {
         quorumBlockProcessor->AddMineableCommitment(fqc);
+    }
+
+    // Runs regardless of whether finalCommitments is empty -- this is the
+    // one case FinalizeCommitments() was never meant to cover, and exactly
+    // the case that matters while minSize stays out of reach.
+    curSession->CheckAbsences(pendingAbsenceVotes);
+
+    // Unlike the earlier phases, there's no protocol deadline for absence
+    // votes to arrive by -- they're evidence, not something the round's
+    // own outcome depends on -- so a short, fixed drain window is enough
+    // rather than tying this to a new block-height phase boundary. Other
+    // members reach this same point at roughly the same height, so most
+    // votes that are coming at all arrive within a few seconds of each other.
+    //
+    // Bounded by wall-clock time, not iteration count: ProcessPendingMessageBatch
+    // returns true (meaning "there was work, don't sleep") whenever it popped
+    // anything at all, so a count-based loop can burn through every iteration
+    // in milliseconds under load and never actually wait out the window.
+    int64_t drainEndTime = GetTimeMillis() + 6000;
+    while (GetTimeMillis() < drainEndTime) {
+        if (stopRequested) {
+            break;
+        }
+        if (GetPhaseAndQuorumHash() != std::make_pair(QuorumPhase_Finalize, curQuorumHash)) {
+            // the round has already moved past this point (or aborted) --
+            // nothing left to drain for a session that no longer exists
+            break;
+        }
+        if (!ProcessPendingMessageBatch<CDKGAbsenceVote, MSG_QUORUM_ABSENCE_VOTE>(*curSession, pendingAbsenceVotes, 8)) {
+            UninterruptibleSleep(std::chrono::milliseconds{100});
+        }
     }
 }
 

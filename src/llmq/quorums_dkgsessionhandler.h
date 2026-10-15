@@ -138,6 +138,8 @@ namespace llmq {
         GUARDED_BY(cs);
         CDKGPendingMessages pendingPrematureCommitments
         GUARDED_BY(cs);
+        CDKGPendingMessages pendingAbsenceVotes
+        GUARDED_BY(cs);
 
     public:
         CDKGSessionHandler(const Consensus::LLMQParams &_params, CBLSWorker &_blsWorker,

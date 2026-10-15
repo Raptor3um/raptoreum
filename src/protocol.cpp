@@ -67,6 +67,7 @@ namespace NetMsgType {
     const char *QCOMPLAINT = "qcomplaint";
     const char *QJUSTIFICATION = "qjustify";
     const char *QPCOMMITMENT = "qpcommit";
+    const char *QABSENCEVOTE = "qabsencevote";
     const char *QWATCH = "qwatch";
     const char *QSIGSESANN = "qsigsesann";
     const char *QSIGSHARESINV = "qsigsinv";
@@ -137,6 +138,7 @@ const static std::string allNetMessageTypes[] = {
         NetMsgType::QCOMPLAINT,
         NetMsgType::QJUSTIFICATION,
         NetMsgType::QPCOMMITMENT,
+        NetMsgType::QABSENCEVOTE,
         NetMsgType::QWATCH,
         NetMsgType::QSIGSESANN,
         NetMsgType::QSIGSHARESINV,
@@ -276,6 +278,8 @@ const char *CInv::GetCommandInternal() const {
             return NetMsgType::QJUSTIFICATION;
         case MSG_QUORUM_PREMATURE_COMMITMENT:
             return NetMsgType::QPCOMMITMENT;
+        case MSG_QUORUM_ABSENCE_VOTE:
+            return NetMsgType::QABSENCEVOTE;
         case MSG_QUORUM_RECOVERED_SIG:
             return NetMsgType::QSIGREC;
         case MSG_CLSIG:
