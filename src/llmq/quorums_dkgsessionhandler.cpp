@@ -624,6 +624,19 @@ void CDKGSessionHandler::HandleDKGRound() {
             UninterruptibleSleep(std::chrono::milliseconds{100});
         }
     }
+
+    // Agreeing: turn whatever votes this node ended up holding -- its own
+    // plus however many it received during the window above -- into a
+    // self-verified CDKGAbsenceRecord. minVotes=1 deliberately: even a
+    // lone self-vote is worth keeping and reporting rather than discarding,
+    // for the same severe-dropout-robustness reason Verify() itself never
+    // enforces a minimum (see quorums_dkgabsence.h). Stored, not relayed --
+    // reporting this beyond the local node is the RPC extension in
+    // rpcquorums.cpp for now, and the special transaction later.
+    {
+        LOCK(curSession->invCs);
+        curSession->builtAbsenceRecord = curSession->BuildAbsenceRecord(1);
+    }
 }
 
 void CDKGSessionHandler::PhaseHandlerThread() {

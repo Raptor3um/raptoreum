@@ -77,6 +77,14 @@ namespace llmq {
 
         bool GetAbsenceVote(const uint256 &hash, CDKGAbsenceVote &ret) const;
 
+        // Unlike GetAbsenceVote (one specific message, looked up by hash,
+        // for serving GETDATA), this returns the CURRENT session's own
+        // already-built, already-self-verified record for the given type --
+        // set once by HandleDKGRound, see quorums_dkgsessionhandler.cpp.
+        // False if this node isn't running that type, hasn't reached
+        // Finalize yet this round, or was never a member of this session.
+        bool GetAbsenceRecord(Consensus::LLMQType llmqType, CDKGAbsenceRecord &ret) const;
+
         // Contributions are written while in the DKG
         void WriteVerifiedVvecContribution(Consensus::LLMQType llmqType, const CBlockIndex *pQuorumBaseBlockIndex,
                                            const uint256 &proTxHash, const BLSVerificationVectorPtr &vvec);
