@@ -63,7 +63,7 @@ TEST_EXIT_PASSED = 0
 TEST_EXIT_FAILED = 1
 TEST_EXIT_SKIPPED = 77
 
-GENESISTIME = 1417713337
+GENESISTIME = 1614369600  # RTM regtest genesis (src/chainparams.cpp CRegTestParams)
 
 class BitcoinTestFramework():
     """Base class for a bitcoin test script.
