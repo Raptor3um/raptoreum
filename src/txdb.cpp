@@ -18,6 +18,7 @@
 #include <ui_interface.h>
 
 #include <stdint.h>
+#include <limits>
 
 #include <boost/thread.hpp>
 
@@ -307,7 +308,7 @@ bool CBlockTreeDB::ReadAddressUnspentIndex(uint160 addressHash, int type,
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         std::pair<char, CAddressUnspentKey> key;
-        if (pcursor->GetKey(key) && key.first == DB_ADDRESSUNSPENTINDEX && key.second.hashBytes == addressHash) {
+        if (pcursor->GetKey(key) && key.first == DB_ADDRESSUNSPENTINDEX && key.second.type == type && key.second.hashBytes == addressHash) {
             CAddressUnspentValue nValue;
             if (pcursor->GetValue(nValue)) {
                 unspentOutputs.push_back(std::make_pair(key.second, nValue));
@@ -345,18 +346,22 @@ bool CBlockTreeDB::ReadAddressIndex(uint160 addressHash, int type,
 
     std::unique_ptr <CDBIterator> pcursor(NewIterator());
 
-    if (start > 0 && end > 0) {
-        pcursor->Seek(std::make_pair(DB_ADDRESSINDEX, CAddressIndexIteratorHeightKey(type, addressHash, start)));
-    } else {
-        pcursor->Seek(std::make_pair(DB_ADDRESSINDEX, CAddressIndexIteratorKey(type, addressHash)));
-    }
+    pcursor->Seek(std::make_pair(DB_ADDRESSINDEX, CAddressIndexIteratorKey(type, addressHash)));
 
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         std::pair<char, CAddressIndexKey> key;
-        if (pcursor->GetKey(key) && key.first == DB_ADDRESSINDEX && key.second.hashBytes == addressHash) {
+        if (pcursor->GetKey(key) && key.first == DB_ADDRESSINDEX && key.second.type == type && key.second.hashBytes == addressHash) {
+            if (start > 0 && end > 0 && key.second.blockHeight < start) {
+                pcursor->Seek(std::make_pair(DB_ADDRESSINDEX, CAddressIndexIteratorHeightKey(
+                        key.second.type, addressHash, key.second.asset, start)));
+                continue;
+            }
             if (end > 0 && key.second.blockHeight > end) {
-                break;
+                // Stored heights are nonnegative ints; UINT32_MAX is past this asset's last entry.
+                pcursor->Seek(std::make_pair(DB_ADDRESSINDEX, CAddressIndexIteratorHeightKey(
+                        key.second.type, addressHash, key.second.asset, std::numeric_limits<uint32_t>::max())));
+                continue;
             }
             CAmount nValue;
             if (pcursor->GetValue(nValue)) {
