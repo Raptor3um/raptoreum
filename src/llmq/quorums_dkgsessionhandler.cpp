@@ -349,6 +349,19 @@ namespace llmq {
                  params.name, curPhase, nextPhase);
     }
 
+bool AllNodeIdsMatch(const std::vector<NodeId> &nodeIds, NodeId &soleNodeId) {
+    if (nodeIds.empty()) {
+        return true;
+    }
+    soleNodeId = nodeIds.front();
+    for (NodeId id : nodeIds) {
+        if (id != soleNodeId) {
+            return false;
+        }
+    }
+    return true;
+}
+
 // returns a set of NodeIds which sent invalid messages
     template<typename Message>
     std::set <NodeId> BatchVerifyMessageSigs(CDKGSession &session, const std::vector <std::pair<NodeId, std::shared_ptr < Message>>>& messages) {
@@ -405,24 +418,16 @@ namespace llmq {
             return ret;
         }
 
-        // are all messages from the same node?
-        NodeId firstNodeId;
-        first = true;
-        bool nodeIdsAllSame = true;
-        for (auto it = messages.begin(); it != messages.end(); ++it) {
-            if (first) {
-                firstNodeId = it->first;
-            } else {
-                first = false;
-                if (it->first != firstNodeId) {
-                    nodeIdsAllSame = false;
-                    break;
-                }
-            }
+        // are all messages from the same node? if so, take a short path and
+        // return a set with only him
+        std::vector<NodeId> nodeIds;
+        nodeIds.reserve(messages.size());
+        for (const auto &p : messages) {
+            nodeIds.emplace_back(p.first);
         }
-        // if yes, take a short path and return a set with only him
-        if (nodeIdsAllSame) {
-            ret.emplace(firstNodeId);
+        NodeId soleNodeId;
+        if (AllNodeIdsMatch(nodeIds, soleNodeId)) {
+            ret.emplace(soleNodeId);
             return ret;
         }
         // different nodes, let's figure out who are the bad ones
