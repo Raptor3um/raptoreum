@@ -86,6 +86,7 @@ BITCOIN_TESTS =\
   test/pow_tests.cpp \
   test/prevector_tests.cpp \
   test/quorums_dkgabsence_tests.cpp \
+  test/quorums_dkgsessionhandler_tests.cpp \
   test/quorums_dkgsessionmgr_tests.cpp \
   test/raii_event_tests.cpp \
   test/random_tests.cpp \
