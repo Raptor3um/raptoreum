@@ -28,14 +28,13 @@
 
 CChain &ChainActive();
 
-static bool
-checkSpecialTxFee(const CTransaction &tx, CAmount &nFeeTotal, CAmount &specialTxFee, bool fFeeVerify = false) {
+bool Consensus::CheckSpecialTxFee(const CTransaction &tx, CAmount &nFeeTotal, CAmount &specialTxFee, bool fFeeVerify) {
     if (tx.nVersion >= 3) {
         switch (tx.nType) {
             case TRANSACTION_FUTURE: {
                 CFutureTx ftx;
                 if (GetTxPayload(tx.vExtraPayload, ftx)) {
-                    if (!Params().IsFutureActive(::ChainActive().Tip())) {
+                    if (!::Params().IsFutureActive(::ChainActive().Tip())) {
                         return false;
                     }
                     bool futureEnabled = sporkManager.IsSporkActive(SPORK_22_SPECIAL_TX_FEE);
@@ -392,7 +391,7 @@ bool Consensus::CheckTxInputs(const CTransaction &tx, CValidationState &state, c
     }
     txfee = txfee_aux;
 
-    if (!checkSpecialTxFee(tx, txfee, specialTxFee, fFeeVerify)) {
+    if (!CheckSpecialTxFee(tx, txfee, specialTxFee, fFeeVerify)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-wrong-future-fee-or-not-enable");
     }
 
