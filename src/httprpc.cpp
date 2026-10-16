@@ -142,33 +142,85 @@ static bool RPCAuthorized(const std::string &strAuth, std::string &strAuthUserna
     return multiUserAuthorized(strUserPass);
 }
 
+// The unauthenticated EVM RPC port may ONLY reach the Ethereum-
+// compatible namespace. This is the security boundary that lets us
+// serve MetaMask/ethers without HTTP auth: a request that slips onto
+// that port can never call wallet, stop, debug or any admin RPC.
+static bool IsEvmNamespaceMethod(const std::string &m) {
+    return m.rfind("eth_", 0) == 0 ||
+           m.rfind("net_", 0) == 0 ||
+           m.rfind("web3_", 0) == 0;
+}
+
+// Pre-scan a parsed JSON-RPC payload (singleton object or batch array)
+// and reject it unless every method is in the EVM namespace. Throws a
+// JSONRPCError (handled by the normal error path) on the first
+// offending element.
+static void EnforceEvmNamespace(const UniValue &valRequest) {
+    auto check = [](const UniValue &one) {
+        const UniValue &m = find_value(one, "method");
+        if (!m.isStr() || !IsEvmNamespaceMethod(m.get_str())) {
+            throw JSONRPCError(RPC_METHOD_NOT_FOUND,
+                "Only eth_/net_/web3_ methods are available on the "
+                "unauthenticated EVM RPC port");
+        }
+    };
+    if (valRequest.isObject()) {
+        check(valRequest);
+    } else if (valRequest.isArray()) {
+        for (size_t i = 0; i < valRequest.size(); ++i) {
+            check(valRequest[i]);
+        }
+    }
+}
+
 static bool HTTPReq_JSONRPC(const util::Ref &context, HTTPRequest *req) {
     // JSONRPC handles only POST
     if (req->GetRequestMethod() != HTTPRequest::POST) {
         req->WriteReply(HTTP_BAD_METHOD, "JSONRPC server handles only POST requests");
         return false;
     }
-    // Check authorization
-    std::pair<bool, std::string> authHeader = req->GetHeader("authorization");
-    if (!authHeader.first) {
-        req->WriteHeader("WWW-Authenticate", WWW_AUTH_HEADER_DATA);
-        req->WriteReply(HTTP_UNAUTHORIZED);
-        return false;
-    }
+
+    // EVM RPC port: MetaMask / ethers / viem / web3.js expect a plain,
+    // unauthenticated JSON-RPC endpoint. We serve it on -evmrpcport
+    // (default 8545, loopback-only unless explicitly bound wider)
+    // WITHOUT HTTP basic auth, but STRICTLY restricted to the
+    // eth_/net_/web3_ namespace (enforced after parse). Operators who
+    // expose the port off-loopback can still require auth on it via
+    // -evmrpcauth. The admin RPC port is unaffected and stays
+    // authenticated.
+    static const int64_t evmRpcPort = gArgs.GetArg("-evmrpcport", 8545);
+    static const bool evmPortRequiresAuth =
+        gArgs.GetBoolArg("-evmrpcauth", false);
+    const int localPort = req->GetLocalPort();
+    const bool unauthEvm = evmRpcPort > 0 &&
+                           localPort == static_cast<int>(evmRpcPort) &&
+                           !evmPortRequiresAuth;
 
     JSONRPCRequest jreq(context);
     jreq.peerAddr = req->GetPeer().ToString();
-    if (!RPCAuthorized(authHeader.second, jreq.authUser)) {
-        LogPrintf("ThreadRPCServer incorrect password attempt from %s\n", jreq.peerAddr);
 
-        /* Deter brute-forcing
-           If this results in a DoS the user really
-           shouldn't have their RPC port exposed. */
-        UninterruptibleSleep(std::chrono::milliseconds{250});
+    if (!unauthEvm) {
+        // Check authorization
+        std::pair<bool, std::string> authHeader = req->GetHeader("authorization");
+        if (!authHeader.first) {
+            req->WriteHeader("WWW-Authenticate", WWW_AUTH_HEADER_DATA);
+            req->WriteReply(HTTP_UNAUTHORIZED);
+            return false;
+        }
 
-        req->WriteHeader("WWW-Authenticate", WWW_AUTH_HEADER_DATA);
-        req->WriteReply(HTTP_UNAUTHORIZED);
-        return false;
+        if (!RPCAuthorized(authHeader.second, jreq.authUser)) {
+            LogPrintf("ThreadRPCServer incorrect password attempt from %s\n", jreq.peerAddr);
+
+            /* Deter brute-forcing
+               If this results in a DoS the user really
+               shouldn't have their RPC port exposed. */
+            UninterruptibleSleep(std::chrono::milliseconds{250});
+
+            req->WriteHeader("WWW-Authenticate", WWW_AUTH_HEADER_DATA);
+            req->WriteReply(HTTP_UNAUTHORIZED);
+            return false;
+        }
     }
 
     try {
@@ -176,6 +228,12 @@ static bool HTTPReq_JSONRPC(const util::Ref &context, HTTPRequest *req) {
         UniValue valRequest;
         if (!valRequest.read(req->ReadBody()))
             throw JSONRPCError(RPC_PARSE_ERROR, "Parse error");
+
+        // Unauthenticated EVM port: hard-restrict to the EVM namespace
+        // BEFORE any method executes.
+        if (unauthEvm) {
+            EnforceEvmNamespace(valRequest);
+        }
 
         // Set the URI
         jreq.URI = req->GetURI();

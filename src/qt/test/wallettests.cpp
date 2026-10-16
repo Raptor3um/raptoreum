@@ -108,14 +108,14 @@ namespace {
 //     QT_QPA_PLATFORM=xcb     src/qt/test/test_raptoreum-qt  # Linux
 //     QT_QPA_PLATFORM=windows src/qt/test/test_raptoreum-qt  # Windows
 //     QT_QPA_PLATFORM=cocoa   src/qt/test/test_raptoreum-qt  # macOS
-    void TestGUI(interfaces::Node &node) {
+    void TestGUI() {
         // Set up wallet and chain with 105 blocks (5 mature blocks for spending).
         TestChain100Setup test;
+        auto node_interface = interfaces::MakeNode(&test.m_node);
+        interfaces::Node &node = *node_interface;
         for (int i = 0; i < 5; ++i) {
             test.CreateAndProcessBlock({}, GetScriptForRawPubKey(test.coinbaseKey.GetPubKey()));
         }
-        node.context()->connman = std::move(test.m_node.connman);
-        node.context()->mempool = std::move(test.m_node.mempool);
         std::shared_ptr <CWallet> wallet = std::make_shared<CWallet>(node.context()->chain.get(), WalletLocation(),
                                                                      CreateMockWalletDatabase());
         AddWallet(wallet);
@@ -232,5 +232,5 @@ void WalletTests::walletTests() {
       return;
     }
 #endif
-    TestGUI(m_node);
+    TestGUI();
 }

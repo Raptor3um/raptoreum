@@ -60,6 +60,11 @@ class CValidationState;
 
 class ChainstateManager;
 
+namespace evm {
+class CEvmStateDB;
+class CEvmStateCache;
+} // namespace evm
+
 struct PrecomputedTransactionData;
 
 class CTxUndo;
@@ -759,10 +764,12 @@ public:
 
     // Block (dis)connection on a given view:
     DisconnectResult DisconnectBlock(const CBlock &block, const CBlockIndex *pindex, CCoinsViewCache &view,
-                                     CAssetsCache *assetsCache = nullptr);
+                                     CAssetsCache *assetsCache = nullptr,
+                                     evm::CEvmStateCache *evmStateCache = nullptr);
 
     bool ConnectBlock(const CBlock &block, CValidationState &state, CBlockIndex *pindex, CCoinsViewCache &view,
-                      const CChainParams &chainparams, CAssetsCache *assetsCache = nullptr, bool fJustCheck = false);
+                      const CChainParams &chainparams, CAssetsCache *assetsCache = nullptr, bool fJustCheck = false,
+                      evm::CEvmStateCache *evmStateCache = nullptr);
 
     // Apply the effects of a block disconnection on the UTXO set.
     bool DisconnectTip(CValidationState &state, const CChainParams &chainparams,
@@ -1124,6 +1131,13 @@ extern std::unique_ptr <CAssetsDB> passetsdb;
 
 /** Global variable that point to the active assets cache (protected by cs_main) */
 extern std::unique_ptr <CAssetsCache> passetsCache;
+
+/** Global variable that points to the active EVM state database
+ *  (protected by cs_main). Lifetime mirrors `passetsdb`: instantiated
+ *  in AppInitMain after the chainstate is opened, reset in
+ *  PrepareShutdown. Block-local CEvmStateCaches are layered over
+ *  this pointer for per-block EVM execution. */
+extern std::unique_ptr<evm::CEvmStateDB> pevmstatedb;
 
 /**
  * Return the spend height, which is one more than the inputs.GetBestBlock().

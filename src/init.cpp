@@ -82,6 +82,7 @@
 #include <walletinitinterface.h>
 #include <assets/assets.h>
 #include <assets/assetsdb.h>
+#include <evm/state_db.h>
 
 #include <evo/deterministicmns.h>
 #include <llmq/quorums.h>
@@ -324,6 +325,7 @@ void PrepareShutdown(NodeContext &node) {
         pblocktree.reset();
         passetsdb.reset();
         passetsCache.reset();
+        pevmstatedb.reset();
         llmq::DestroyLLMQSystem();
         deterministicMNManager.reset();
         evoDb.reset();
@@ -942,6 +944,27 @@ void SetupServerArgs() {
                  strprintf("Listen for JSON-RPC connections on <port> (default: %u, testnet: %u, regtest: %u)",
                            defaultBaseParams->RPCPort(), testnetBaseParams->RPCPort(), regtestBaseParams->RPCPort()),
                  ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::RPC);
+    gArgs.AddArg("-evmrpcport=<port>",
+                 "Open an additional JSON-RPC listener on <port> for the "
+                 "Ethereum-compatible namespace only (eth_/net_/web3_). "
+                 "Unauthenticated by default (MetaMask / ethers / viem / "
+                 "web3.js connect without credentials) and STRICTLY "
+                 "restricted to that namespace, so it can never reach "
+                 "wallet, stop, debug or admin RPCs. Defaults to 8545 "
+                 "(the Ethereum-default port), loopback-only unless bound "
+                 "wider. Set to 0 to disable.",
+                 ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
+    gArgs.AddArg("-evmrpcbind=<addr>[:port]",
+                 "Additional bind address for the EVM-port JSON-RPC listener. "
+                 "Same semantics as -rpcbind but applies to -evmrpcport. "
+                 "Defaults to the same addresses as -rpcbind.",
+                 ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
+    gArgs.AddArg("-evmrpcauth",
+                 "Also require HTTP basic auth (the same -rpcuser/-rpcauth "
+                 "credentials) on the EVM RPC port. Off by default so "
+                 "wallets work out of the box; enable this if you expose "
+                 "-evmrpcport off loopback. (default: 0)",
+                 ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
     gArgs.AddArg("-rpcservertimeout=<n>",
                  strprintf("Timeout during HTTP requests (default: %d)", DEFAULT_HTTP_SERVER_TIMEOUT),
                  ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::RPC);
@@ -2191,6 +2214,12 @@ bool AppInitMain(const util::Ref &context, NodeContext &node, interfaces::BlockA
                     strLoadError = _("Failed to load Assets Database");
                     break;
                 }
+
+                // Phase 2.4e — open the EVM state database. Lives at
+                // <datadir>/evmstate/. Stays in step with passetsdb's
+                // open/reset cycle: a chain reset wipes both.
+                pevmstatedb.reset();
+                pevmstatedb.reset(new evm::CEvmStateDB(nBlockTreeDBCache, false, fReset));
 
                 llmq::DestroyLLMQSystem();
                 // Same logic as above with pblocktree

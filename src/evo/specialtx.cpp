@@ -10,6 +10,7 @@
 #include <hash.h>
 #include <primitives/block.h>
 #include <validation.h>
+#include <evm/evmtx.h>
 #include <evo/cbtx.h>
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_commitment.h>
@@ -46,6 +47,18 @@ bool CheckSpecialTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CVali
                 return CheckUpdateAssetTx(tx, pindexPrev, state, view, assetsCache);
             case TRANSACTION_MINT_ASSET:
                 return CheckMintAssetTx(tx, pindexPrev, state, view, assetsCache);
+            case TRANSACTION_EVM_DEPLOY:
+                return evm::CheckEvmDeployTx(tx, pindexPrev, state);
+            case TRANSACTION_EVM_CALL:
+                return evm::CheckEvmCallTx(tx, pindexPrev, state);
+            case TRANSACTION_EVM_SPEND:
+                return evm::CheckEvmSpendTx(tx, pindexPrev, state);
+            case TRANSACTION_EVM_FUND:
+                return evm::CheckEvmFundTx(tx, pindexPrev, state);
+            case TRANSACTION_WRAP_ASSET:
+                return evm::CheckWrapAssetTx(tx, pindexPrev, state, view, assetsCache);
+            case TRANSACTION_UNWRAP_ASSET:
+                return evm::CheckUnwrapAssetTx(tx, pindexPrev, state, view, assetsCache);
         }
     } catch (const std::exception &e) {
         LogPrintf("%s -- failed: %s\n", __func__, e.what());
@@ -78,6 +91,17 @@ bool ProcessSpecialTx(const CTransaction &tx, const CBlockIndex *pindex, CValida
             return true;
         case TRANSACTION_MINT_ASSET:
             return true;
+        case TRANSACTION_EVM_DEPLOY:
+        case TRANSACTION_EVM_CALL:
+        case TRANSACTION_EVM_SPEND:
+        case TRANSACTION_EVM_FUND:
+        case TRANSACTION_WRAP_ASSET:
+        case TRANSACTION_UNWRAP_ASSET:
+            // EVM state changes are applied in ConnectBlock via the EVM
+            // pipeline (ProcessEvmTransactionsInBlock + ApplyEvm*Tx), not
+            // here — this hook only validates structure. The UTXO-side
+            // asset burn/mint of wrap/unwrap is handled by AddAssets.
+            return true;
     }
     return state.DoS(100, false, REJECT_INVALID, "bad-tx-type-proc");
 }
@@ -104,6 +128,17 @@ bool UndoSpecialTx(const CTransaction &tx, const CBlockIndex *pindex) {
         case TRANSACTION_UPDATE_ASSET:
             return true;
         case TRANSACTION_MINT_ASSET:
+            return true;
+        case TRANSACTION_EVM_DEPLOY:
+        case TRANSACTION_EVM_CALL:
+        case TRANSACTION_EVM_SPEND:
+        case TRANSACTION_EVM_FUND:
+        case TRANSACTION_WRAP_ASSET:
+        case TRANSACTION_UNWRAP_ASSET:
+            // EVM state changes are undone via the EVM reorg journal
+            // (CEvmStateUndo / ApplyUndoToDB) in DisconnectBlock, not here.
+            // The UTXO-side asset burn/mint reverts via the normal
+            // input-restore / output-removal path in DisconnectBlock.
             return true;
     }
     return false;

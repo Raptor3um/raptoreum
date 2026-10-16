@@ -188,11 +188,20 @@ enum opcodetype {
     //asset
     OP_ASSET_ID = 0xbc,
 
+    //evm (Phase 1 scaffolding; execution lands in Phase 2 per docs/evm/PLAN.md).
+    //Each opcode accompanies the corresponding special transaction type:
+    //  OP_EVMCREATE -> TRANSACTION_EVM_DEPLOY  (deploy a new contract)
+    //  OP_EVMCALL   -> TRANSACTION_EVM_CALL    (invoke a contract)
+    //  OP_EVMSPEND  -> TRANSACTION_EVM_SPEND   (move RTM from EVM acct to UTXO)
+    OP_EVMCREATE = 0xbd,
+    OP_EVMCALL = 0xbe,
+    OP_EVMSPEND = 0xbf,
+
     OP_INVALIDOPCODE = 0xff,
 };
 
 // Maximum value that an opcode can be
-static const unsigned int MAX_OPCODE = OP_ASSET_ID;
+static const unsigned int MAX_OPCODE = OP_EVMSPEND;
 
 const char *GetOpName(opcodetype opcode);
 
