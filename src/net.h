@@ -958,6 +958,7 @@ public:
 /** Information about a peer */
 class CNode {
     friend class CConnman;
+    friend struct CConnmanTest;
 
 public:
     // socket

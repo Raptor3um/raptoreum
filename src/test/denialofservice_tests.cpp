@@ -24,6 +24,11 @@
 #include <unistd.h>
 #endif
 
+#ifndef WIN32
+#include <sys/socket.h>
+#include <unistd.h>
+#endif
+
 #include <boost/test/unit_test.hpp>
 
 struct CConnmanTest : public CConnman {
@@ -41,6 +46,16 @@ struct CConnmanTest : public CConnman {
         }
         vNodes.clear();
     }
+
+    size_t CallSocketRecvData(CNode *pnode) { return SocketRecvData(pnode); }
+
+    bool NodeHasRecvData(CNode *pnode) { return pnode->fHasRecvData; }
+
+    // SocketRecvData() itself only ever clears this; it's set true by the
+    // recv_set-processing loop in SocketHandler() before SocketRecvData() is
+    // ever called on a node. Calling SocketRecvData() directly, as this test
+    // file does, bypasses that -- so the precondition has to be seeded here.
+    void SetNodeHasRecvData(CNode *pnode, bool v) { pnode->fHasRecvData = v; }
 
 #ifdef USE_WAKEUP_PIPE
     // CConnman's own wakeupPipe is only opened by Start(), which also spins up the real
@@ -573,5 +588,52 @@ BOOST_AUTO_TEST_CASE(process_messages_does_not_wake_select_when_nothing_was_paus
         peerLogic->FinalizeNode(node.GetId(), dummy);
         }
 #endif // USE_WAKEUP_PIPE
+
+#ifndef WIN32
+// Regression test for SocketRecvData() clearing receive-readiness on a merely
+// short read. recv() on a stream socket never promises to fill the caller's
+// buffer, so a positive read shorter than the buffer is the normal case, not
+// a signal that nothing more is coming -- that can only be learned from the
+// kernel returning 0 (closed) or WOULDBLOCK (drained for now). Under a
+// level-triggered backend this went unnoticed, since the socket keeps being
+// reported ready regardless of our own bookkeeping; under an edge-triggered
+// one (kqueue with EV_CLEAR, epoll with EPOLLET -- the latter already the
+// default here for peer sockets) clearing readiness on a short final read
+// means recv()'s terminating 0, and the FIN it represents, might never be
+// collected. A real AF_UNIX socketpair reproduces the exact byte-level shape:
+// one short, positive read (the peer's last bytes) followed by a second call
+// that must see the close.
+BOOST_AUTO_TEST_CASE(socket_recv_data_keeps_readiness_after_a_short_read) {
+    int fds[2];
+    BOOST_REQUIRE_EQUAL(socketpair(AF_UNIX, SOCK_STREAM, 0, fds), 0);
+
+    const char payload[] = "final bytes";
+    BOOST_REQUIRE_EQUAL(write(fds[1], payload, sizeof(payload)), (ssize_t) sizeof(payload));
+    BOOST_REQUIRE_EQUAL(shutdown(fds[1], SHUT_WR), 0);
+
+    auto connman = MakeUnique<CConnmanTest>(0x1337, 0x1337);
+    CAddress addr(ip(0xa0b0c004), NODE_NONE);
+    auto node = std::make_unique<CNode>(id++, ServiceFlags(NODE_NETWORK), 0, (SOCKET) fds[0], addr, 0, 0,
+                                         CAddress(), "", /*fInboundIn=*/ true);
+    connman->SetNodeHasRecvData(node.get(), true);
+
+    // First call: the peer's final bytes are already queued, so recv() returns
+    // them -- short relative to the 64K buffer, but readiness must not be
+    // cleared on that basis alone, or nothing will ever ask again.
+    size_t n1 = connman->CallSocketRecvData(node.get());
+    BOOST_CHECK_EQUAL(n1, sizeof(payload));
+    BOOST_CHECK(connman->NodeHasRecvData(node.get()));
+    BOOST_CHECK(!node->fOtherSideDisconnected);
+
+    // Second call: nothing left to read and the peer has closed -- recv() now
+    // returns 0, which is what actually closes the connection.
+    size_t n2 = connman->CallSocketRecvData(node.get());
+    BOOST_CHECK_EQUAL(n2, 0);
+    BOOST_CHECK(!connman->NodeHasRecvData(node.get()));
+    BOOST_CHECK(node->fOtherSideDisconnected);
+
+    close(fds[1]);
+}
+#endif // !WIN32
 
 BOOST_AUTO_TEST_SUITE_END()

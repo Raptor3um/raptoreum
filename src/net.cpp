@@ -1421,17 +1421,35 @@ void CConnman::SocketEventsKqueue(std::set<SOCKET> &recv_set, std::set<SOCKET> &
     } else if (n > 0) {
         for (int i = 0; i < n; i++) {
             auto& event = events[i];
-            if ((event.flags & EV_ERROR) || (event.flags & EV_EOF)) {
+            if (event.flags & EV_ERROR) {
                 error_set.insert((SOCKET)event.ident);
                 continue;
             }
 
             if (event.filter == EVFILT_READ) {
+                // EV_EOF here means the peer's FIN arrived alongside (or
+                // instead of) readable data -- not an error. Routing it to
+                // recv_set like any other readable event, instead of
+                // error_set, keeps the node in the normal receivable-node
+                // path (mapReceivableNodes/fHasRecvData) so SocketRecvData()
+                // gets called again on it next pass. Reporting it via
+                // error_set only calls SocketRecvData() once for this
+                // event; with EV_CLEAR now set, that one call -- or the
+                // positive read it returns -- is the last signal this
+                // socket ever gets, so a final recv()==0 to actually
+                // consume the EOF and close the connection might never run.
                 recv_set.insert((SOCKET)event.ident);
+                continue;
             }
 
             if (event.filter == EVFILT_WRITE) {
-                send_set.insert((SOCKET)event.ident);
+                if (event.flags & EV_EOF) {
+                    // peer closed or half-closed while we still had bytes
+                    // queued to send -- treat like any other write-side error.
+                    error_set.insert((SOCKET)event.ident);
+                } else {
+                    send_set.insert((SOCKET)event.ident);
+                }
             }
         }
     }
@@ -1815,12 +1833,26 @@ size_t CConnman::SocketRecvData(CNode *pnode) {
     // typical socket buffer is 8K-64K
     char pchBuf[0x10000];
     int nBytes = 0;
+    int nErr = 0;
     {
         LOCK(pnode->cs_hSocket);
         if (pnode->hSocket == INVALID_SOCKET)
             return 0;
         nBytes = recv(pnode->hSocket, pchBuf, sizeof(pchBuf), MSG_DONTWAIT);
-        if (nBytes < (int) sizeof(pchBuf)) {
+        nErr = WSAGetLastError();
+        // A short, positive read is not evidence the peer is done -- recv()
+        // on a stream socket never promises to fill the buffer, so this is
+        // the normal case, not a signal. Clearing readiness here, before the
+        // kernel actually reports "nothing more right now" (WOULDBLOCK) or
+        // "closed" (0), can drop a node out of mapReceivableNodes with its
+        // final bytes read but its FIN never consumed -- harmless under a
+        // level-triggered backend, which keeps re-reporting the socket
+        // regardless of this flag, but silent under an edge-triggered one
+        // (kqueue with EV_CLEAR, epoll with EPOLLET), which won't signal
+        // again until new data arrives. The connection then lingers open
+        // until an unrelated send draws an RST or the inactivity timeout
+        // notices, instead of closing when the peer actually said goodbye.
+        if (nBytes == 0 || (nBytes < 0 && nErr == WSAEWOULDBLOCK)) {
             pnode->fHasRecvData = false;
         }
     }
@@ -1856,8 +1888,7 @@ size_t CConnman::SocketRecvData(CNode *pnode) {
         pnode->fOtherSideDisconnected = true; // avoid lingering
         pnode->CloseSocketDisconnect(this);
     } else if (nBytes < 0) {
-        // error
-        int nErr = WSAGetLastError();
+        // error (nErr captured above, alongside the same recv() call)
         if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS) {
             if (!pnode->fDisconnect) {
                 LogPrint(BCLog::NET, "socket recv error for peer=%d: %s\n", pnode->GetId(), NetworkErrorString(nErr));
