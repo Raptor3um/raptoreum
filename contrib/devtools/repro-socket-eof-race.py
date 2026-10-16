@@ -19,19 +19,21 @@ something unrelated notices (an outbound send drawing an RST, or the
 inactivity timeout), rather than closing when the peer actually said
 goodbye, which could be minutes.
 
-Expected to reproduce on macOS/FreeBSD (kqueue). It was ALSO expected to
-reproduce on Linux, since this codebase's peer-socket epoll registration is
-already edge-triggered (EPOLLET) for the same reason -- but a live run here,
-against a binary with only the old heuristic reverted (not a real kqueue
-build), did not show the lingering effect: the node correctly logged "socket
-closed for peer" and disconnected immediately every time this was tried.
-Something about epoll's own handling of a closing TCP socket's readiness
-appears to re-signal it in a way kqueue's EV_CLEAR, per its own documented
-semantics, does not -- that difference isn't fully understood, not
-disproven. Kept running on Linux anyway: it still covers the shared
-heuristic fix (harmless to confirm), and the gap it was built to catch is on
-kqueue specifically, which this script cannot build or run outside
-USE_KQUEUE.
+This script never reproduced the lingering connection, on Linux or on real
+macOS/arm64 hardware, across five separate live attempts (with the heuristic
+reverted alone, and with it and the kqueue EV_EOF-routing fix below both
+reverted together) -- not because the bug isn't real, but because sendall()
+immediately followed by close() leaves the OS free to transmit the final
+data and the FIN as two separate segments, and a second, independent
+notification covering the FIN gives SocketRecvData() another chance
+regardless of any of these fixes. Root-caused by example, not by guessing:
+repro-socket-eof-race.c, a lower-level companion using TCP_NOPUSH/TCP_CORK
+to force the final write and the close into one segment instead of leaving
+it to transmit-scheduling luck, reproduced a clean, consistent ~3.3s
+lingering close on Linux with just the heuristic reverted (0.0s with it
+fixed) across three repeated runs each way. Use that one for an actual
+before/after comparison; this script is kept for the simpler setup
+(no C toolchain needed) where forcing the exact race isn't the point.
 
 A second, kqueue-only bug lived alongside the heuristic one: read-side
 EV_EOF was routed to error_set, which only called SocketRecvData() once for
