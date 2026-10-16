@@ -107,7 +107,8 @@ def all_interfaces():
             max_possible *= 2
         else:
             break
-    namestr = names.tostring()
+    # array.tostring() was removed in Python 3.9; tobytes() is the same thing.
+    namestr = names.tobytes()
     return [(namestr[i:i+16].split(b'\0', 1)[0],
              socket.inet_ntoa(namestr[i+20:i+24]))
             for i in range(0, outbytes, struct_size)]
