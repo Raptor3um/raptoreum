@@ -582,12 +582,17 @@ static UniValue smartnodelist(const JSONRPCRequest &request) {
 
     mnList.ForEachMN(false, [&](const CDeterministicMNCPtr &dmn) {
         std::string strOutpoint = dmn->collateralOutpoint.ToStringShort();
-        Coin coin;
         std::string collateralAddressStr = "UNKNOWN";
-        if (GetUTXOCoin(dmn->collateralOutpoint, coin)) {
-            CTxDestination collateralDest;
-            if (ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
-                collateralAddressStr = EncodeDestination(collateralDest);
+        // Only the "json" mode reports the collateral address, so skip the UTXO
+        // lookup (which takes cs_main and may hit the coins database) for every
+        // other mode instead of doing it once per smartnode and discarding it.
+        if (strMode == "json") {
+            Coin coin;
+            if (GetUTXOCoin(dmn->collateralOutpoint, coin)) {
+                CTxDestination collateralDest;
+                if (ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
+                    collateralAddressStr = EncodeDestination(collateralDest);
+                }
             }
         }
 
