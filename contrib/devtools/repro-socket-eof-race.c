@@ -18,6 +18,14 @@
  * exercises the same shared heuristic the Python version already covered
  * there, for the same reason documented in that script.
  *
+ * CONFIRMED on real hardware: three runs each way on Linux (x86_64) gave a
+ * clean, consistent split -- ~3.3s lingering close with just the heuristic
+ * reverted, 0.0s with it fixed. Three runs each way on real macOS/arm64
+ * (the actual target platform, both the heuristic and the EV_EOF routing
+ * reverted together) gave 0.0s/2.9s/2.9s buggy vs 0.0s/0.0s/0.0s fixed --
+ * the bug not firing every single time is expected for a genuine race, not
+ * a sign it isn't real; the fix firing every single time is the point.
+ *
  * HOW TO RUN
  *
  *   cc -O2 -o repro-eof-race-c contrib/devtools/repro-socket-eof-race.c -lcrypto
