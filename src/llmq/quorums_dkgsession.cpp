@@ -1457,6 +1457,8 @@ namespace llmq {
     }
 
     CDKGAbsenceRecordPtr CDKGSession::BuildAbsenceRecord(size_t minVotes) const {
+        CDKGLogger logger(*this, __func__);
+
         auto record = std::make_unique<CDKGAbsenceRecord>();
         record->llmqType = params.type;
         record->quorumHash = m_quorum_base_block_index->GetBlockHash();
@@ -1469,6 +1471,7 @@ namespace llmq {
             LOCK(invCs);
 
             if (absenceVotes.size() < minVotes) {
+                logger.Batch("not enough votes to build a record yet (%d < %d)", absenceVotes.size(), minVotes);
                 return nullptr;
             }
 
@@ -1489,9 +1492,12 @@ namespace llmq {
             // should never happen if every stored vote already passed
             // PreVerifyMessage/ReceiveMessage, but never hand back a record
             // that fails its own self-check
+            logger.Batch("built record failed its own Verify() -- discarding, this should never happen");
             return nullptr;
         }
 
+        logger.Batch("absence record built. confirmedAbsentCount=%d, voteCount=%d", record->CountConfirmedAbsent(),
+                     record->votes.size());
         return record;
     }
 
