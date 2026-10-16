@@ -40,7 +40,8 @@ runs:
 
     - name: Build
       shell: bash
-      run: make -j$(nproc)
+      # nproc is GNU coreutils and is absent on macOS; hw.ncpu is the BSD equivalent
+      run: make -j$(nproc 2>/dev/null || sysctl -n hw.ncpu)
 
     - name: Save ccache cache
       uses: actions/cache/save@v4
