@@ -633,9 +633,23 @@ void CDKGSessionHandler::HandleDKGRound() {
     // enforces a minimum (see quorums_dkgabsence.h). Stored, not relayed --
     // reporting this beyond the local node is the RPC extension in
     // rpcquorums.cpp for now, and the special transaction later.
+    //
+    // Built outside invCs on purpose: BuildAbsenceRecord() already releases
+    // its own internal invCs lock before calling Verify() (see its comment),
+    // specifically so Verify()'s descent into GetAllQuorumMembers() never
+    // holds invCs. Wrapping the whole call in invCs here would silently
+    // defeat that -- invCs is a RecursiveMutex, so BuildAbsenceRecord's own
+    // inner LOCK(invCs) would just re-enter rather than block, and Verify()
+    // would run with this thread still holding invCs for real. For a
+    // voting-activated LLMQ type (e.g. LLMQ_TEST_V17/LLMQ_100_67 with no
+    // forced height), that reaches Updates().State(), which takes cs_main --
+    // the same lock quorum_dkgstatus holds while it calls GetAbsenceRecord()
+    // (needs invCs). Building first and locking only to store avoids ever
+    // holding both at once from this side.
+    auto builtRecord = curSession->BuildAbsenceRecord(1);
     {
         LOCK(curSession->invCs);
-        curSession->builtAbsenceRecord = curSession->BuildAbsenceRecord(1);
+        curSession->builtAbsenceRecord = std::move(builtRecord);
     }
 }
 

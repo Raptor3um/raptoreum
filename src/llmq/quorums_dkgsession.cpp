@@ -1347,12 +1347,13 @@ namespace llmq {
 
         logger.Batch("absence vote built. absentCount=%d", qv.CountAbsentMembers());
 
-        if (qv.CountAbsentMembers() == 0) {
-            // nothing to report; a vote recording no absences is not
-            // evidence of anything and would just add noise
-            return;
-        }
-
+        // Send this even when absentCount is 0. An all-clear vote is the
+        // override evidence the intersection rule in VerifyAbsenceRecordCore
+        // depends on: if this node heard from every other member, that's
+        // what corrects another member's false (or stale) accusation once
+        // both votes land in the same bundle. Skipping it here would mean
+        // that correction never gets produced in the first place, no matter
+        // how well relay works.
         qv.sig = WITH_LOCK(activeSmartnodeInfoCs,
         return activeSmartnodeInfo.blsKeyOperator->Sign(qv.GetSignHash()));
 
@@ -1434,12 +1435,20 @@ namespace llmq {
 
         {
             LOCK(invCs);
-            // Keyed by message hash, matching contributions/complaints/etc.,
-            // so GetAbsenceVote (the GETDATA-serving path) can look it up the
-            // same way. One-vote-per-voter is enforced in PreVerifyMessage
-            // (rejects before this point if proTxHash already has a stored
-            // vote), so a plain insert is safe here -- no duplicate to race
-            // against or replace.
+            // PreVerifyMessage's duplicate-reporter check reads this same
+            // map, but ProcessPendingMessageBatch pre-verifies every message
+            // in a batch before ReceiveMessage is called for any of them --
+            // two distinct, validly-signed votes from the same reporter in
+            // one batch both see this map before either has been inserted,
+            // so both pass PreVerifyMessage. Re-checking here, under the
+            // lock that actually guards the insert, is what makes
+            // one-vote-per-voter hold regardless of batching.
+            for (const auto &p: absenceVotes) {
+                if (p.second.proTxHash == qv.proTxHash) {
+                    logger.Batch("%s already has a stored absence vote, rejecting", qv.proTxHash.ToString());
+                    return;
+                }
+            }
             absenceVotes.emplace(hash, qv);
         }
 

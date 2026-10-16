@@ -117,7 +117,12 @@ BOOST_AUTO_TEST_CASE(confirmed_absent_size_mismatch_rejected) {
     // equal), which would mask this check -- use an EMPTY bundle instead,
     // where that equality never runs and the explicit size check is the
     // only thing standing between accept and reject.
-    std::vector<bool> wrongSize = {false, true, false}; // 3, not paramsSize=4
+    //
+    // All-false, not {false, true, false}: a set bit here would also get
+    // rejected by the empty-votes/no-claim-without-evidence check below,
+    // masking the size check the same way a non-empty bundle would -- an
+    // all-false vector is rejected ONLY if the size check itself still runs.
+    std::vector<bool> wrongSize = {false, false, false}; // 3, not paramsSize=4
     BOOST_CHECK(!llmq::VerifyAbsenceRecordCore(TYPE, QHASH, 4, 4, MEMBERS, wrongSize, {}));
 }
 

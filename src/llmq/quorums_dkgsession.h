@@ -312,10 +312,11 @@ namespace llmq {
         // contribution, keyed by message hash (same convention as
         // contributions/complaints/justifications/prematureCommitments
         // above, needed so GetAbsenceVote can serve GETDATA requests the
-        // same way). One-vote-per-voter is enforced earlier, in
-        // PreVerifyMessage (first-wins: a second vote from an already-seen
-        // proTxHash is rejected before it ever reaches here), so this map's
-        // own insert is a plain emplace, not an erase-then-insert.
+        // same way). One-vote-per-voter (first-wins) is enforced in
+        // ReceiveMessage, under the same lock that guards this map --
+        // PreVerifyMessage checks the same thing earlier, but only as a
+        // cheap reject for the common case, since a whole batch is
+        // pre-verified before any message in it is stored.
         std::map <uint256, CDKGAbsenceVote> absenceVotes
         GUARDED_BY(invCs);
 
