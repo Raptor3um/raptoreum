@@ -19,6 +19,16 @@
 
 #include <stdint.h>
 
+#ifdef USE_WAKEUP_PIPE
+#include <fcntl.h>
+#include <unistd.h>
+#endif
+
+#ifndef WIN32
+#include <sys/socket.h>
+#include <unistd.h>
+#endif
+
 #include <boost/test/unit_test.hpp>
 
 struct CConnmanTest : public CConnman {
@@ -36,6 +46,44 @@ struct CConnmanTest : public CConnman {
         }
         vNodes.clear();
     }
+
+    size_t CallSocketRecvData(CNode *pnode) { return SocketRecvData(pnode); }
+
+    bool NodeHasRecvData(CNode *pnode) { return pnode->fHasRecvData; }
+
+    // SocketRecvData() itself only ever clears this; it's set true by the
+    // recv_set-processing loop in SocketHandler() before SocketRecvData() is
+    // ever called on a node. Calling SocketRecvData() directly, as this test
+    // file does, bypasses that -- so the precondition has to be seeded here.
+    void SetNodeHasRecvData(CNode *pnode, bool v) { pnode->fHasRecvData = v; }
+
+#ifdef USE_WAKEUP_PIPE
+    // CConnman's own wakeupPipe is only opened by Start(), which also spins up the real
+    // network threads -- too heavy for a unit test. Wire a private pipe into the same
+    // member instead, so WakeSelect() has somewhere to write and a test can observe it.
+    void SetupWakeupPipeForTest() {
+        int fds[2];
+        if (pipe(fds) == 0) {
+            wakeupPipe[0] = fds[0];
+            wakeupPipe[1] = fds[1];
+            // Non-blocking read end: a test asking whether a wakeup happened must get an
+            // answer either way, not block forever when the code under test failed to write.
+            int flags = fcntl(wakeupPipe[0], F_GETFL, 0);
+            fcntl(wakeupPipe[0], F_SETFL, flags | O_NONBLOCK);
+        }
+    }
+
+    bool WakeupPipeSignaled() {
+        char buf;
+        return read(wakeupPipe[0], &buf, 1) == 1;
+    }
+
+    ~CConnmanTest() {
+        if (wakeupPipe[0] != -1) close(wakeupPipe[0]);
+        if (wakeupPipe[1] != -1) close(wakeupPipe[1]);
+        wakeupPipe[0] = wakeupPipe[1] = -1;
+    }
+#endif
 };
 
 // Tests these internal-to-net_processing.cpp methods:
@@ -446,5 +494,146 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         LimitOrphanTxSize(0);
         BOOST_CHECK(mapOrphanTransactions.empty());
         }
+
+#ifdef USE_WAKEUP_PIPE
+// Regression test: ProcessMessages() must call CConnman::WakeSelect() the moment a peer's
+// fPauseRecv clears, or the socket thread does not learn a paused peer is drainable again
+// until its next SELECT_TIMEOUT_MILLISECONDS wakeup (see net_processing.cpp). Unlike the
+// HasUnpausedReceivableNode() predicate covered in net_tests.cpp, this checks the actual
+// WakeSelect() call site: deleting it, while leaving the surrounding logic untouched, would
+// not be caught by a test of the predicate alone.
+BOOST_AUTO_TEST_CASE(process_messages_wakes_select_on_unpause)
+        {
+                auto connman = MakeUnique<CConnmanTest>(0x1337, 0x1337);
+        connman->SetupWakeupPipeForTest();
+        auto peerLogic = MakeUnique<PeerLogicValidation>(connman.get(), nullptr, *m_node.scheduler, *m_node.chainman, *m_node.mempool, false);
+
+        CAddress addr(ip(0xa0b0c002), NODE_NONE);
+        CNode node(id++, ServiceFlags(NODE_NETWORK), 0, INVALID_SOCKET, addr, 0, 0, CAddress(), "", /*fInboundIn=*/ true);
+        node.SetSendVersion(PROTOCOL_VERSION);
+        peerLogic->InitializeNode(&node);
+        node.nVersion = 1;
+        node.fSuccessfullyConnected = true;
+
+        // A message start that matches no configured network. ProcessMessages() disconnects
+        // on it right after the wake_select check, before it would touch validation or the
+        // mempool -- exactly the boundary this test needs to stay inside.
+        CMessageHeader::MessageStartChars badStart = {0, 0, 0, 0};
+        CNetMessage msg(badStart, SER_NETWORK, node.GetRecvVersion());
+        const size_t queued_size = msg.vRecv.size() + CMessageHeader::HEADER_SIZE;
+
+        node.fPauseRecv = true;
+        // Default-constructed CConnman has a 0-byte receive flood size, so dropping the
+        // queue to exactly 0 (not merely below the flood size) is what flips fPauseRecv.
+        node.nProcessQueueSize = queued_size;
+        {
+            LOCK(node.cs_vProcessMsg);
+            node.vProcessMsg.push_back(std::move(msg));
+        }
+
+        std::atomic<bool> interrupt{false};
+        peerLogic->ProcessMessages(&node, interrupt);
+
+        BOOST_CHECK(!node.fPauseRecv);
+        BOOST_CHECK(connman->WakeupPipeSignaled());
+
+        bool dummy;
+        peerLogic->FinalizeNode(node.GetId(), dummy);
+        }
+
+// Companion to process_messages_wakes_select_on_unpause: that test alone would still pass
+// if WakeSelect() were called unconditionally on every processed message rather than only
+// on a genuine pause->unpause transition, since it never checks the non-paused case. Confirm
+// a peer that was never paused leaves the wakeup pipe unsignaled after the same message is
+// processed.
+BOOST_AUTO_TEST_CASE(process_messages_does_not_wake_select_when_nothing_was_paused)
+        {
+                auto connman = MakeUnique<CConnmanTest>(0x1337, 0x1337);
+        connman->SetupWakeupPipeForTest();
+        auto peerLogic = MakeUnique<PeerLogicValidation>(connman.get(), nullptr, *m_node.scheduler, *m_node.chainman, *m_node.mempool, false);
+
+        CAddress addr(ip(0xa0b0c003), NODE_NONE);
+        CNode node(id++, ServiceFlags(NODE_NETWORK), 0, INVALID_SOCKET, addr, 0, 0, CAddress(), "", /*fInboundIn=*/ true);
+        node.SetSendVersion(PROTOCOL_VERSION);
+        peerLogic->InitializeNode(&node);
+        node.nVersion = 1;
+        node.fSuccessfullyConnected = true;
+
+        // Same message shape as the sibling test -- disconnects right after the wake_select
+        // check, before touching validation or the mempool. nProcessQueueSize must still be
+        // set to match the message's own size, mirroring what the real receive path would
+        // have added when queuing it: ProcessMessages unconditionally SUBTRACTS this same
+        // amount when it pops the message (net_processing.cpp), so leaving it at the
+        // default 0 underflows (nProcessQueueSize is size_t) into a huge value, which then
+        // reads as over the flood size and spuriously pauses the peer -- exactly the
+        // pause/wake transition this test exists to rule out, not induce.
+        CMessageHeader::MessageStartChars badStart = {0, 0, 0, 0};
+        CNetMessage msg(badStart, SER_NETWORK, node.GetRecvVersion());
+        const size_t queued_size = msg.vRecv.size() + CMessageHeader::HEADER_SIZE;
+        node.nProcessQueueSize = queued_size;
+        {
+            LOCK(node.cs_vProcessMsg);
+            node.vProcessMsg.push_back(std::move(msg));
+        }
+
+        BOOST_REQUIRE(!node.fPauseRecv);
+
+        std::atomic<bool> interrupt{false};
+        peerLogic->ProcessMessages(&node, interrupt);
+
+        BOOST_CHECK(!node.fPauseRecv);
+        BOOST_CHECK(!connman->WakeupPipeSignaled());
+
+        bool dummy;
+        peerLogic->FinalizeNode(node.GetId(), dummy);
+        }
+#endif // USE_WAKEUP_PIPE
+
+#ifndef WIN32
+// Regression test for SocketRecvData() clearing receive-readiness on a merely
+// short read. recv() on a stream socket never promises to fill the caller's
+// buffer, so a positive read shorter than the buffer is the normal case, not
+// a signal that nothing more is coming -- that can only be learned from the
+// kernel returning 0 (closed) or WOULDBLOCK (drained for now). Under a
+// level-triggered backend this went unnoticed, since the socket keeps being
+// reported ready regardless of our own bookkeeping; under an edge-triggered
+// one (kqueue with EV_CLEAR, epoll with EPOLLET -- the latter already the
+// default here for peer sockets) clearing readiness on a short final read
+// means recv()'s terminating 0, and the FIN it represents, might never be
+// collected. A real AF_UNIX socketpair reproduces the exact byte-level shape:
+// one short, positive read (the peer's last bytes) followed by a second call
+// that must see the close.
+BOOST_AUTO_TEST_CASE(socket_recv_data_keeps_readiness_after_a_short_read) {
+    int fds[2];
+    BOOST_REQUIRE_EQUAL(socketpair(AF_UNIX, SOCK_STREAM, 0, fds), 0);
+
+    const char payload[] = "final bytes";
+    BOOST_REQUIRE_EQUAL(write(fds[1], payload, sizeof(payload)), (ssize_t) sizeof(payload));
+    BOOST_REQUIRE_EQUAL(shutdown(fds[1], SHUT_WR), 0);
+
+    auto connman = MakeUnique<CConnmanTest>(0x1337, 0x1337);
+    CAddress addr(ip(0xa0b0c004), NODE_NONE);
+    auto node = std::make_unique<CNode>(id++, ServiceFlags(NODE_NETWORK), 0, (SOCKET) fds[0], addr, 0, 0,
+                                         CAddress(), "", /*fInboundIn=*/ true);
+    connman->SetNodeHasRecvData(node.get(), true);
+
+    // First call: the peer's final bytes are already queued, so recv() returns
+    // them -- short relative to the 64K buffer, but readiness must not be
+    // cleared on that basis alone, or nothing will ever ask again.
+    size_t n1 = connman->CallSocketRecvData(node.get());
+    BOOST_CHECK_EQUAL(n1, sizeof(payload));
+    BOOST_CHECK(connman->NodeHasRecvData(node.get()));
+    BOOST_CHECK(!node->fOtherSideDisconnected);
+
+    // Second call: nothing left to read and the peer has closed -- recv() now
+    // returns 0, which is what actually closes the connection.
+    size_t n2 = connman->CallSocketRecvData(node.get());
+    BOOST_CHECK_EQUAL(n2, 0);
+    BOOST_CHECK(!connman->NodeHasRecvData(node.get()));
+    BOOST_CHECK(node->fOtherSideDisconnected);
+
+    close(fds[1]);
+}
+#endif // !WIN32
 
 BOOST_AUTO_TEST_SUITE_END()

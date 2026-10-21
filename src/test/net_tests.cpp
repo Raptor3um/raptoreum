@@ -16,6 +16,7 @@
 #include <version.h>
 
 #include <memory>
+#include <unordered_map>
 
 class CAddrManSerializationMock : public CAddrMan {
 public:
@@ -308,5 +309,59 @@ BOOST_AUTO_TEST_CASE(ipv4_peer_with_ipv6_addrMe_test)
                 // suppress no-checks-run warning; if this test fails, it's by triggering a sanitizer
                 BOOST_CHECK(1);
         }
+
+//! Regression test for the ThreadSocketHandler busy-loop on undrainable peers.
+//!
+//! CConnman::SocketHandler() skips waiting for socket events and polls with a zero timeout
+//! whenever a receivable node has work to do, so that sockets with buffered data keep being
+//! drained. The receive path only drains a node that is unpaused, has an empty send queue
+//! and is not disconnecting; a node failing any of those lingers in the receivable set with
+//! its readable flag set and is never read. Counting it as work makes the poll return
+//! nothing and repeat immediately, spinning the socket thread at 100% of a core for as long
+//! as a remote peer sustains the condition.
+//!
+//! HasUnpausedReceivableNode() encodes that rule, and must agree with the receive path on
+//! all three conditions -- not only the pause.
+BOOST_AUTO_TEST_CASE(socket_handler_skips_undrainable_nodes)
+{
+    auto make_node = [](NodeId id) {
+        return std::make_unique<CNode>(id, NODE_NONE, 0, INVALID_SOCKET, CAddress(), 0, 0,
+                                       CAddress(), "", /* fInboundIn = */ true);
+    };
+
+    std::unordered_map<NodeId, CNode *> receivable;
+    // Nothing receivable: no work.
+    BOOST_CHECK(!HasUnpausedReceivableNode(receivable));
+
+    auto drainable = make_node(1);
+    receivable.emplace(drainable->GetId(), drainable.get());
+    BOOST_CHECK(HasUnpausedReceivableNode(receivable));
+
+    // Receive-paused: skipped by the receive path, so it is not work.
+    drainable->fPauseRecv = true;
+    BOOST_CHECK(!HasUnpausedReceivableNode(receivable));
+    drainable->fPauseRecv = false;
+
+    // Pending outbound data: the receive path drains the write buffer first, so this node
+    // is not read either. Checking only fPauseRecv would miss this and leave the spin.
+    drainable->nSendMsgSize = 1;
+    BOOST_CHECK(!HasUnpausedReceivableNode(receivable));
+    drainable->nSendMsgSize = 0;
+
+    // Disconnecting: likewise skipped.
+    drainable->fDisconnect = true;
+    BOOST_CHECK(!HasUnpausedReceivableNode(receivable));
+    drainable->fDisconnect = false;
+
+    // One undrainable node must not mask a drainable one.
+    auto blocked = make_node(2);
+    blocked->fPauseRecv = true;
+    receivable.emplace(blocked->GetId(), blocked.get());
+    BOOST_CHECK(HasUnpausedReceivableNode(receivable));
+
+    // ... and with only the undrainable one left, there is no work.
+    receivable.erase(drainable->GetId());
+    BOOST_CHECK(!HasUnpausedReceivableNode(receivable));
+}
 
 BOOST_AUTO_TEST_SUITE_END()
