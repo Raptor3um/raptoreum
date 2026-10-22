@@ -1509,6 +1509,15 @@ namespace llmq {
         return members[it->second].get();
     }
 
+    std::vector<uint256> CDKGSession::GetMemberProTxHashes() const {
+        std::vector<uint256> ret;
+        ret.reserve(members.size());
+        for (const auto &m: members) {
+            ret.emplace_back(m->dmn->proTxHash);
+        }
+        return ret;
+    }
+
     void CDKGSession::MarkBadMember(size_t idx) {
         auto *member = members.at(idx).get();
         if (member->bad) {

@@ -420,6 +420,15 @@ namespace llmq {
         // than minVotes distinct votes are held.
         CDKGAbsenceRecordPtr BuildAbsenceRecord(size_t minVotes) const;
 
+        // members[i]'s proTxHash, in the same index order a CDKGAbsenceRecord's
+        // confirmedAbsent/vote absentMembers bits use (CDKGMember's own idx
+        // matches its position in this vector -- see the Init() loop that
+        // constructs both together). For the round-level absence tracker,
+        // which needs to know who was selected regardless of whether any
+        // absence was reported. Defined in the .cpp: CDeterministicMN is
+        // only forward-declared here, and dmn->proTxHash needs the full type.
+        [[nodiscard]] std::vector<uint256> GetMemberProTxHashes() const;
+
         bool AreWeMember() const { return !myProTxHash.IsNull(); }
 
         void MarkBadMember(size_t idx);
