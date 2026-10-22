@@ -208,6 +208,7 @@ BITCOIN_CORE_H = \
   llmq/quorums_chainlocks.h \
   llmq/quorums_debug.h \
   llmq/quorums_dkgabsence.h \
+  llmq/quorums_dkgabsencetracker.h \
   llmq/quorums_dkgsessionhandler.h \
   llmq/quorums_dkgsessionmgr.h \
   llmq/quorums_dkgsession.h \
@@ -394,6 +395,7 @@ libraptoreum_server_a_SOURCES = \
   llmq/quorums_chainlocks.cpp \
   llmq/quorums_debug.cpp \
   llmq/quorums_dkgabsence.cpp \
+  llmq/quorums_dkgabsencetracker.cpp \
   llmq/quorums_dkgsessionhandler.cpp \
   llmq/quorums_dkgsessionmgr.cpp \
   llmq/quorums_dkgsession.cpp \
