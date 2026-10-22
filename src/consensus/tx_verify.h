@@ -22,6 +22,12 @@ class CValidationState;
 /** Transaction validation functions */
 
 namespace Consensus {
+    /** Separate the special payload fee from the total input-minus-output fee.
+     * Initialize specialTxFee to zero before calling. Historical callers must
+     * leave fFeeVerify false so current spork values do not change past fees.
+     */
+    bool CheckSpecialTxFee(const CTransaction &tx, CAmount &txfee, CAmount &specialTxFee, bool fFeeVerify = false);
+
 /**
  * Check whether all inputs of this transaction are valid (no double spends and amounts)
  * This does not modify the UTXO set. This does not check scripts and sigs.
