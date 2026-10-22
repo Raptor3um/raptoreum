@@ -7,6 +7,7 @@
 from decimal import Decimal
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    REGTEST_SUBSIDY,
     assert_equal,
     assert_fee_amount,
     assert_greater_than,
@@ -39,6 +40,11 @@ class RawTransactionsTest(BitcoinTestFramework):
         connect_nodes_bi(self.nodes, 0, 3)
 
     def run_test(self):
+        # Clear the 4 RTM launch window: these tests move far more than a
+        # launch-window block pays, and the coins go to an address no wallet
+        # here holds a key for.
+        self.mine_past_launch_window()
+        self.sync_all()
         min_relay_tx_fee = self.nodes[0].getnetworkinfo()['relayfee']
         # This test is not meant to test fee estimation and we'd like
         # to be sure all txs are sent at a consistent desired feerate
@@ -59,7 +65,10 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.sync_all()
 
         # ensure that setting changePosition in fundraw with an exact match is handled properly
-        rawmatch = self.nodes[2].createrawtransaction([], {self.nodes[2].getnewaddress():500})
+        # An exact match means the output equals the whole value of node2's single
+        # coin, so no change is needed. That coin is a full block reward here, not
+        # Dash's 500.
+        rawmatch = self.nodes[2].createrawtransaction([], {self.nodes[2].getnewaddress(): REGTEST_SUBSIDY})
         rawmatch = self.nodes[2].fundrawtransaction(rawmatch, {"changePosition":1, "subtractFeeFromOutputs":[0]})
         assert_equal(rawmatch["changepos"], -1)
 
@@ -511,14 +520,15 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.sync_all()
 
         # make sure funds are received at node1
-        assert_equal(oldBalance+Decimal('511.0000000'), self.nodes[0].getbalance())
+        # One block reward plus the 11 that was sent.
+        assert_equal(oldBalance + REGTEST_SUBSIDY + Decimal('11'), self.nodes[0].getbalance())
 
         ###############################################
         # multiple (~19) inputs tx test | Compare fee #
         ###############################################
 
         #empty node1, send some small coins from node0 to node1
-        self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), self.nodes[1].getbalance(), "", "", True)
+        self.nodes[1].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=self.nodes[1].getbalance(), subtractfeefromamount=True)
         self.sync_all()
         self.nodes[0].generate(1)
         self.sync_all()
@@ -548,7 +558,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         #############################################
 
         #again, empty node1, send some small coins from node0 to node1
-        self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), self.nodes[1].getbalance(), "", "", True)
+        self.nodes[1].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=self.nodes[1].getbalance(), subtractfeefromamount=True)
         self.sync_all()
         self.nodes[0].generate(1)
         self.sync_all()
@@ -570,7 +580,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.sync_all()
         self.nodes[0].generate(1)
         self.sync_all()
-        assert_equal(oldBalance+Decimal('500.19000000'), self.nodes[0].getbalance()) #0.19+block reward
+        assert_equal(oldBalance+REGTEST_SUBSIDY + Decimal('0.19'), self.nodes[0].getbalance()) #0.19+block reward
 
         #####################################################
         # test fundrawtransaction with OP_RETURN and no vin #

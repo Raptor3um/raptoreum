@@ -31,8 +31,10 @@ ASMAP = '../../src/test/data/asmap.raw' # path to unit test skeleton asmap
 VERSION = 'fec61fa21a9f46f3b17bdcd660d7f4cd90b966aad3aec593c99b35f0aca15853'
 
 def expected_messages(filename):
-    return ['Opened asmap file "{}" (59 bytes) from disk'.format(filename),
-            'Using asmap version {} for IP bucketing'.format(VERSION)]
+    # This tree logs only the version line: src/init.cpp has no
+    # 'Opened asmap file ... from disk' message, so asserting it would wait for
+    # something that is never written.
+    return ['Using asmap version {} for IP bucketing'.format(VERSION)]
 
 class AsmapTest(BitcoinTestFramework):
     def set_test_params(self):

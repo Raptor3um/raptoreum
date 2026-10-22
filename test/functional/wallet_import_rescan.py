@@ -117,7 +117,11 @@ ImportNode = collections.namedtuple("ImportNode", "prune rescan")
 IMPORT_NODES = [ImportNode(*fields) for fields in itertools.product((False, True), repeat=2)]
 
 # Rescans start at the earliest block up to 2 hours before the key timestamp.
-TIMESTAMP_WINDOW = 2 * 60 * 60
+# src/chain.h: TIMESTAMP_WINDOW is MAX_FUTURE_BLOCK_TIME, which is 15 minutes
+# here rather than Bitcoin's two hours. It is how far before an import's
+# timestamp the rescan starts, so a test that assumes the larger value imports
+# with a timestamp past every transaction it then expects to find.
+TIMESTAMP_WINDOW = 15 * 60
 
 
 class ImportRescanTest(BitcoinTestFramework):

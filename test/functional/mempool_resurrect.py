@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test resurrection of mined transactions when the blockchain is re-organized."""
 
+from decimal import Decimal
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
@@ -25,16 +26,17 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         # Mine a new block
         # ... make sure all the transactions are confirmed again.
 
-        b = [ self.nodes[0].getblockhash(n) for n in range(1, 4) ]
+        b = [ self.nodes[0].getblockhash(n) for n in
+              range(CACHE_WARMUP_BLOCKS + 1, CACHE_WARMUP_BLOCKS + 4) ]
         coinbase_txids = [ self.nodes[0].getblock(h)['tx'][0] for h in b ]
-        spends1_raw = [ create_tx(self.nodes[0], txid, node0_address, 500) for txid in coinbase_txids ]
-        spends1_id = [ self.nodes[0].sendrawtransaction(tx, False, False, True) for tx in spends1_raw ]
+        spends1_raw = [ create_tx(self.nodes[0], txid, node0_address, REGTEST_SUBSIDY - Decimal('0.01')) for txid in coinbase_txids ]
+        spends1_id = [ self.nodes[0].sendrawtransaction(tx, 0, False, True) for tx in spends1_raw ]
 
         blocks = []
         blocks.extend(self.nodes[0].generate(1))
 
-        spends2_raw = [ create_tx(self.nodes[0], txid, node0_address, 499.99) for txid in spends1_id ]
-        spends2_id = [ self.nodes[0].sendrawtransaction(tx, False, False, True) for tx in spends2_raw ]
+        spends2_raw = [ create_tx(self.nodes[0], txid, node0_address, REGTEST_SUBSIDY - Decimal('0.02')) for txid in spends1_id ]
+        spends2_id = [ self.nodes[0].sendrawtransaction(tx, 0, False, True) for tx in spends2_raw ]
 
         blocks.extend(self.nodes[0].generate(1))
 

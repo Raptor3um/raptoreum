@@ -25,6 +25,7 @@ import sys
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    REGTEST_LAUNCH_SUBSIDY,
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
@@ -38,6 +39,8 @@ from test_framework.blocktools import (
     create_coinbase,
 )
 from test_framework.messages import (
+    CBlockHeader,
+    FromHex,
     msg_block,
 )
 from test_framework.mininode import (
@@ -74,9 +77,10 @@ class BlockchainTest(BitcoinTestFramework):
     def _test_getblockchaininfo(self):
         self.log.info("Test getblockchaininfo")
 
+        # Alphabetical: these are compared against sorted(res.keys()).
+        # rip1_softforks is Raptoreum's own and was inserted here out of order.
         keys = [
             'bestblockhash',
-            'bip9_softforks',
             'blocks',
             'chain',
             'chainwork',
@@ -85,6 +89,7 @@ class BlockchainTest(BitcoinTestFramework):
             'initialblockdownload',
             'mediantime',
             'pruned',
+            'rip1_softforks',
             'size_on_disk',
             'softforks',
             'verificationprogress',
@@ -142,11 +147,17 @@ class BlockchainTest(BitcoinTestFramework):
         self.nodes[0].reconsiderblock(blockhash)
 
         chaintxstats = self.nodes[0].getchaintxstats(1)
-        # 200 txs plus genesis tx
-        assert_equal(chaintxstats['txcount'], 201)
-        # tx rate should be 1 per ~2.6 minutes (156 seconds), or 1/156
-        # we have to round because of binary math
-        assert_equal(round(chaintxstats['txrate'] * 156, 10), Decimal(1))
+        # Upstream expects one transaction per block plus genesis. Here a block
+        # inside a DKG mining window also carries a quorum commitment, so the
+        # count is not one per block; check getchaintxstats against what the
+        # blocks actually hold rather than against a fixed number.
+        tip_height = self.nodes[0].getblockcount()
+        block_tx_counts = [len(self.nodes[0].getblock(self.nodes[0].getblockhash(h))['tx'])
+                           for h in range(0, tip_height + 1)]
+        assert_equal(chaintxstats['txcount'], sum(block_tx_counts))
+        # One block of window, so the rate is that block's transactions over the
+        # 156 second spacing.
+        assert_equal(round(chaintxstats['txrate'] * 156, 10), Decimal(block_tx_counts[-1]))
 
         b1_hash = self.nodes[0].getblockhash(1)
         b1 = self.nodes[0].getblock(b1_hash)
@@ -154,18 +165,21 @@ class BlockchainTest(BitcoinTestFramework):
         b200 = self.nodes[0].getblock(b200_hash)
         time_diff = b200['mediantime'] - b1['mediantime']
 
+        # The window runs from block 2 to block 200 inclusive; its transaction
+        # count is whatever those blocks hold, commitments included.
+        window_tx = sum(block_tx_counts[2:201])
         chaintxstats = self.nodes[0].getchaintxstats()
         assert_equal(chaintxstats['time'], b200['time'])
-        assert_equal(chaintxstats['txcount'], 201)
+        assert_equal(chaintxstats['txcount'], sum(block_tx_counts))
         assert_equal(chaintxstats['window_final_block_hash'], b200_hash)
         assert_equal(chaintxstats['window_block_count'], 199)
-        assert_equal(chaintxstats['window_tx_count'], 199)
+        assert_equal(chaintxstats['window_tx_count'], window_tx)
         assert_equal(chaintxstats['window_interval'], time_diff)
-        assert_equal(round(chaintxstats['txrate'] * time_diff, 10), Decimal(199))
+        assert_equal(round(chaintxstats['txrate'] * time_diff, 10), Decimal(window_tx))
 
         chaintxstats = self.nodes[0].getchaintxstats(blockhash=b1_hash)
         assert_equal(chaintxstats['time'], b1['time'])
-        assert_equal(chaintxstats['txcount'], 2)
+        assert_equal(chaintxstats['txcount'], sum(block_tx_counts[0:2]))
         assert_equal(chaintxstats['window_final_block_hash'], b1_hash)
         assert_equal(chaintxstats['window_block_count'], 0)
         assert('window_tx_count' not in chaintxstats)
@@ -176,11 +190,16 @@ class BlockchainTest(BitcoinTestFramework):
         node = self.nodes[0]
         res = node.gettxoutsetinfo()
 
-        assert_equal(res['total_amount'], Decimal('98214.28571450'))
+        # 200 blocks, all inside the launch window, so each pays the launch
+        # subsidy in full: the founder's 5% only starts at height 501.
+        assert_equal(res['total_amount'], Decimal(200 * REGTEST_LAUNCH_SUBSIDY))
+        # One coinbase per block; quorum commitments create no outputs and so no
+        # unspent entries.
         assert_equal(res['transactions'], 200)
         assert_equal(res['height'], 200)
-        assert_equal(res['txouts'], 200)
-        assert_equal(res['bogosize'], 17000),
+        # Two outputs per coinbase, the second being the founder payment, which
+        # exists but is zero valued below the founder start height.
+        assert_equal(res['txouts'], 400)
         size = res['disk_size']
         assert size > 6400
         assert size < 64000
@@ -209,6 +228,22 @@ class BlockchainTest(BitcoinTestFramework):
         del res['disk_size'], res3['disk_size']
         assert_equal(res, res3)
 
+        self.log.info("Test hash_type option for gettxoutsetinfo()")
+        # hash_serialized_2 is the default, so asking for it explicitly must
+        # not change the result.
+        res4 = node.gettxoutsetinfo(hash_type='hash_serialized_2')
+        del res4['disk_size']
+        assert_equal(res, res4)
+
+        # hash_type none should not return a UTXO set hash.
+        res5 = node.gettxoutsetinfo(hash_type='none')
+        assert 'hash_serialized_2' not in res5
+
+        # Upstream also covers hash_type muhash. This tree has no MuHash, and
+        # ParseHashType (rpc/blockchain.cpp) offers only hash_serialized_2 and
+        # none, so that half is left out.
+        assert_raises_rpc_error(-8, "foohash is not a valid hash_type", node.gettxoutsetinfo, "foohash")
+
     def _test_getblockheader(self):
         node = self.nodes[0]
 
@@ -233,6 +268,14 @@ class BlockchainTest(BitcoinTestFramework):
         assert isinstance(header['nonce'], int)
         assert isinstance(header['version'], int)
         assert isinstance(int(header['versionHex'], 16), int)
+
+        # verbose=False returns the header as hex; it must round-trip to the
+        # same hash.
+        header_hex = node.getblockheader(blockhash=besthash, verbose=False)
+        assert_is_hex_string(header_hex)
+        header_obj = FromHex(CBlockHeader(), header_hex)
+        header_obj.calc_sha256()
+        assert_equal(header_obj.hash, besthash)
         assert isinstance(header['difficulty'], Decimal)
 
     def _test_getdifficulty(self):

@@ -4,8 +4,8 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.mininode import *
-from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error
+from test_framework.test_framework import RaptoreumTestFramework
+from test_framework.util import assert_equal, assert_raises_rpc_error, force_finish_mnsync
 
 '''
 rpc_mnauth.py
@@ -14,13 +14,16 @@ Tests mnauth RPC command
 '''
 
 
-class FakeMNAUTHTest(DashTestFramework):
+class FakeMNAUTHTest(RaptoreumTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(2, 1, fast_dip3_enforcement=True)
+        self.set_raptoreum_test_params(2, 1, fast_dip3_enforcement=True)
 
     def run_test(self):
 
         masternode = self.mninfo[0]
+        # Force the sync again now the node has peers: connecting resets it
+        # (net.cpp:1275), and an unsynced smartnode refuses inbound connections.
+        force_finish_mnsync(masternode.node)
         p2p_masternode = masternode.node.add_p2p_connection(P2PInterface())
         network_thread_start()
         p2p_masternode.wait_for_verack()

@@ -323,7 +323,7 @@ static UniValue deriveaddresses(const JSONRPCRequest &request) {
                {
                        {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor"},
                        {"range", RPCArg::Type::RANGE, RPCArg::Optional::OMITTED_NAMED_ARG,
-                        "If a ranged descriptor is used, this specifies the beginning of the range (in [begin,end] notation) to derive."},
+                        "If a ranged descriptor is used, this specifies the end or the range (in [begin,end] notation) to derive."},
                },
                RPCResult{
                        RPCResult::Type::ARR, "", "",
@@ -338,7 +338,7 @@ static UniValue deriveaddresses(const JSONRPCRequest &request) {
                }
     }.Check(request);
 
-    RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VNUM, UniValue::VNUM});
+    RPCTypeCheck(request.params, {UniValue::VSTR, UniValueType()}); // Range argument is checked later
     const std::string desc_str = request.params[0].get_str();
 
     int64_t range_begin = 0;
@@ -365,10 +365,15 @@ static UniValue deriveaddresses(const JSONRPCRequest &request) {
 
     UniValue addresses(UniValue::VARR);
 
-    for (int i = range_begin; i <= range_end; ++i) {
+    // range_end can reach INT_MAX (ParseDescriptorRange only rejects it above
+    // that), and an int i here would need to represent INT_MAX + 1 to test
+    // the loop condition one last time -- signed overflow, undefined
+    // behavior. i itself always fits in int by the same bound, checked here
+    // rather than widening Expand()'s own parameter.
+    for (int64_t i = range_begin; i <= range_end; ++i) {
         FlatSigningProvider provider;
         std::vector <CScript> scripts;
-        if (!desc->Expand(i, key_provider, scripts, provider)) {
+        if (!desc->Expand(static_cast<int>(i), key_provider, scripts, provider)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Cannot derive script without private keys"));
         }
 
@@ -1513,15 +1518,20 @@ UniValue logging(const JSONRPCRequest &request) {
 }
 
 UniValue echo(const JSONRPCRequest &request) {
-    RPCHelpMan{"echo|echojson ...",
-               "\nSimply echo back the input arguments. This command is for testing.\n"
-               "\nIt will return an internal bug report when exactly 100 arguments are passed.\n"
-               "\nThe difference between echo and echojson is that echojson has argument conversion enabled in the client-side table in "
-               "raptoreum-cli and the GUI. There is no server-side difference.",
-               {},
-               RPCResult{RPCResult::Type::NONE, "", "Returns whatever was passed in"},
-               RPCExamples{""},
-    }.Check(request);
+    if (request.fHelp)
+        throw std::runtime_error(
+                RPCHelpMan{"echo|echojson ...",
+                           "\nSimply echo back the input arguments. This command is for testing.\n"
+                           "\nIt will return an internal bug report when exactly 100 arguments are passed.\n"
+                           "\nThe difference between echo and echojson is that echojson has argument conversion enabled in the client-side table in "
+                           "raptoreum-cli and the GUI. There is no server-side difference.",
+                           {},
+                           RPCResult{RPCResult::Type::NONE, "", "Returns whatever was passed in"},
+                           RPCExamples{""},
+                }.ToString()
+        );
+
+    CHECK_NONFATAL(request.params.size() != 100);
 
     return request.params;
 }
@@ -1533,7 +1543,7 @@ static const CRPCCommand commands[] =
                 {"control",      "logging",                &logging,                {"include",    "exclude"}},
                 {"util",         "validateaddress",        &validateaddress,        {"address"}},
                 {"util",         "createmultisig",         &createmultisig,         {"nrequired",  "keys"}},
-                {"util",         "deriveaddresses",        &deriveaddresses,        {"descriptor", "begin",     "end"}},
+                {"util",         "deriveaddresses",        &deriveaddresses,        {"descriptor", "range"}},
                 {"util",         "getdescriptorinfo",      &getdescriptorinfo,      {"descriptor"}},
                 {"util",         "verifymessage",          &verifymessage,          {"address",    "signature", "message"}},
                 {"util",         "signmessagewithprivkey", &signmessagewithprivkey, {"privkey",    "message"}},

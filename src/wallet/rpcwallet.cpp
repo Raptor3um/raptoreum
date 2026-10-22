@@ -1895,6 +1895,8 @@ UniValue listsinceblock(const JSONRPCRequest &request) {
     bool include_removed = (request.params[3].isNull() || request.params[3].get_bool());
 
     const Optional<int> tip_height = pwallet->chain().getHeight();
+    // depth filters transactions and comes from blockhash (params[0]);
+    // target_confirms only affects lastblockhash below, per the help text.
     int depth = tip_height && height ? (1 + *tip_height - *height) : -1;
 
     UniValue transactions(UniValue::VARR);
@@ -1902,7 +1904,7 @@ UniValue listsinceblock(const JSONRPCRequest &request) {
     for (const std::pair<const uint256, CWalletTx> &pairWtx: pwallet->mapWallet) {
         CWalletTx tx = pairWtx.second;
 
-        if (depth == -1 || tx.GetDepthInMainChain() < depth) {
+        if (depth == -1 || abs(tx.GetDepthInMainChain()) < depth) {
             ListTransactions(pwallet, tx, 0, true, transactions, filter, nullptr /* filter_label */);
         }
     }
@@ -3884,6 +3886,7 @@ UniValue getaddressinfo(const JSONRPCRequest &request) {
         ret.pushKV("desc", InferDescriptor(scriptPubKey, *pwallet)->ToString());
     }
     ret.pushKV("iswatchonly", bool(mine & ISMINE_WATCH_ONLY));
+    ret.pushKV("ischange", pwallet->IsChange(scriptPubKey));
     ret.pushKV("solvable", IsSolvable(*pwallet, scriptPubKey));
     UniValue detail = DescribeWalletAddress(pwallet, dest);
     ret.pushKVs(detail);
