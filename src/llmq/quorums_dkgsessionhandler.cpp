@@ -6,6 +6,7 @@
 #include <llmq/quorums_dkgsessionhandler.h>
 
 #include <llmq/quorums_commitment.h>
+#include <llmq/quorums_dkgabsencetracker.h>
 #include <llmq/quorums_dkgsession.h>
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_debug.h>
@@ -652,6 +653,19 @@ void CDKGSessionHandler::HandleDKGRound() {
     // (needs invCs). Building first and locking only to store avoids ever
     // holding both at once from this side.
     auto builtRecord = curSession->BuildAbsenceRecord(1);
+
+    // Cross-round accounting, so a future threshold/window decision has real
+    // per-round numbers to look at instead of none -- see
+    // quorums_dkgabsencetracker.h. Only for sessions we were actually a
+    // member of: a session we weren't selected into gives us no contribution/
+    // complaint/justification visibility at all, so recording its roster here
+    // would inflate roundsSelected with rounds that can never have a matching
+    // absence observation (BuildAbsenceRecord() already returns nullptr for
+    // those, via CheckAbsences()'s own AreWeMember() guard).
+    if (curSession->AreWeMember()) {
+        quorumDKGAbsenceTracker->RecordRound(params.type, curSession->GetMemberProTxHashes(), builtRecord.get());
+    }
+
     {
         LOCK(curSession->invCs);
         curSession->builtAbsenceRecord = std::move(builtRecord);
