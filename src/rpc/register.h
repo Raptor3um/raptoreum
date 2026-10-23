@@ -42,6 +42,9 @@ void RegisterQuorumsRPCCommands(CRPCTable &tableRPC);
 /** Register Quorums RPC commands */
 void RegisterAssetsRPCCommands(CRPCTable &tableRPC);
 
+/** Register Ethereum/EVM RPC commands (Phase 0 smoke namespace) */
+void RegisterEthereumRPCCommands(CRPCTable &tableRPC);
+
 static inline void RegisterAllCoreRPCCommands(CRPCTable &t) {
     RegisterBlockchainRPCCommands(t);
     RegisterNetRPCCommands(t);
@@ -54,6 +57,7 @@ static inline void RegisterAllCoreRPCCommands(CRPCTable &t) {
     RegisterEvoRPCCommands(t);
     RegisterQuorumsRPCCommands(t);
     RegisterAssetsRPCCommands(t);
+    RegisterEthereumRPCCommands(t);
 }
 
 #endif // BITCOIN_RPC_REGISTER_H

@@ -10,6 +10,7 @@
 
 #include <chainparams.h>
 #include <interfaces/node.h>
+#include <node/context.h>
 #include <qt/raptoreum.h>
 #include <qt/test/apptests.h>
 #include <qt/test/rpcnestedtests.h>
@@ -57,7 +58,8 @@ int main(int argc, char *argv[]) {
         BasicTestingSetup dummy{CBaseChainParams::REGTEST};
     }
 
-    std::unique_ptr <interfaces::Node> node = interfaces::MakeNode();
+    NodeContext node_context;
+    std::unique_ptr <interfaces::Node> node = interfaces::MakeNode(&node_context);
 
     bool fInvalid = false;
 

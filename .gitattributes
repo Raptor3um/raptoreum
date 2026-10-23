@@ -1,1 +1,99 @@
+# Line-ending normalization for cross-platform development.
+#
+# Without these rules, Windows clones with core.autocrlf=true check out shell
+# scripts with CRLF, which fails on Linux: /usr/bin/env interprets "bash\r" as
+# the binary name. Phase 0 of the EVM integration burned an afternoon on this;
+# see docs/evm/PHASE-0-HANDOFF.md § "Issue 1" for the discovery context.
+
+# ----------------------------------------------------------------------
+# Build-critical files: MUST be LF on all platforms
+# ----------------------------------------------------------------------
+
+*.sh           text eol=lf
+*.mk           text eol=lf
+*.am           text eol=lf
+*.ac           text eol=lf
+*.in           text eol=lf
+*.m4           text eol=lf
+Makefile*      text eol=lf
+configure*     text eol=lf
+
+# Build scripts without standard extension
+depends/config.guess        text eol=lf
+depends/config.sub          text eol=lf
+depends/gen_id              text eol=lf
+build-aux/compile           text eol=lf
+build-aux/config.guess      text eol=lf
+build-aux/config.sub        text eol=lf
+build-aux/depcomp           text eol=lf
+build-aux/install-sh        text eol=lf
+build-aux/missing           text eol=lf
+build-aux/test-driver       text eol=lf
+build-aux/ltmain.sh         text eol=lf
+share/genbuild.sh           text eol=lf
+
+# Python: keep LF (interpreted on Linux/macOS more often than Windows)
+*.py           text eol=lf
+
+# Debian packaging
+contrib/debian/rules        text eol=lf
+
+# CI / lint scripts
+test/lint/*.sh              text eol=lf
+test/lint/*.py              text eol=lf
+
+# ----------------------------------------------------------------------
+# Source files: declared text but allow native line endings on checkout
+# (clang-format and most editors handle both; not build-critical)
+# ----------------------------------------------------------------------
+
+*.cpp          text
+*.h            text
+*.hpp          text
+*.c            text
+*.cc           text
+*.hh           text
+
+# ----------------------------------------------------------------------
+# Markdown / config / data: normalize to LF for consistent diffs
+# ----------------------------------------------------------------------
+
+*.md           text eol=lf
+*.txt          text eol=lf
+*.json         text eol=lf
+*.yaml         text eol=lf
+*.yml          text eol=lf
+*.toml         text eol=lf
+
+# ----------------------------------------------------------------------
+# Existing rule (do not remove)
+# ----------------------------------------------------------------------
+
 src/clientversion.cpp export-subst
+
+# ----------------------------------------------------------------------
+# Binary files: never normalize
+# ----------------------------------------------------------------------
+
+*.png          binary
+*.jpg          binary
+*.jpeg         binary
+*.gif          binary
+*.ico          binary
+*.icns         binary
+*.bmp          binary
+*.pdf          binary
+*.zip          binary
+*.gz           binary
+*.bz2          binary
+*.tar          binary
+*.exe          binary
+*.dll          binary
+*.so           binary
+*.dylib        binary
+*.a            binary
+*.lib          binary
+*.o            binary
+*.obj          binary
+*.dat          binary
+*.raw          binary
