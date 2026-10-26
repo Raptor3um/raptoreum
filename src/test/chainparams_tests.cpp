@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(mainnet_default_assume_valid_is_not_null) {
 
     BOOST_CHECK(!assumeValid.IsNull());
     BOOST_CHECK_EQUAL(assumeValid.GetHex(),
-                       "6fb0b649723f51b67484019409fef94d077f17c8d88645e08c000b2e4fd3e28a");
+                       "4cd8ad75b5e03cf1f0be245042331d1bec64c35b6fcd44d6d3ebe29cc23c6c97");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
