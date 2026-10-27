@@ -86,6 +86,14 @@ public:
      */
     CService GetPeer();
 
+    /** Get the LOCAL (server-side) TCP port this request arrived on,
+     *  or -1 if it cannot be determined. Lets the JSON-RPC handler
+     *  distinguish the dedicated EVM RPC port (MetaMask/ethers:
+     *  unauthenticated + restricted to the eth_/net_/web3_ namespace)
+     *  from the authenticated admin RPC port, even though a single
+     *  evhttp serves both. */
+    int GetLocalPort();
+
     /** Get request method.
      */
     RequestMethod GetRequestMethod();

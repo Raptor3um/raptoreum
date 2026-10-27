@@ -32,6 +32,9 @@
 #include <llmq/quorums_init.h>
 #include <assets/assets.h>
 #include <assets/assetsdb.h>
+#include <evm/connectblock.h>
+#include <evm/state_db.h>
+#include <update/update.h>
 
 #include <memory>
 
@@ -142,6 +145,12 @@ TestingSetup::TestingSetup(const std::string &chainName) : BasicTestingSetup(cha
     ::ChainstateActive().InitCoinsCache(1 << 23);
     assert(::ChainstateActive().CanFlushToDisk());
     passetsdb.reset(new CAssetsDB(1 << 23, false, true));
+    // Regtest force-activates EVM + the D2 EVM_COMMIT hard fork at
+    // height 0, so the unit chain harness must own an EVM state DB
+    // exactly as the daemon does (init.cpp) — otherwise the miner
+    // cannot build the required v3 coinbase and every TestChainSetup
+    // suite would wedge. In-memory, like pblocktree / the coins DB.
+    pevmstatedb.reset(new evm::CEvmStateDB(1 << 20, /*fMemory=*/true));
     if (!LoadGenesisBlock(chainparams)) {
         throw std::runtime_error("LoadGenesisBlock failed.");
     }
@@ -181,6 +190,7 @@ TestingSetup::~TestingSetup() {
     m_node.chainman = nullptr;
     pblocktree.reset();
     passetsdb.reset();
+    pevmstatedb.reset();
 }
 
 TestChainSetup::TestChainSetup(int blockCount) {
@@ -258,8 +268,38 @@ CBlock TestChainSetup::CreateBlock(const std::vector <CMutableTransaction> &txns
         if (!CalcCbTxMerkleRootQuorums(block, ::ChainActive().Tip(), cbTx.merkleRootQuorums, state)) {
             BOOST_ASSERT(false);
         }
+        // D2 — when the EVM-commitment hard fork is active, the
+        // coinbase must commit the EVM roots over the FINAL assembled
+        // block (we just replaced block.vtx with the passed-in txns,
+        // which may include EVM txs). Recompute via the SAME shared
+        // helper the miner and validator use, so the harness produces
+        // valid v3 blocks carrying EVM transactions. We only need the
+        // five committed values to match the validator's recompute;
+        // the EIP-1559 tip is an upper bound on coinbase value, and a
+        // test coinbase legitimately under-claims it.
+        std::vector<evm::ApplyResult::UtxoCredit> spendCredits;
+        if (Updates().IsEvmCommitActive(::ChainActive().Tip()) && pevmstatedb) {
+            const auto commit = evm::ComputeCoinbaseEvmCommitment(
+                block, ::ChainActive().Tip(), *pevmstatedb,
+                chainparams.GetConsensus());
+            BOOST_ASSERT(commit.ok);
+            cbTx.nVersion = CCbTx::EVM_COMMIT_VERSION;
+            cbTx.evmStateRoot = commit.stateRoot;
+            cbTx.evmReceiptsRoot = commit.receiptsRoot;
+            cbTx.evmBaseFee = commit.baseFee;
+            cbTx.evmGasUsed = commit.gasUsed;
+            cbTx.evmExecTime = commit.execTime;
+            spendCredits = commit.utxoCredits;
+        }
+
         CMutableTransaction tmpTx{*block.vtx[0]};
         SetTxPayload(tmpTx, cbTx);
+        // Realise EVM_SPEND credits as coinbase outputs (mirrors the
+        // production miner) so harness blocks carrying SPEND txs pass
+        // ConnectBlock's CheckCoinbaseRealisesSpendCredits.
+        for (const auto& credit : spendCredits) {
+            tmpTx.vout.emplace_back(credit.amount, credit.script);
+        }
         block.vtx[0] = MakeTransactionRef(tmpTx);
     }
 

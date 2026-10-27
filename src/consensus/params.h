@@ -32,6 +32,7 @@ namespace Consensus {
  * Parameters that influence chain consensus.
  */
     struct Params {
+        int64_t evmChainId{7373};
         uint256 hashGenesisBlock;
         uint256 hashDevnetGenesisBlock;
         int nSubsidyHalvingInterval;
