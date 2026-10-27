@@ -23,7 +23,10 @@ param(
     [string]$DescriptionUrl = "https://raptoreum.com",
 
     [Parameter(HelpMessage="Automatically find signtool.exe")]
-    [switch]$AutoFindSignTool
+    [switch]$AutoFindSignTool,
+
+    [Parameter(HelpMessage="Skip the confirmation prompt for unattended signing")]
+    [switch]$SkipConfirmation
 )
 
 # Script version
@@ -164,10 +167,12 @@ Write-Host ""
 Write-Warning "⚠ Please ensure your USB token is unlocked"
 Write-Host "You may be prompted for your PIN by the SafeNet client" -ForegroundColor Gray
 Write-Host ""
-$confirm = Read-Host "Ready to sign? (Y/N)"
-if ($confirm -ne 'Y' -and $confirm -ne 'y') {
-    Write-Host "Signing cancelled by user" -ForegroundColor Yellow
-    exit 0
+if (-not $SkipConfirmation) {
+    $confirm = Read-Host "Ready to sign? (Y/N)"
+    if ($confirm -ne 'Y' -and $confirm -ne 'y') {
+        Write-Host "Signing cancelled by user" -ForegroundColor Yellow
+        exit 0
+    }
 }
 
 Write-Host ""
