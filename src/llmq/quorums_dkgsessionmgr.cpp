@@ -161,6 +161,7 @@ namespace llmq {
             && strCommand != NetMsgType::QCOMPLAINT
             && strCommand != NetMsgType::QJUSTIFICATION
             && strCommand != NetMsgType::QPCOMMITMENT
+            && strCommand != NetMsgType::QABSENCEVOTE
             && strCommand != NetMsgType::QWATCH) {
             return;
         }
@@ -210,7 +211,8 @@ namespace llmq {
             if (dkgType.pendingContributions.HasSeen(inv.hash)
                 || dkgType.pendingComplaints.HasSeen(inv.hash)
                 || dkgType.pendingJustifications.HasSeen(inv.hash)
-                || dkgType.pendingPrematureCommitments.HasSeen(inv.hash)) {
+                || dkgType.pendingPrematureCommitments.HasSeen(inv.hash)
+                || dkgType.pendingAbsenceVotes.HasSeen(inv.hash)) {
                 return true;
             }
         }
@@ -296,6 +298,53 @@ namespace llmq {
             }
         }
         return false;
+    }
+
+    bool CDKGSessionManager::GetAbsenceVote(const uint256 &hash, CDKGAbsenceVote &ret) const {
+        if (!IsQuorumDKGEnabled())
+            return false;
+
+        for (const auto &p: dkgSessionHandlers) {
+            auto &dkgType = p.second;
+            LOCK(dkgType.cs);
+            // Built at/after Finalize, for the lifetime of the session that
+            // built it -- once phase wraps back to Initialized for the next
+            // round, curSession is already a different (fresh) object, so no
+            // explicit upper bound is needed.
+            if (dkgType.phase < QuorumPhase_Finalize) {
+                continue;
+            }
+            LOCK(dkgType.curSession->invCs);
+            auto it = dkgType.curSession->absenceVotes.find(hash);
+            if (it != dkgType.curSession->absenceVotes.end()) {
+                ret = it->second;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool CDKGSessionManager::GetAbsenceRecord(Consensus::LLMQType llmqType, CDKGAbsenceRecord &ret) const {
+        if (!IsQuorumDKGEnabled())
+            return false;
+
+        auto it = dkgSessionHandlers.find(llmqType);
+        if (it == dkgSessionHandlers.end()) {
+            return false;
+        }
+        auto &dkgType = it->second;
+        LOCK(dkgType.cs);
+        // Same lower bound as GetAbsenceVote, for the same reason: built
+        // at/after Finalize, for the lifetime of the session that built it.
+        if (dkgType.phase < QuorumPhase_Finalize) {
+            return false;
+        }
+        LOCK(dkgType.curSession->invCs);
+        if (!dkgType.curSession->builtAbsenceRecord) {
+            return false;
+        }
+        ret = *dkgType.curSession->builtAbsenceRecord;
+        return true;
     }
 
     void CDKGSessionManager::WriteVerifiedVvecContribution(Consensus::LLMQType llmqType,
