@@ -10,6 +10,7 @@
 #include <llmq/quorums_commitment.h>
 #include <llmq/quorums_chainlocks.h>
 #include <llmq/quorums_debug.h>
+#include <llmq/quorums_dkgabsencetracker.h>
 #include <llmq/quorums_dkgsessionmgr.h>
 #include <llmq/quorums_instantsend.h>
 #include <llmq/quorums_signing.h>
@@ -26,6 +27,7 @@ namespace llmq {
         blsWorker = new CBLSWorker();
 
         quorumDKGDebugManager = new CDKGDebugManager();
+        quorumDKGAbsenceTracker = new CDKGAbsenceTracker();
         quorumBlockProcessor = new CQuorumBlockProcessor(evoDb, connman);
         quorumDKGSessionManager = new CDKGSessionManager(connman, *blsWorker, unitTests, fWipe);
         quorumManager = new CQuorumManager(evoDb, connman, *blsWorker, *quorumDKGSessionManager);
@@ -56,6 +58,8 @@ namespace llmq {
         quorumBlockProcessor = nullptr;
         delete quorumDKGDebugManager;
         quorumDKGDebugManager = nullptr;
+        delete quorumDKGAbsenceTracker;
+        quorumDKGAbsenceTracker = nullptr;
         delete blsWorker;
         blsWorker = nullptr;
     }

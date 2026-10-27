@@ -18,7 +18,9 @@
 #include <llmq/quorums_commitment.h>
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_debug.h>
+#include <llmq/quorums_dkgabsencetracker.h>
 #include <llmq/quorums_dkgsession.h>
+#include <llmq/quorums_dkgsessionmgr.h>
 #include <llmq/quorums_signing.h>
 #include <llmq/quorums_signing_shares.h>
 
@@ -191,6 +193,8 @@ UniValue quorum_dkgstatus(const JSONRPCRequest &request) {
     return activeSmartnodeInfo.proTxHash);
     UniValue mineableCommitments(UniValue::VOBJ);
     UniValue quorumConnections(UniValue::VOBJ);
+    UniValue absenceRecords(UniValue::VOBJ);
+    UniValue absenceStats(UniValue::VOBJ);
     for (const auto &type: llmq::CLLMQUtils::GetEnabledQuorumTypes(pindexTip)) {
         const auto &llmq_params = llmq::GetLLMQParams(type);
 
@@ -232,10 +236,45 @@ UniValue quorum_dkgstatus(const JSONRPCRequest &request) {
             fqc.ToJson(obj);
             mineableCommitments.pushKV(std::string(llmq_params.name), obj);
         }
+
+        // Interim reporting for the phantom-pruning evidence pipeline:
+        // identify (CDKGAbsenceVote) -> agree (BuildAbsenceRecord, run
+        // automatically in HandleDKGRound) -> report (here, until the
+        // special transaction replaces this -- see the design doc's
+        // Release A/B split). Local-node-only, no P2P relay of the record
+        // itself yet, no consensus weight: this is this node's own
+        // self-verified view, not a network-wide claim.
+        llmq::CDKGAbsenceRecord absenceRecord;
+        if (llmq::quorumDKGSessionManager->GetAbsenceRecord(type, absenceRecord)) {
+            UniValue obj(UniValue::VOBJ);
+            absenceRecord.ToJson(obj);
+            absenceRecords.pushKV(std::string(llmq_params.name), obj);
+        }
+
+        // Cross-round counts behind the single-round records above: how many
+        // times has this node selected (and separately, reported absent)
+        // each member across every round it ran for this type since this
+        // process started. See quorums_dkgabsencetracker.h -- no threshold,
+        // no consequence, just the numbers a future decision would need.
+        auto allStats = llmq::quorumDKGAbsenceTracker->GetAllStats(type);
+        if (!allStats.empty()) {
+            UniValue statsArr(UniValue::VARR);
+            for (const auto &[proTxHash, stats]: allStats) {
+                UniValue obj(UniValue::VOBJ);
+                // ToJson() calls setObject() first, which would wipe any
+                // key pushed before it -- push proTxHash after, not before.
+                stats.ToJson(obj);
+                obj.pushKV("proTxHash", proTxHash.ToString());
+                statsArr.push_back(obj);
+            }
+            absenceStats.pushKV(std::string(llmq_params.name), statsArr);
+        }
     }
 
     ret.pushKV("mineableCommitments", mineableCommitments);
     ret.pushKV("quorumConnections", quorumConnections);
+    ret.pushKV("absenceRecords", absenceRecords);
+    ret.pushKV("absenceStats", absenceStats);
 
     return ret;
 }
