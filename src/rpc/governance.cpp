@@ -723,24 +723,26 @@ UniValue ListObjects(const std::string &strCachedSignal, const std::string &strT
 
     LOCK2(cs_main, governance.cs);
 
-    std::vector <CGovernanceObject> objs = governance.GetAllNewerThan(nStartTime);
     governance.UpdateLastDiffTime(GetTime());
 
     // CREATE RESULTS FOR USER
 
-    for (const auto &govObj: objs) {
-        if (strCachedSignal == "valid" && !govObj.IsSetCachedValid()) continue;
-        if (strCachedSignal == "funding" && !govObj.IsSetCachedFunding()) continue;
-        if (strCachedSignal == "delete" && !govObj.IsSetCachedDelete()) continue;
-        if (strCachedSignal == "endorsed" && !govObj.IsSetCachedEndorsed()) continue;
+    governance.ForEachObjectNewerThan(nStartTime, [&](const CGovernanceObject &govObj) {
+        if (strCachedSignal == "valid" && !govObj.IsSetCachedValid()) return;
+        if (strCachedSignal == "funding" && !govObj.IsSetCachedFunding()) return;
+        if (strCachedSignal == "delete" && !govObj.IsSetCachedDelete()) return;
+        if (strCachedSignal == "endorsed" && !govObj.IsSetCachedEndorsed()) return;
 
-        if (strType == "proposals" && govObj.GetObjectType() != GOVERNANCE_OBJECT_PROPOSAL) continue;
-        if (strType == "triggers" && govObj.GetObjectType() != GOVERNANCE_OBJECT_TRIGGER) continue;
+        if (strType == "proposals" && govObj.GetObjectType() != GOVERNANCE_OBJECT_PROPOSAL) return;
+        if (strType == "triggers" && govObj.GetObjectType() != GOVERNANCE_OBJECT_TRIGGER) return;
+
+        // GetHash() is recomputed from the object data on every call, so do it once.
+        const std::string strHash = govObj.GetHash().ToString();
 
         UniValue bObj(UniValue::VOBJ);
         bObj.pushKV("DataHex", govObj.GetDataAsHexString());
         bObj.pushKV("DataString", govObj.GetDataAsPlainString());
-        bObj.pushKV("Hash", govObj.GetHash().ToString());
+        bObj.pushKV("Hash", strHash);
         bObj.pushKV("CollateralHash", govObj.GetCollateralHash().ToString());
         bObj.pushKV("ObjectType", govObj.GetObjectType());
         bObj.pushKV("CreationTime", govObj.GetCreationTime());
@@ -750,9 +752,13 @@ UniValue ListObjects(const std::string &strCachedSignal, const std::string &strT
         }
 
         // REPORT STATUS FOR FUNDING VOTES SPECIFICALLY
-        bObj.pushKV("AbsoluteYesCount", govObj.GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING));
-        bObj.pushKV("YesCount", govObj.GetYesCount(VOTE_SIGNAL_FUNDING));
-        bObj.pushKV("NoCount", govObj.GetNoCount(VOTE_SIGNAL_FUNDING));
+        // Each of these walks the whole vote map, and GetAbsoluteYesCount() is
+        // defined as yes - no, so count each outcome once and reuse the results.
+        const int nYesCount = govObj.GetYesCount(VOTE_SIGNAL_FUNDING);
+        const int nNoCount = govObj.GetNoCount(VOTE_SIGNAL_FUNDING);
+        bObj.pushKV("AbsoluteYesCount", nYesCount - nNoCount);
+        bObj.pushKV("YesCount", nYesCount);
+        bObj.pushKV("NoCount", nNoCount);
         bObj.pushKV("AbstainCount", govObj.GetAbstainCount(VOTE_SIGNAL_FUNDING));
 
         // REPORT VALIDITY AND CACHING FLAGS FOR VARIOUS SETTINGS
@@ -764,8 +770,8 @@ UniValue ListObjects(const std::string &strCachedSignal, const std::string &strT
         bObj.pushKV("fCachedDelete", govObj.IsSetCachedDelete());
         bObj.pushKV("fCachedEndorsed", govObj.IsSetCachedEndorsed());
 
-        objResult.pushKV(govObj.GetHash().ToString(), bObj);
-    }
+        objResult.pushKV(strHash, bObj);
+    });
 
     return objResult;
 }
