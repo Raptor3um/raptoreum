@@ -61,7 +61,7 @@ MESSAGEMAP = {
     b"islock": msg_islock,
     b"isdlock": msg_isdlock,
     b"mnlistdiff": msg_mnlistdiff,
-    b"notfound": None,
+    b"notfound": msg_notfound,
     b"qfcommit": None,
     b"qsendrecsigs": None,
     b"qgetdata": msg_qgetdata,
@@ -109,6 +109,7 @@ class P2PConnection(asyncore.dispatcher):
         self.recvbuf = b""
         self._asyncore_pre_connection = True
         self.network = net
+        self.magic_bytes = MAGIC_BYTES[net]
         self.devnet_name = devnet_name
         self.uacomment = uacomment
         self.disconnect = False
@@ -176,7 +177,7 @@ class P2PConnection(asyncore.dispatcher):
             while True:
                 if len(self.recvbuf) < 4:
                     return
-                if self.recvbuf[:4] != MAGIC_BYTES[self.network]:
+                if self.recvbuf[:4] != self.magic_bytes:
                     raise ValueError("got garbage %s" % repr(self.recvbuf))
                 if len(self.recvbuf) < 4 + 12 + 4 + 4:
                     return
@@ -243,7 +244,7 @@ class P2PConnection(asyncore.dispatcher):
         if not self.is_connected:
             raise IOError('Not connected')
         self._log_message("send", message)
-        tmsg = self._build_message(message)
+        tmsg = self.build_message(message)
         with mininode_lock:
             if len(self.sendbuf) == 0:
                 try:
@@ -254,13 +255,27 @@ class P2PConnection(asyncore.dispatcher):
             else:
                 self.sendbuf += tmsg
 
+    def send_raw_message(self, raw_message_bytes):
+        """Queue already-serialised bytes, header and all, without building one."""
+        if not self.is_connected:
+            raise IOError('Not connected')
+        with mininode_lock:
+            if len(self.sendbuf) == 0:
+                try:
+                    sent = self.send(raw_message_bytes)
+                    self.sendbuf = raw_message_bytes[sent:]
+                except BlockingIOError:
+                    self.sendbuf = raw_message_bytes
+            else:
+                self.sendbuf += raw_message_bytes
+
     # Class utility methods
 
-    def _build_message(self, message):
+    def build_message(self, message):
         """Build a serialized P2P message"""
         command = message.command
         data = message.serialize()
-        tmsg = MAGIC_BYTES[self.network]
+        tmsg = self.magic_bytes
         tmsg += command
         tmsg += b"\x00" * (12 - len(command))
         tmsg += struct.pack("<I", len(data))
@@ -317,7 +332,7 @@ class P2PInterface(P2PConnection):
             vt.addrFrom.ip = "0.0.0.0"
             vt.addrFrom.port = 0
             vt.strSubVer = self.strSubVer
-            self.sendbuf = self._build_message(vt)  # Will be sent right after handle_connect
+            self.sendbuf = self.build_message(vt)  # Will be sent right after handle_connect
 
     # Message receiving methods
 
@@ -357,6 +372,7 @@ class P2PInterface(P2PConnection):
     def on_getheaders(self, message): pass
     def on_headers(self, message): pass
     def on_mempool(self, message): pass
+    def on_notfound(self, message): pass
     def on_pong(self, message): pass
     def on_reject(self, message): pass
     def on_sendcmpct(self, message): pass
@@ -403,6 +419,21 @@ class P2PInterface(P2PConnection):
 
     def wait_for_block(self, blockhash, timeout=60):
         test_function = lambda: self.last_message.get("block") and self.last_message["block"].block.rehash() == blockhash
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
+
+    def wait_for_header(self, blockhash, timeout=60):
+        def test_function():
+            last_headers = self.last_message.get('headers')
+            if not last_headers:
+                return False
+            return last_headers.headers[0].rehash() == int(blockhash, 16)
+        wait_until(test_function, timeout=timeout, lock=mininode_lock)
+
+    def wait_for_tx(self, txid, timeout=60):
+        def test_function():
+            if not self.last_message.get('tx'):
+                return False
+            return self.last_message['tx'].tx.rehash() == txid
         wait_until(test_function, timeout=timeout, lock=mininode_lock)
 
     def wait_for_getdata(self, timeout=60):

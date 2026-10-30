@@ -181,6 +181,13 @@ namespace llmq {
         // Peek into the message and see which LLMQType it is. First byte of all messages is always the LLMQType
         Consensus::LLMQType llmqType = (Consensus::LLMQType) * vRecv.begin();
         if (llmqType == Consensus::LLMQType::LLMQ_INVALID && (strCommand == NetMsgType::QCONTRIB || strCommand == NetMsgType::QPCOMMITMENT)) {
+            // These messages carry the real LLMQType in the second byte. Reject a
+            // 1-byte message instead of reading past the end of the buffer.
+            if (vRecv.size() < 2) {
+                LOCK(cs_main);
+                Misbehaving(pfrom->GetId(), 100);
+                return;
+            }
             llmqType = (Consensus::LLMQType) * (vRecv.begin() + 1);
         }
 
@@ -432,6 +439,10 @@ namespace llmq {
         return sporkManager.IsSporkActive(SPORK_17_QUORUM_DKG_ENABLED);
     }
 
+    bool IsContributionExpired(int nTipHeight, int nQuorumHeight, const Consensus::LLMQParams &params) {
+        return nTipHeight - nQuorumHeight > params.max_store_depth();
+    }
+
     void CDKGSessionManager::CleanupOldContributions() const
     {
         LOCK(cs_db);
@@ -462,7 +473,7 @@ namespace llmq {
                     }
                     cnt_all++;
                     const CBlockIndex* pindexQuorum = LookupBlockIndex(std::get<2>(k));
-                    if (pindexQuorum == nullptr || ::ChainActive().Tip()->nHeight - pindexQuorum->nHeight > params.max_store_depth()) {
+                    if (pindexQuorum == nullptr || IsContributionExpired(::ChainActive().Tip()->nHeight, pindexQuorum->nHeight, params)) {
                         LogPrint(BCLog::LLMQ, "CDKGSessionManager::%s -- removing element for llmq type %d\n", __func__, uint8_t(params.type));
 
                         // not found or too old

@@ -316,6 +316,17 @@ bool AcceptToMemoryPool(CTxMemPool &pool, CValidationState &state, const CTransa
                         bool *pfMissingInputs, bool bypass_limits,
                         const CAmount nAbsurdFee, bool fDryRun = false);
 
+/**
+ * Does this transaction need a working copy of the global asset cache?
+ *
+ * True only for the three asset transaction types (NEW_ASSET/UPDATE_ASSET/MINT_ASSET);
+ * every other type CheckSpecialTx dispatches to either doesn't take an assetsCache
+ * parameter at all, or (TRANSACTION_NORMAL) never reaches the dispatcher. Kept in exact
+ * agreement with AcceptToMemoryPoolWorker's own use of it and with CheckSpecialTx's switch
+ * in evo/specialtx.cpp.
+ */
+bool TxNeedsAssetsCache(const CTransaction &tx);
+
 bool GetUTXOCoin(const COutPoint &outpoint, Coin &coin, int height);
 
 bool GetUTXOCoin(const COutPoint &outpoint, Coin &coin);

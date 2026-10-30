@@ -202,6 +202,13 @@ class BaseNode(P2PInterface):
             self.block_announced = False
             self.last_message.pop("inv", None)
 
+# src/validation.h. Raptoreum raised this from Bitcoin's 8, so the reorgs below
+# have to be sized against it: a reorg of `length` replaces those blocks with
+# length + 1 new ones, and the node reverts to an inv once that count exceeds
+# MAX_BLOCKS_TO_ANNOUNCE.
+MAX_BLOCKS_TO_ANNOUNCE = 16
+
+
 class SendHeadersTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
@@ -268,7 +275,7 @@ class SendHeadersTest(BitcoinTestFramework):
         test_node.check_last_headers_announcement(headers=[tip_hash])
 
         self.log.info("Verify getheaders with null locator and invalid hashstop does not return headers.")
-        block = create_block(int(tip["hash"], 16), create_coinbase(tip["height"] + 1), tip["mediantime"] + 1)
+        block = create_block(int(tip["hash"], 16), create_coinbase(tip["height"] + 1), tip["mediantime"] + 1, node=self.nodes[0])
         block.solve()
         test_node.send_header_for_blocks([block])
         test_node.clear_block_announcements()
@@ -308,7 +315,7 @@ class SendHeadersTest(BitcoinTestFramework):
                 height = self.nodes[0].getblockcount()
                 last_time = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['time']
                 block_time = last_time + 1
-                new_block = create_block(tip, create_coinbase(height + 1), block_time)
+                new_block = create_block(tip, create_coinbase(height + 1), block_time, node=self.nodes[0])
                 new_block.solve()
                 test_node.send_header_for_blocks([new_block])
                 test_node.wait_for_getdata([new_block.sha256])
@@ -345,7 +352,7 @@ class SendHeadersTest(BitcoinTestFramework):
                 self.log.debug("Part 2.{}.{}: starting...".format(i, j))
                 blocks = []
                 for b in range(i + 1):
-                    blocks.append(create_block(tip, create_coinbase(height), block_time))
+                    blocks.append(create_block(tip, create_coinbase(height), block_time, node=self.nodes[0]))
                     blocks[-1].solve()
                     tip = blocks[-1].sha256
                     block_time += 1
@@ -391,20 +398,20 @@ class SendHeadersTest(BitcoinTestFramework):
         for j in range(2):
             self.log.debug("Part 3.{}: starting...".format(j))
             # First try mining a reorg that can propagate with header announcement
-            new_block_hashes = self.mine_reorg(length=7)
+            new_block_hashes = self.mine_reorg(length=MAX_BLOCKS_TO_ANNOUNCE - 1)
             tip = new_block_hashes[-1]
             inv_node.check_last_inv_announcement(inv=[tip])
             test_node.check_last_headers_announcement(headers=new_block_hashes)
 
-            block_time += 8
+            block_time += MAX_BLOCKS_TO_ANNOUNCE
 
             # Mine a too-large reorg, which should be announced with a single inv
-            new_block_hashes = self.mine_reorg(length=8)
+            new_block_hashes = self.mine_reorg(length=MAX_BLOCKS_TO_ANNOUNCE)
             tip = new_block_hashes[-1]
             inv_node.check_last_inv_announcement(inv=[tip])
             test_node.check_last_inv_announcement(inv=[tip])
 
-            block_time += 9
+            block_time += MAX_BLOCKS_TO_ANNOUNCE + 1
 
             fork_point = self.nodes[0].getblock("%02x" % new_block_hashes[0])["previousblockhash"]
             fork_point = int(fork_point, 16)
@@ -457,7 +464,7 @@ class SendHeadersTest(BitcoinTestFramework):
         # Create 2 blocks.  Send the blocks, then send the headers.
         blocks = []
         for b in range(2):
-            blocks.append(create_block(tip, create_coinbase(height), block_time))
+            blocks.append(create_block(tip, create_coinbase(height), block_time, node=self.nodes[0]))
             blocks[-1].solve()
             tip = blocks[-1].sha256
             block_time += 1
@@ -475,7 +482,7 @@ class SendHeadersTest(BitcoinTestFramework):
         # This time, direct fetch should work
         blocks = []
         for b in range(3):
-            blocks.append(create_block(tip, create_coinbase(height), block_time))
+            blocks.append(create_block(tip, create_coinbase(height), block_time, node=self.nodes[0]))
             blocks[-1].solve()
             tip = blocks[-1].sha256
             block_time += 1
@@ -489,14 +496,17 @@ class SendHeadersTest(BitcoinTestFramework):
 
         test_node.sync_with_ping()
 
-        # Now announce a header that forks the last two blocks
+        # Now announce a header that forks the last two blocks. The fork point
+        # is blocks[0], so the next block is two below where `height` now
+        # stands -- Raptoreum checks the CbTx nHeight on every block, so an
+        # off-by-one here is a bad-cbtx-height rejection and a banned peer.
         tip = blocks[0].sha256
-        height -= 1
+        height -= 2
         blocks = []
 
         # Create extra blocks for later
         for b in range(20):
-            blocks.append(create_block(tip, create_coinbase(height), block_time))
+            blocks.append(create_block(tip, create_coinbase(height), block_time, node=self.nodes[0]))
             blocks[-1].solve()
             tip = blocks[-1].sha256
             block_time += 1
@@ -543,7 +553,7 @@ class SendHeadersTest(BitcoinTestFramework):
             blocks = []
             # Create two more blocks.
             for j in range(2):
-                blocks.append(create_block(tip, create_coinbase(height), block_time))
+                blocks.append(create_block(tip, create_coinbase(height), block_time, node=self.nodes[0]))
                 blocks[-1].solve()
                 tip = blocks[-1].sha256
                 block_time += 1
@@ -564,7 +574,7 @@ class SendHeadersTest(BitcoinTestFramework):
         # don't go into an infinite loop trying to get them to connect.
         MAX_UNCONNECTING_HEADERS = 10
         for j in range(MAX_UNCONNECTING_HEADERS + 1):
-            blocks.append(create_block(tip, create_coinbase(height), block_time))
+            blocks.append(create_block(tip, create_coinbase(height), block_time, node=self.nodes[0]))
             blocks[-1].solve()
             tip = blocks[-1].sha256
             block_time += 1

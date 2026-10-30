@@ -2,25 +2,50 @@
 # Copyright (c) 2015-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test BIP65 (CHECKLOCKTIMEVERIFY).
+"""Test BIP65 (CHECKLOCKTIMEVERIFY) enforcement.
 
-Test that the CHECKLOCKTIMEVERIFY soft-fork activates at (regtest) block height
-1351.
+Raptoreum has no soft-fork activation for BIP65: consensus.BIP65Enabled is a
+bool that is true on every network (chainparams.cpp), so SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY
+is in the consensus flags from genesis. The block-version ratchet that went
+with the activation is commented out in ContextualCheckBlockHeader, so a
+low-version block is not rejected either. What is left to test is enforcement:
+a transaction failing CLTV must be refused by both the mempool and the block
+validator, and its fixed-up form must be accepted.
 """
 
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-from test_framework.mininode import *
-from test_framework.blocktools import create_coinbase, create_block
-from test_framework.script import CScript, OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP, CScriptNum
 from io import BytesIO
 
-CLTV_HEIGHT = 1351
+from test_framework.blocktools import create_block, create_coinbase
+from test_framework.mininode import (
+    CTransaction,
+    P2PInterface,
+    ToHex,
+    mininode_lock,
+    msg_block,
+    network_thread_start,
+)
+from test_framework.script import (
+    CScript,
+    CScriptNum,
+    OP_1NEGATE,
+    OP_CHECKLOCKTIMEVERIFY,
+    OP_DROP,
+)
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+    bytes_to_hex_str,
+    hex_str_to_bytes,
+    wait_until,
+)
 
-# Reject codes that we might receive in this test
+# Enough blocks for the first coinbase to mature (COINBASE_MATURITY = 100).
+MATURITY_BLOCKS = 101
+
 REJECT_INVALID = 16
-REJECT_OBSOLETE = 17
 REJECT_NONSTANDARD = 64
+
 
 def cltv_invalidate(tx):
     '''Modify the signature in vin 0 of the tx to fail CLTV
@@ -32,6 +57,7 @@ def cltv_invalidate(tx):
     '''
     tx.vin[0].scriptSig = CScript([OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP] +
                                   list(CScript(tx.vin[0].scriptSig)))
+
 
 def cltv_validate(node, tx, height):
     '''Modify the signature in vin 0 of the tx to pass CLTV
@@ -46,112 +72,80 @@ def cltv_validate(node, tx, height):
     new_tx.deserialize(BytesIO(hex_str_to_bytes(signed_result['hex'])))
 
     new_tx.vin[0].scriptSig = CScript([CScriptNum(height), OP_CHECKLOCKTIMEVERIFY, OP_DROP] +
-                                  list(CScript(new_tx.vin[0].scriptSig)))
+                                      list(CScript(new_tx.vin[0].scriptSig)))
     return new_tx
+
 
 def create_transaction(node, coinbase, to_address, amount):
     from_txid = node.getblock(coinbase)['tx'][0]
-    inputs = [{ "txid" : from_txid, "vout" : 0}]
-    outputs = { to_address : amount }
+    inputs = [{"txid": from_txid, "vout": 0}]
+    outputs = {to_address: amount}
     rawtx = node.createrawtransaction(inputs, outputs)
     signresult = node.signrawtransactionwithwallet(rawtx)
     tx = CTransaction()
     tx.deserialize(BytesIO(hex_str_to_bytes(signresult['hex'])))
     return tx
 
+
 class BIP65Test(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.extra_args = [['-whitelist=127.0.0.1', '-dip3params=9000:9000']]
+        self.extra_args = [['-whitelist=127.0.0.1']]
         self.setup_clean_chain = True
 
     def run_test(self):
-        self.nodes[0].add_p2p_connection(P2PInterface())
+        node = self.nodes[0]
+        node.add_p2p_connection(P2PInterface())
 
         network_thread_start()
+        node.p2p.wait_for_verack()
 
-        # wait_for_verack ensures that the P2P connection is fully up.
-        self.nodes[0].p2p.wait_for_verack()
+        self.log.info("Mining %d blocks", MATURITY_BLOCKS)
+        self.coinbase_blocks = node.generate(MATURITY_BLOCKS)
+        self.nodeaddress = node.getnewaddress()
 
-        self.log.info("Mining %d blocks", CLTV_HEIGHT - 2)
-        self.coinbase_blocks = self.nodes[0].generate(CLTV_HEIGHT - 2)
-        self.nodeaddress = self.nodes[0].getnewaddress()
+        tip = node.getbestblockhash()
+        block_time = node.getblockheader(tip)['mediantime'] + 1
+        height = node.getblockcount() + 1
 
-        self.log.info("Test that an invalid-according-to-CLTV transaction can still appear in a block")
-
-        spendtx = create_transaction(self.nodes[0], self.coinbase_blocks[0],
-                self.nodeaddress, 1.0)
+        self.log.info("Test that an invalid-according-to-CLTV transaction is rejected from the mempool")
+        spendtx = create_transaction(node, self.coinbase_blocks[0], self.nodeaddress, 1.0)
         cltv_invalidate(spendtx)
         spendtx.rehash()
+        assert_raises_rpc_error(-26, 'non-mandatory-script-verify-flag (Negative locktime) (code 64)',
+                                node.sendrawtransaction, bytes_to_hex_str(spendtx.serialize()), 0)
 
-        tip = self.nodes[0].getbestblockhash()
-        block_time = self.nodes[0].getblockheader(tip)['mediantime'] + 1
-        block = create_block(int(tip, 16), create_coinbase(CLTV_HEIGHT - 1), block_time)
-        block.nVersion = 3
+        self.log.info("Test that a block containing it is rejected too")
+        block = create_block(int(tip, 16), create_coinbase(height), block_time, node=node)
         block.vtx.append(spendtx)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()
 
-        self.nodes[0].p2p.send_and_ping(msg_block(block))
-        assert_equal(self.nodes[0].getbestblockhash(), block.hash)
+        node.p2p.send_and_ping(msg_block(block))
+        assert_equal(node.getbestblockhash(), tip)
 
-        self.log.info("Test that blocks must now be at least version 4")
-        tip = block.sha256
-        block_time += 1
-        block = create_block(tip, create_coinbase(CLTV_HEIGHT), block_time)
-        block.nVersion = 3
-        block.solve()
-        self.nodes[0].p2p.send_and_ping(msg_block(block))
-        assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
-
-        wait_until(lambda: "reject" in self.nodes[0].p2p.last_message.keys(), lock=mininode_lock)
+        wait_until(lambda: "reject" in node.p2p.last_message.keys(), lock=mininode_lock)
         with mininode_lock:
-            assert_equal(self.nodes[0].p2p.last_message["reject"].code, REJECT_OBSOLETE)
-            assert_equal(self.nodes[0].p2p.last_message["reject"].reason, b'bad-version(0x00000003)')
-            assert_equal(self.nodes[0].p2p.last_message["reject"].data, block.sha256)
-            del self.nodes[0].p2p.last_message["reject"]
-
-        self.log.info("Test that invalid-according-to-cltv transactions cannot appear in a block")
-        block.nVersion = 4
-
-        spendtx = create_transaction(self.nodes[0], self.coinbase_blocks[1],
-                self.nodeaddress, 1.0)
-        cltv_invalidate(spendtx)
-        spendtx.rehash()
-
-        # First we show that this tx is valid except for CLTV by getting it
-        # rejected from the mempool for exactly that reason.
-        assert_raises_rpc_error(-26, 'non-mandatory-script-verify-flag (Negative locktime) (code 64)', self.nodes[0].sendrawtransaction, bytes_to_hex_str(spendtx.serialize()), True)
-
-        # Now we verify that a block with this transaction is also invalid.
-        block.vtx.append(spendtx)
-        block.hashMerkleRoot = block.calc_merkle_root()
-        block.solve()
-
-        self.nodes[0].p2p.send_and_ping(msg_block(block))
-        assert_equal(int(self.nodes[0].getbestblockhash(), 16), tip)
-
-        wait_until(lambda: "reject" in self.nodes[0].p2p.last_message.keys(), lock=mininode_lock)
-        with mininode_lock:
-            assert self.nodes[0].p2p.last_message["reject"].code in [REJECT_INVALID, REJECT_NONSTANDARD]
-            assert_equal(self.nodes[0].p2p.last_message["reject"].data, block.sha256)
-            if self.nodes[0].p2p.last_message["reject"].code == REJECT_INVALID:
+            assert node.p2p.last_message["reject"].code in [REJECT_INVALID, REJECT_NONSTANDARD]
+            assert_equal(node.p2p.last_message["reject"].data, block.sha256)
+            if node.p2p.last_message["reject"].code == REJECT_INVALID:
                 # Generic rejection when a block is invalid
-                assert_equal(self.nodes[0].p2p.last_message["reject"].reason, b'block-validation-failed')
+                assert_equal(node.p2p.last_message["reject"].reason, b'block-validation-failed')
             else:
-                assert b'Negative locktime' in self.nodes[0].p2p.last_message["reject"].reason
+                assert b'Negative locktime' in node.p2p.last_message["reject"].reason
+            del node.p2p.last_message["reject"]
 
-        self.log.info("Test that a version 4 block with a valid-according-to-CLTV transaction is accepted")
-        spendtx = cltv_validate(self.nodes[0], spendtx, CLTV_HEIGHT - 1)
+        self.log.info("Test that a block with a valid-according-to-CLTV transaction is accepted")
+        spendtx = cltv_validate(node, spendtx, height - 1)
         spendtx.rehash()
 
-        block.vtx.pop(1)
+        block = create_block(int(tip, 16), create_coinbase(height), block_time, node=node)
         block.vtx.append(spendtx)
         block.hashMerkleRoot = block.calc_merkle_root()
         block.solve()
 
-        self.nodes[0].p2p.send_and_ping(msg_block(block))
-        assert_equal(int(self.nodes[0].getbestblockhash(), 16), block.sha256)
+        node.p2p.send_and_ping(msg_block(block))
+        assert_equal(int(node.getbestblockhash(), 16), block.sha256)
 
 
 if __name__ == '__main__':

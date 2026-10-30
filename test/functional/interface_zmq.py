@@ -9,14 +9,17 @@ from codecs import encode
 
 from test_framework.test_framework import (
     BitcoinTestFramework, skip_if_no_bitcoind_zmq, skip_if_no_py3_zmq)
-from test_framework.mininode import dashhash
 from test_framework.util import (assert_equal,
                                  bytes_to_hex_str,
                                  hash256,
                                  )
 
-def dashhash_helper(b):
-    return encode(dashhash(b)[::-1], 'hex_codec').decode('ascii')
+def block_hash_helper(header):
+    """A block's identity hash is SHA256d over its header. GhostRider is only
+    the proof of work, reached through GetPOWHash(); CBlockHeader::GetHash()
+    and ComputeHash() are different functions here. util.hash256 already
+    returns the bytes in RPC order."""
+    return encode(hash256(header), 'hex_codec').decode('ascii')
 
 class ZMQSubscriber:
     def __init__(self, socket, topic):
@@ -82,22 +85,24 @@ class ZMQTest (BitcoinTestFramework):
         self.sync_all()
 
         for x in range(num_blocks):
-            # Should receive the coinbase txid.
-            txid = self.hashtx.receive()
-
-            # Should receive the coinbase raw transaction.
-            hex = self.rawtx.receive()
-            assert_equal(hash256(hex), txid)
+            # CZMQNotificationInterface::BlockConnected notifies once per
+            # transaction in the block, and a block inside a DKG mining window
+            # carries a quorum commitment beside the coinbase, so this is not
+            # always just the one.
+            block_txids = self.nodes[1].getblock(genhashes[x])["tx"]
+            for expected_txid in block_txids:
+                txid = self.hashtx.receive()
+                assert_equal(bytes_to_hex_str(txid), expected_txid)
+                hex = self.rawtx.receive()
+                assert_equal(hash256(hex), txid)
 
             # Should receive the generated block hash.
             hash = bytes_to_hex_str(self.hashblock.receive())
             assert_equal(genhashes[x], hash)
-            # The block should only have the coinbase txid.
-            assert_equal([bytes_to_hex_str(txid)], self.nodes[1].getblock(hash)["tx"])
 
             # Should receive the generated raw block.
             block = self.rawblock.receive()
-            assert_equal(genhashes[x], dashhash_helper(block[:80]))
+            assert_equal(genhashes[x], block_hash_helper(block[:80]))
 
         self.log.info("Wait for tx from second node")
         payment_txid = self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 1.0)

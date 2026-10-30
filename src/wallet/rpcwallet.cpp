@@ -329,7 +329,10 @@ UniValue sendtoaddress(const JSONRPCRequest &request) {
                        {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO,
                         "The amount in " + CURRENCY_UNIT + " to send. eg 0.1"},
                        {"future", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG,
-                        "Future transaction is mature when it has enough confirmations or locktime in seconds has past from its first confirm.",
+                        "Future transaction is mature when it has enough confirmations or locktime in seconds has past from its first confirm.\n"
+                        "                             This argument is optional: to skip it positionally and still pass later\n"
+                        "                             arguments, give an empty array [] or null (an empty string \"\" is NOT valid here).\n"
+                        "                             Alternatively use named arguments, e.g. -named ... subtractfeefromamount=true.",
                         {
                                 {"future_maturity", RPCArg::Type::NUM, /* default */ "",
                                  "Number of confirmations required for this future to mature."},
@@ -391,7 +394,10 @@ UniValue sendtoaddress(const JSONRPCRequest &request) {
     bool hasFuture = false;
     int nextParamsIndex = 2;
     if (!request.params[nextParamsIndex].isNull()) {
-        if (request.params[nextParamsIndex].isObject()) {
+        // The optional "future" argument can be skipped positionally by passing an
+        // empty array, null, or an empty object. Only a non-empty object actually
+        // requests a future transaction; anything else means "no future" (issue #383).
+        if (request.params[nextParamsIndex].isObject() && !request.params[nextParamsIndex].empty()) {
             if (request.params[nextParamsIndex]["future_maturity"].isNull()) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("no future_maturity is specified "));
             }
@@ -1889,6 +1895,8 @@ UniValue listsinceblock(const JSONRPCRequest &request) {
     bool include_removed = (request.params[3].isNull() || request.params[3].get_bool());
 
     const Optional<int> tip_height = pwallet->chain().getHeight();
+    // depth filters transactions and comes from blockhash (params[0]);
+    // target_confirms only affects lastblockhash below, per the help text.
     int depth = tip_height && height ? (1 + *tip_height - *height) : -1;
 
     UniValue transactions(UniValue::VARR);
@@ -1896,7 +1904,7 @@ UniValue listsinceblock(const JSONRPCRequest &request) {
     for (const std::pair<const uint256, CWalletTx> &pairWtx: pwallet->mapWallet) {
         CWalletTx tx = pairWtx.second;
 
-        if (depth == -1 || tx.GetDepthInMainChain() < depth) {
+        if (depth == -1 || abs(tx.GetDepthInMainChain()) < depth) {
             ListTransactions(pwallet, tx, 0, true, transactions, filter, nullptr /* filter_label */);
         }
     }
@@ -3878,6 +3886,7 @@ UniValue getaddressinfo(const JSONRPCRequest &request) {
         ret.pushKV("desc", InferDescriptor(scriptPubKey, *pwallet)->ToString());
     }
     ret.pushKV("iswatchonly", bool(mine & ISMINE_WATCH_ONLY));
+    ret.pushKV("ischange", pwallet->IsChange(scriptPubKey));
     ret.pushKV("solvable", IsSolvable(*pwallet, scriptPubKey));
     UniValue detail = DescribeWalletAddress(pwallet, dest);
     ret.pushKVs(detail);

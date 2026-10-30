@@ -291,17 +291,19 @@ namespace llmq {
         auto curDkgBlock = pindexNew->GetAncestor(curDkgHeight)->GetBlockHash();
         connmanQuorumsToDelete.erase(curDkgBlock);
 
+        const auto myProTxHash = WITH_LOCK(activeSmartnodeInfoCs, return activeSmartnodeInfo.proTxHash);
+
         for (const auto &quorum: lastQuorums) {
             if (CLLMQUtils::EnsureQuorumConnections(llmqParams, quorum->m_quorum_base_block_index, connman,
-                                                    WITH_LOCK(activeSmartnodeInfoCs,
-                return activeSmartnodeInfo.proTxHash))) {
-                continue;
+                                                    myProTxHash)) {
+                connmanQuorumsToDelete.erase(quorum->qc->quorumHash);
             }
-            if (connmanQuorumsToDelete.count(quorum->qc->quorumHash) > 0) {
-                LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- removing smartnodes quorum connections for quorum %s:\n",
-                         __func__, quorum->qc->quorumHash.ToString());
-                connman.RemoveSmartnodeQuorumNodes(llmqParams.type, quorum->qc->quorumHash);
-            }
+        }
+
+        for (const auto &quorumHash: connmanQuorumsToDelete) {
+            LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- removing smartnodes quorum connections for quorum %s:\n",
+                     __func__, quorumHash.ToString());
+            connman.RemoveSmartnodeQuorumNodes(llmqParams.type, quorumHash);
         }
     }
 
@@ -717,7 +719,7 @@ namespace llmq {
             // Check if request has ENCRYPTED_CONTRIBUTIONS data
             if (request.GetDataMask() & CQuorumDataRequest::ENCRYPTED_CONTRIBUTIONS) {
 
-                if (WITH_LOCK(pQuorum->cs, return pQuorum->quorumVvec->size() != pQuorum->params.threshold)) {
+                if (WITH_LOCK(pQuorum->cs, return pQuorum->quorumVvec == nullptr || pQuorum->quorumVvec->size() != pQuorum->params.threshold)) {
                     errorHandler("No valid quorum verification vector available", 0); // Don't bump score because we asked for it
                     return;
                 }

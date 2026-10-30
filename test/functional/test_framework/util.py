@@ -252,6 +252,45 @@ def wait_until(predicate, *, attempts=float('inf'), timeout=float('inf'), sleep=
 
 # The maximum number of nodes a single test can spawn
 MAX_NODES = 15
+
+# Raptoreum pays 4 RTM through height 720 and 5000 after, against Dash's flat
+# 500. The cache mines past the launch window so every spendable block is a 5000
+# one, less the 5% founder output from height 501, leaving 4750.
+REGTEST_SUBSIDY = 4750
+REGTEST_SUBSIDY_SAT = REGTEST_SUBSIDY * 100000000
+
+# Tests that set setup_clean_chain mine from genesis and so stay inside the
+# launch window, where the reward is 4 RTM. The founder's 5% only starts at
+# height 501, so a clean-chain test that mines beyond that sees 3.8, not 4.
+# Full block reward above the launch window, before the founder's cut.
+REGTEST_BLOCK_REWARD = 5000
+FOUNDER_PERCENT = 5
+
+def founder_cut_on_fees(fee_sat, reward_sat=REGTEST_BLOCK_REWARD * 100000000):
+    """Satoshis the founder takes out of a block's fees.
+
+    The founder gets 5% of the block reward INCLUDING transaction fees --
+    src/miner.cpp passes nFees + GetBlockSubsidy() to FillFounderPayment, which
+    Dash does not do -- so a miner recovers only 95% of the fees in its own
+    block. The division truncates, so this has to be done in whole satoshis
+    rather than by multiplying a Decimal by 0.05.
+    """
+    total = (reward_sat + fee_sat) * FOUNDER_PERCENT // 100
+    return total - (reward_sat * FOUNDER_PERCENT // 100)
+
+REGTEST_LAUNCH_SUBSIDY = 4
+REGTEST_LAUNCH_SUBSIDY_SAT = REGTEST_LAUNCH_SUBSIDY * 100000000
+
+# Blocks the cache mines before its own round-robin, purely to clear the launch
+# window. They go to the regtest founder address (CRegTestParams in
+# src/chainparams.cpp), which no test wallet holds a key for -- so the coins are
+# unspendable and all four funded nodes stay symmetric.
+CACHE_WARMUP_BLOCKS = 721
+CACHE_WARMUP_ADDRESS = "yaackz5YDLnFuuX6gGzEs9EMRQGfqmNYjc"
+
+# Height of the cached chain: the warm-up plus 2 rounds x 4 nodes x 25 blocks.
+# Nodes 0-3 each end with 25 mature and 25 immature blocks, all worth 5000.
+CACHE_HEIGHT = CACHE_WARMUP_BLOCKS + 200
 # Don't assign rpc or p2p ports lower than this
 PORT_MIN = 11000
 # The number of ports to "reserve" for p2p and rpc, each
@@ -326,7 +365,7 @@ def initialize_datadir(dirname, n, chain):
         chain_name_conf_section = chain
         chain_name_conf_arg_value = '1'
     with open(os.path.join(datadir, "raptoreum.conf"), 'w', encoding='utf8') as f:
-        f.write("{}={}]\n".format(chain_name_conf_arg, chain_name_conf_arg_value))
+        f.write("{}={}\n".format(chain_name_conf_arg, chain_name_conf_arg_value))
         f.write("[{}]\n".format(chain_name_conf_section))
         f.write("port=" + str(p2p_port(n)) + "\n")
         f.write("rpcport=" + str(rpc_port(n)) + "\n")
@@ -340,7 +379,7 @@ def get_datadir_path(dirname, n):
     return os.path.join(dirname, "node" + str(n))
 
 def append_config(datadir, options):
-    with open(os.path.join(datadir, "dash.conf"), 'a', encoding='utf8') as f:
+    with open(os.path.join(datadir, "raptoreum.conf"), 'a', encoding='utf8') as f:
         for option in options:
             f.write(option + "\n")
 
@@ -404,7 +443,7 @@ def get_chain_folder(datadir, chain):
 
 def get_bip9_status(node, key):
     info = node.getblockchaininfo()
-    return info['bip9_softforks'][key]
+    return info['rip1_softforks'][key]
 
 def set_node_times(nodes, t):
     for node in nodes:
@@ -448,6 +487,12 @@ def isolate_node(node, timeout=5):
 def reconnect_isolated_node(node, node_num):
     node.setnetworkactive(True)
     connect_nodes(node, node_num)
+    # CConnman resets the smartnode sync in SetNetworkActive (net.cpp:2730) and
+    # again on the 0 -> N connection edge (net.cpp:1275), and a smartnode then
+    # refuses every inbound connection while !IsSynced (net.cpp:1126) and opens
+    # none while !IsBlockchainSynced (net.cpp:2309). Force it once the node has
+    # its first peer back, or it never rejoins its quorum.
+    force_finish_mnsync(node)
 
 def sync_blocks(rpc_connections, *, wait=1, timeout=60):
     """
@@ -559,7 +604,7 @@ def random_transaction(nodes, amount, min_fee, fee_increment, fee_variants):
 
     rawtx = from_node.createrawtransaction(inputs, outputs)
     signresult = from_node.signrawtransactionwithwallet(rawtx)
-    txid = from_node.sendrawtransaction(signresult["hex"], True)
+    txid = from_node.sendrawtransaction(signresult["hex"], 0)
 
     return (txid, signresult["hex"], fee)
 
@@ -639,7 +684,7 @@ def create_lots_of_big_transactions(node, txouts, utxos, num, fee):
         newtx = newtx + txouts
         newtx = newtx + rawtx[94:]
         signresult = node.signrawtransactionwithwallet(newtx, None, "NONE")
-        txid = node.sendrawtransaction(signresult["hex"], True)
+        txid = node.sendrawtransaction(signresult["hex"], 0)
         txids.append(txid)
     return txids
 

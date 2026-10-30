@@ -4,8 +4,9 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the listsincelast RPC."""
 
+from decimal import Decimal
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_array_result, assert_raises_rpc_error
+from test_framework.util import assert_equal, assert_array_result, assert_raises_rpc_error, isolate_node, reconnect_isolated_node
 
 class ListSinceBlockTest (BitcoinTestFramework):
     def set_test_params(self):
@@ -21,6 +22,7 @@ class ListSinceBlockTest (BitcoinTestFramework):
         self.test_reorg()
         self.test_double_spend()
         self.test_double_send()
+        self.double_spends_filtered()
 
     def test_no_blockhash(self):
         txid = self.nodes[2].sendtoaddress(self.nodes[0].getnewaddress(), 1)
@@ -276,6 +278,56 @@ class ListSinceBlockTest (BitcoinTestFramework):
         for tx in lsbres['removed']:
             if tx['txid'] == txid1:
                 assert_equal(tx['confirmations'], 2)
+
+    def double_spends_filtered(self):
+        """listsinceblock must not return conflicted transactions from before
+        the cutoff blockhash."""
+        spending_node = self.nodes[2]
+        double_spending_node = self.nodes[3]
+        dest_address = spending_node.getnewaddress()
+
+        # Upstream marks the input opt-in RBF; there is no BIP125 here and the
+        # case does not depend on it.
+        tx_input = next(u for u in spending_node.listunspent())
+        rawtx = spending_node.createrawtransaction(
+            [tx_input], {dest_address: tx_input["amount"] - Decimal("0.00051000"),
+                         spending_node.getrawchangeaddress(): Decimal("0.00050000")})
+        double_rawtx = spending_node.createrawtransaction(
+            [tx_input], {dest_address: tx_input["amount"] - Decimal("0.00052000"),
+                         spending_node.getrawchangeaddress(): Decimal("0.00050000")})
+
+        isolate_node(self.nodes[3])
+
+        signedtx = spending_node.signrawtransactionwithwallet(rawtx)
+        orig_tx_id = spending_node.sendrawtransaction(signedtx["hex"])
+        original_tx = spending_node.gettransaction(orig_tx_id)
+
+        double_signedtx = spending_node.signrawtransactionwithwallet(double_rawtx)
+        dbl_tx_id = double_spending_node.sendrawtransaction(double_signedtx["hex"])
+        double_tx = double_spending_node.getrawtransaction(dbl_tx_id, 1)
+        lastblockhash = double_spending_node.generate(1)[0]
+
+        reconnect_isolated_node(self.nodes[3], 2)
+        self.sync_all()
+        spending_node.invalidateblock(lastblockhash)
+
+        # both transactions exist before the cutoff
+        found = self.find_txids(spending_node, spending_node.getblockhash(spending_node.getblockcount()),
+                                original_tx['txid'], double_tx['txid'])
+        assert_equal(found, (True, True))
+
+        lastblockhash = spending_node.generate(1)[0]
+
+        # neither exists after it
+        found = self.find_txids(spending_node, lastblockhash, original_tx['txid'], double_tx['txid'])
+        assert_equal(found, (False, False))
+
+    @staticmethod
+    def find_txids(node, blockhash, original_txid, double_txid):
+        txs = node.listsinceblock(blockhash)['transactions']
+        return (any(tx['txid'] == original_txid for tx in txs),
+                any(tx['txid'] == double_txid for tx in txs))
+
 
 if __name__ == '__main__':
     ListSinceBlockTest().main()

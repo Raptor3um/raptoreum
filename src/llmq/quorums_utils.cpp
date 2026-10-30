@@ -330,6 +330,7 @@ namespace llmq {
             case Consensus::LLMQ_50_60:
             case Consensus::LLMQ_400_60:
             case Consensus::LLMQ_400_85:
+            case Consensus::LLMQ_5_60:
                 break;
             case Consensus::LLMQ_100_67:
             case Consensus::LLMQ_TEST_V17:

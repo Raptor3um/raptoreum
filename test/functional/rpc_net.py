@@ -7,6 +7,8 @@
 Tests correspond to code in rpc/net.cpp.
 """
 
+from test_framework.messages import NODE_BLOOM, NODE_NETWORK, NODE_NETWORK_LIMITED
+from test_framework.mininode import P2PInterface, network_thread_start
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -16,6 +18,20 @@ from test_framework.util import (
     p2p_port,
     wait_until,
 )
+
+def assert_net_servicesnames(servicesflag, servicenames):
+    """Check that getpeerinfo/getnetworkinfo decode every set service flag.
+
+    NODE_GETUTXO and NODE_HEADERS_COMPRESSED are omitted: this tree defines
+    neither (messages.py, protocol.h).
+    """
+    if servicesflag & NODE_NETWORK:
+        assert "NETWORK" in servicenames
+    if servicesflag & NODE_BLOOM:
+        assert "BLOOM" in servicenames
+    if servicesflag & NODE_NETWORK_LIMITED:
+        assert "NETWORK_LIMITED" in servicenames
+
 
 class NetTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -33,6 +49,7 @@ class NetTest(BitcoinTestFramework):
         self._test_getnetworkinginfo()
         self._test_getaddednodeinfo()
         self._test_getpeerinfo()
+        self._test_service_flags()
 
     def _test_connection_count(self):
         # connect_nodes_bi connects each node to the other
@@ -63,12 +80,17 @@ class NetTest(BitcoinTestFramework):
         wait_until(lambda: (self.nodes[0].getnettotals()['totalbytessent'] >= net_totals_after['totalbytessent'] + 32 * 2), timeout=1)
         wait_until(lambda: (self.nodes[0].getnettotals()['totalbytesrecv'] >= net_totals_after['totalbytesrecv'] + 32 * 2), timeout=1)
 
+        for peer in peer_info:
+            assert_net_servicesnames(int(peer["services"], 16), peer["servicesnames"])
+
         peer_info_after_ping = self.nodes[0].getpeerinfo()
         for before, after in zip(peer_info, peer_info_after_ping):
             assert_greater_than_or_equal(after['bytesrecv_per_msg'].get('pong', 0), before['bytesrecv_per_msg'].get('pong', 0) + 32)
             assert_greater_than_or_equal(after['bytessent_per_msg'].get('ping', 0), before['bytessent_per_msg'].get('ping', 0) + 32)
 
     def _test_getnetworkinginfo(self):
+        info = self.nodes[0].getnetworkinfo()
+        assert_net_servicesnames(int(info["localservices"], 16), info["localservicesnames"])
         assert_equal(self.nodes[0].getnetworkinfo()['networkactive'], True)
         assert_equal(self.nodes[0].getnetworkinfo()['connections'], 2)
 
@@ -94,6 +116,16 @@ class NetTest(BitcoinTestFramework):
         assert_equal(added_nodes[0]['addednode'], ip_port)
         # check that a non-existent node returns an error
         assert_raises_rpc_error(-24, "Node has not been added", self.nodes[0].getaddednodeinfo, '1.1.1.1')
+
+    def _test_service_flags(self):
+        # This framework needs the network thread started explicitly, and
+        # add_p2p_connection does not wait for the handshake.
+        conn = self.nodes[0].add_p2p_connection(P2PInterface(), services=(1 << 4) | (1 << 63))
+        network_thread_start()
+        conn.wait_for_verack()
+        # Bit 4 is NODE_XTHIN here (protocol.h), where upstream has it unassigned.
+        assert_equal(['XTHIN', 'UNKNOWN[2^63]'], self.nodes[0].getpeerinfo()[-1]['servicesnames'])
+        self.nodes[0].disconnect_p2ps()
 
     def _test_getpeerinfo(self):
         peer_info = [x.getpeerinfo() for x in self.nodes]

@@ -2023,13 +2023,6 @@ QDialog#UpdateAssetsDialog QPushButton#updateAssetButton {
 }
 
 /******************************************************
-AssetsDialog
-******************************************************/
-QDialog#AssetsDialog QListWidget#listWidget {
-    background-color: #00000000;
-}
-
-/******************************************************
 SignVerifyMessageDialog
 ******************************************************/
 

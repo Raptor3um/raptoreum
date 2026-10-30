@@ -102,7 +102,10 @@ public:
         CoinJoinCreateDenominations,
         CoinJoinSend,
         FutureSend,
-        FutureReceive
+        FutureReceive,
+        AssetCreate,
+        AssetMint,
+        AssetUpdate
     };
 
     /** Number of confirmation recommended for accepting a transaction */

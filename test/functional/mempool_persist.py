@@ -47,21 +47,34 @@ class MempoolPersistTest(BitcoinTestFramework):
 
     def run_test(self):
         chain_height = self.nodes[0].getblockcount()
-        assert_equal(chain_height, 200)
+        assert_equal(chain_height, CACHE_HEIGHT)
 
         self.log.debug("Mine a single block to get out of IBD")
         self.nodes[0].generate(1)
         self.sync_all()
 
         self.log.debug("Send 5 transactions from node2 (to its own address)")
+        tx_creation_time_lower = self.mocktime
         for i in range(5):
-            self.nodes[2].sendtoaddress(self.nodes[2].getnewaddress(), Decimal("10"))
+            last_txid = self.nodes[2].sendtoaddress(self.nodes[2].getnewaddress(), Decimal("10"))
         node2_balance = self.nodes[2].getbalance()
         self.sync_all()
+        tx_creation_time_higher = self.mocktime
 
         self.log.debug("Verify that node0 and node1 have 5 transactions in their mempools")
         assert_equal(len(self.nodes[0].getrawmempool()), 5)
         assert_equal(len(self.nodes[1].getrawmempool()), 5)
+
+        self.log.debug("Prioritize a transaction on node0")
+        fees = self.nodes[0].getmempoolentry(txid=last_txid)['fees']
+        assert_equal(fees['base'], fees['modified'])
+        self.nodes[0].prioritisetransaction(txid=last_txid, fee_delta=1000)
+        fees = self.nodes[0].getmempoolentry(txid=last_txid)['fees']
+        assert_equal(fees['base'] + Decimal('0.00001000'), fees['modified'])
+
+        tx_creation_time = self.nodes[0].getmempoolentry(txid=last_txid)['time']
+        assert_greater_than_or_equal(tx_creation_time, tx_creation_time_lower)
+        assert_greater_than_or_equal(tx_creation_time_higher, tx_creation_time)
 
         self.log.debug("Stop-start the nodes. Verify that node0 has the transactions in its mempool and node1 does not. Verify that node2 calculates its balance correctly after loading wallet transactions.")
         self.stop_nodes()
@@ -75,6 +88,15 @@ class MempoolPersistTest(BitcoinTestFramework):
         wait_until(lambda: len(self.nodes[2].getrawmempool()) == 5, timeout=1)
         # The others have loaded their mempool. If node_1 loaded anything, we'd probably notice by now:
         assert_equal(len(self.nodes[1].getrawmempool()), 0)
+
+        assert self.nodes[0].getmempoolinfo()["loaded"]
+
+        self.log.debug('Verify prioritization is loaded correctly')
+        fees = self.nodes[0].getmempoolentry(txid=last_txid)['fees']
+        assert_equal(fees['base'] + Decimal('0.00001000'), fees['modified'])
+
+        self.log.debug('Verify time is loaded correctly')
+        assert_equal(tx_creation_time, self.nodes[0].getmempoolentry(txid=last_txid)['time'])
 
         # Verify accounting of mempool transactions after restart is correct
         self.nodes[2].syncwithvalidationinterfacequeue()  # Flush mempool to wallet

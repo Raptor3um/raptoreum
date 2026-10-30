@@ -25,6 +25,8 @@ class WalletGroupTest(BitcoinTestFramework):
 
     def run_test (self):
         # Mine some coins
+        # Clear the 4 RTM launch window; these blocks belong to no wallet here.
+        self.mine_past_launch_window()
         self.nodes[0].generate(110)
 
         # Get some addresses from the two nodes
@@ -66,7 +68,7 @@ class WalletGroupTest(BitcoinTestFramework):
         assert_approx(v[1], 1.3, 0.0001)
 
         # Empty out node2's wallet
-        self.node[2].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=self.nodes[2].getbalance(), substractfeefromamount=True)
+        self.nodes[2].sendtoaddress(address=self.nodes[0].getnewaddress(), amount=self.nodes[2].getbalance(), subtractfeefromamount=True)
         self.sync_all()
         self.nodes[0].generate(1)
 

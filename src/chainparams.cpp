@@ -215,11 +215,11 @@ public:
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S(
-                "000000000000000000000000000000000000000000000000000eead474ccbc59"); // block 421457 chainwork
+                "000000000000000000000000000000000000000000000000001995158ec834f2"); // block 1352257 chainwork
 
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S(
-                "ox6fb0b649723f51b67484019409fef94d077f17c8d88645e08c000b2e4fd3e28a"); // block hash for 421457
+                "0x4cd8ad75b5e03cf1f0be245042331d1bec64c35b6fcd44d6d3ebe29cc23c6c97"); // block hash for 1352257
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -311,16 +311,16 @@ public:
                 {{5145, uint256S("0x64c9cc82f05f4326e49fd4b21a48494b02b12a707de67a47c7e8e1102b0f1d9b")},
                  {35000, uint256S("0xb4fb191f3ef4141557aef8aafa700d312e5499cbde4a3079faa78cf58c0c414f")},
                  {61900, uint256S("0xc146fc6244fe4d71559f4fef16a386f1fceda6e5efa3da3ca1ebe9806cc8f25c")},
-                 {394273, uint256S("0dc274a28864a01a9539e60afdbc38fcdb0f000fbc52553cd31651c97557dc04")}
-
+                 {394273, uint256S("0dc274a28864a01a9539e60afdbc38fcdb0f000fbc52553cd31651c97557dc04")},
+                 {1352257, uint256S("0x4cd8ad75b5e03cf1f0be245042331d1bec64c35b6fcd44d6d3ebe29cc23c6c97")}
                 }
         };
 
         chainTxData = ChainTxData{
-                1662608883,   // * UNIX timestamp of last known number of transactions (Block 0)
-                2091922,   // * total number of transactions between genesis and that timestamp
+                1779917349,   // * UNIX timestamp of last known number of transactions (block 1352257)
+                5400092,   // * total number of transactions between genesis and that timestamp
                 //   (the tx=... number in the SetBestChain debug.log lines)
-                0.06    // * estimated number of transactions per second after that timestamp
+                0.018    // * estimated number of transactions per second after that timestamp
         };
     }
 };
@@ -797,13 +797,20 @@ public:
         nExtCoinType = 1;
 
         // long living quorum params
-        consensus.llmqs[Consensus::LLMQ_50_60] = Consensus::llmq50_60;
-        consensus.llmqs[Consensus::LLMQ_400_60] = Consensus::llmq400_60;
-        consensus.llmqs[Consensus::LLMQ_400_85] = Consensus::llmq400_85;
-        consensus.llmqs[Consensus::LLMQ_100_67] = Consensus::llmq100_67_testnet;
-        consensus.llmqTypeChainLocks = Consensus::LLMQ_50_60;
-        consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
-        consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
+        // Regtest registers only the two test-only types, LLMQ_5_60 (100) and
+        // LLMQ_TEST_V17 (101), which exist on no real network. The production types can
+        // never be filled by the handful of smartnodes a test starts, and registering them
+        // costs a DKG session per block for a quorum that cannot form. Two hooks in the
+        // source are anchored to the test types and are inert without this:
+        // CDKGSession::ShouldSimulateError fires only for LLMQ_5_60, and LLMQ_TEST_V17 is
+        // the second type the quorum-data and recovery tests need on the same DKG cycle.
+        // Size and threshold are overridable with -llmqtestparams.
+        consensus.llmqs[Consensus::LLMQ_5_60] = Consensus::llmq_test;
+        consensus.llmqs[Consensus::LLMQ_TEST_V17] = Consensus::llmq_test_v17;
+        consensus.llmqTypeChainLocks = Consensus::LLMQ_5_60;
+        consensus.llmqTypeInstantSend = Consensus::LLMQ_5_60;
+        consensus.llmqTypePlatform = Consensus::LLMQ_5_60;
+        UpdateLLMQTestParametersFromArgs(args);
     }
 
     //  void
@@ -835,6 +842,10 @@ public:
     }
 
     void UpdateBudgetParametersFromArgs(const ArgsManager &args);
+
+    void UpdateLLMQTestParameters(int size, int threshold);
+
+    void UpdateLLMQTestParametersFromArgs(const ArgsManager &args);
 };
 
 // void CRegTestParams::UpdateVersionBitsParametersFromArgs(const ArgsManager &args) {
@@ -928,6 +939,41 @@ void CDevNetParams::UpdateDevnetSubsidyAndDiffParametersFromArgs(const ArgsManag
     UpdateDevnetSubsidyAndDiffParameters(nMinimumDifficultyBlocks, nHighSubsidyBlocks, nHighSubsidyFactor);
 }
 
+void CRegTestParams::UpdateLLMQTestParameters(int size, int threshold) {
+    // Both test types, not just the ChainLocks one. They exist to be used together --
+    // a test that wants two quorum types on the same DKG cycle wants them the same size,
+    // and sizing only one would silently leave the other at its default.
+    for (const auto type: {Consensus::LLMQ_5_60, Consensus::LLMQ_TEST_V17}) {
+        auto &params = consensus.llmqs.at(type);
+        params.size = size;
+        params.minSize = threshold;
+        params.threshold = threshold;
+        params.dkgBadVotesThreshold = threshold;
+    }
+}
+
+void CRegTestParams::UpdateLLMQTestParametersFromArgs(const ArgsManager &args) {
+    if (!args.IsArgSet("-llmqtestparams")) return;
+
+    // regtest only: CRegTestParams is the sole owner of this override, so it can
+    // never be reached on mainnet, testnet or devnet.
+    std::string strParams = args.GetArg("-llmqtestparams", "");
+    std::vector <std::string> vParams;
+    boost::split(vParams, strParams, boost::is_any_of(":"));
+    if (vParams.size() != 2) {
+        throw std::runtime_error("-llmqtestparams must be specified as size:threshold");
+    }
+    int size, threshold;
+    if (!ParseInt32(vParams[0], &size) || !ParseInt32(vParams[1], &threshold)) {
+        throw std::runtime_error("Invalid size or threshold in -llmqtestparams");
+    }
+    if (size < 1 || threshold < 1 || threshold > size) {
+        throw std::runtime_error("-llmqtestparams requires 1 <= threshold <= size");
+    }
+    LogPrintf("Setting llmq_test parameters to size=%d, threshold=%d\n", size, threshold);
+    UpdateLLMQTestParameters(size, threshold);
+}
+
 void CDevNetParams::UpdateDevnetLLMQChainLocksFromArgs(const ArgsManager &args)
 // void UpdateBudgetParameters(int nSmartnodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock)
 {
@@ -1017,6 +1063,15 @@ bool IsLLMQsMiningPhase(int nHeight) {
 }
 
 void CChainParams::UpdateLLMQParams(size_t totalMnCount, int height, const CBlockIndex* blockIndex, bool lowLLMQParams) {
+    // Regtest quorum parameters are fixed by the test that starts the chain (see
+    // CRegTestParams and -llmqtestparams). Scaling them to the smartnode count is a
+    // mainnet/testnet concern; applying it here would overwrite the test's choice on
+    // every block and re-register production-sized quorum types that a handful of
+    // local nodes can never fill.
+    if (strcmp(NetworkIDString().c_str(), "regtest") == 0) {
+        return;
+    }
+
     bool isNotLLMQsMiningPhase;
     if (lastCheckHeight < height && (lastCheckMnCount != totalMnCount || lastCheckedLowLLMQParams != lowLLMQParams) &&
         (isNotLLMQsMiningPhase = !IsLLMQsMiningPhase(height))) {

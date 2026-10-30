@@ -40,7 +40,7 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         self.log.info("Create a new block with an anyone-can-spend coinbase")
 
         height = 1
-        block = create_block(tip, create_coinbase(height), block_time)
+        block = create_block(tip, create_coinbase(height), block_time, node=self.nodes[0])
         block.solve()
         # Save the coinbase for later
         block1 = block
@@ -62,6 +62,8 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         # leave merkle root and blockheader unchanged but invalidate the block.
         self.log.info("Test merkle root malleability.")
 
+        # No quorum commitments here: this tests merkle malleability, which needs
+        # an odd transaction count. The block dies in CheckBlock first anyway.
         block2 = create_block(tip, create_coinbase(height), block_time)
         block_time += 1
 
@@ -86,7 +88,7 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
 
         self.log.info("Test very broken block.")
 
-        block3 = create_block(tip, create_coinbase(height), block_time)
+        block3 = create_block(tip, create_coinbase(height), block_time, node=self.nodes[0])
         block_time += 1
         block3.vtx[0].vout[0].nValue = 1000 * COIN  # Too high!
         block3.vtx[0].sha256 = None

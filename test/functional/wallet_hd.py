@@ -120,11 +120,12 @@ class WalletHDTest(BitcoinTestFramework):
 
         # Try a RPC based rescan
         self.stop_node(1)
-        shutil.rmtree(os.path.join(tmpdir, "node1/regtest/blocks"))
-        shutil.rmtree(os.path.join(tmpdir, "node1/regtest/chainstate"))
-        shutil.rmtree(os.path.join(tmpdir, "node1/regtest/evodb"))
-        shutil.rmtree(os.path.join(tmpdir, "node1/regtest/llmq"))
-        shutil.copyfile(os.path.join(tmpdir, "hd.bak"), os.path.join(tmpdir, "node1/regtest/wallets/wallet.dat"))
+        shutil.rmtree(os.path.join(self.nodes[1].datadir, self.chain, "blocks"))
+        shutil.rmtree(os.path.join(self.nodes[1].datadir, self.chain, "chainstate"))
+        shutil.rmtree(os.path.join(self.nodes[1].datadir, self.chain, "evodb"))
+        shutil.rmtree(os.path.join(self.nodes[1].datadir, self.chain, "llmq"))
+        shutil.copyfile(os.path.join(self.nodes[1].datadir, "hd.bak"),
+                        os.path.join(self.nodes[1].datadir, self.chain, "wallets", "wallet.dat"))
         self.start_node(1, extra_args=self.extra_args[1])
         connect_nodes_bi(self.nodes, 0, 1)
         self.sync_all()
@@ -134,7 +135,7 @@ class WalletHDTest(BitcoinTestFramework):
         out = self.nodes[1].rescanblockchain()
         assert_equal(out['start_height'], 0)
         assert_equal(out['stop_height'], self.nodes[1].getblockcount())
-        assert_equal(self.nodes[1].getbalance(), num_hd_adds + 1)
+        assert_equal(self.nodes[1].getbalance(), NUM_HD_ADDS + 1)
 
         # send a tx and make sure its using the internal chain for the changeoutput
         txid = self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 1)

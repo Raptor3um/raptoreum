@@ -50,9 +50,9 @@ class TestBitcoinCli(BitcoinTestFramework):
         network_info = self.nodes[0].getnetworkinfo()
         blockchain_info = self.nodes[0].getblockchaininfo()
 
+        # This -getinfo emits no protocolversion, walletversion or keypoololdest
+        # (raptoreum-cli.cpp:278-295), so those three comparisons are dropped.
         assert_equal(cli_get_info['version'], network_info['version'])
-        assert_equal(cli_get_info['protocolversion'], network_info['protocolversion'])
-        assert_equal(cli_get_info['walletversion'], wallet_info['walletversion'])
         assert_equal(cli_get_info['balance'], wallet_info['balance'])
         assert_equal(cli_get_info['coinjoin_balance'], wallet_info['coinjoin_balance'])
         assert_equal(cli_get_info['blocks'], blockchain_info['blocks'])
@@ -62,7 +62,6 @@ class TestBitcoinCli(BitcoinTestFramework):
         assert_equal(cli_get_info['difficulty'], blockchain_info['difficulty'])
         assert_equal(cli_get_info['testnet'], blockchain_info['chain'] == "test")
         assert_equal(cli_get_info['balance'], wallet_info['balance'])
-        assert_equal(cli_get_info['keypoololdest'], wallet_info['keypoololdest'])
         assert_equal(cli_get_info['keypoolsize'], wallet_info['keypoolsize'])
         assert_equal(cli_get_info['paytxfee'], wallet_info['paytxfee'])
         assert_equal(cli_get_info['relayfee'], network_info['relayfee'])

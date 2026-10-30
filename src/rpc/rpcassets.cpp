@@ -108,8 +108,8 @@ UniValue createasset(const JSONRPCRequest &request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK2(cs_main, mempool.cs);
     LOCK(pwallet->cs_wallet);
+    LOCK2(cs_main, mempool.cs);
 
     if (pwallet->GetBroadcastTransactions() && !pwallet->chain().p2pEnabled()) {
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
@@ -345,8 +345,8 @@ UniValue updateasset(const JSONRPCRequest &request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK2(cs_main, mempool.cs);
     LOCK(pwallet->cs_wallet);
+    LOCK2(cs_main, mempool.cs);
 
     if (pwallet->GetBroadcastTransactions() && !pwallet->chain().p2pEnabled()) {
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
@@ -547,8 +547,8 @@ UniValue mintasset(const JSONRPCRequest &request) {
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    LOCK2(cs_main, mempool.cs);
     LOCK(pwallet->cs_wallet);
+    LOCK2(cs_main, mempool.cs);
 
     if (pwallet->GetBroadcastTransactions() && !pwallet->chain().p2pEnabled()) {
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
@@ -653,7 +653,8 @@ UniValue sendasset(const JSONRPCRequest &request) {
     if (!wallet) return NullUniValue;
     CWallet *const pwallet = wallet.get();
 
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK(pwallet->cs_wallet);
+    LOCK(cs_main);
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -812,6 +813,7 @@ UniValue getassetdetailsbyid(const JSONRPCRequest &request) {
     return result;
 }
 
+#ifdef ENABLE_WALLET
 UniValue listassetsbalance(const JSONRPCRequest &request) {
     if (request.fHelp || !Updates().IsAssetsActive(::ChainActive().Tip()) || request.params.size() > 0)
         throw std::runtime_error(
@@ -828,7 +830,8 @@ UniValue listassetsbalance(const JSONRPCRequest &request) {
     if (!wallet) return NullUniValue;
     CWallet *const pwallet = wallet.get();
 
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK(pwallet->cs_wallet);
+    LOCK(cs_main);
 
     std::map <std::string, std::vector<COutput>> mapAssetCoins;
     pwallet->AvailableAssets(mapAssetCoins);
@@ -1008,7 +1011,7 @@ UniValue listunspentassets(const JSONRPCRequest& request)
 
     UniValue results(UniValue::VARR);
     std::map<std::string, std::vector<COutput> > mapAssetCoins;
-    LOCK2(cs_main, pwallet->cs_wallet);
+    LOCK(pwallet->cs_wallet);
 
     pwallet->AvailableAssets(mapAssetCoins, !include_unsafe, &coinControl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMaximumCount, nMinDepth, nMaxDepth);
     for (const auto asset : mapAssetCoins) {
@@ -1062,6 +1065,7 @@ UniValue listunspentassets(const JSONRPCRequest& request)
 
     return results;
 }
+#endif // ENABLE_WALLET
 
 UniValue listassets(const JSONRPCRequest &request) {
     RPCHelpMan{"listassets",
@@ -1158,6 +1162,7 @@ UniValue listassets(const JSONRPCRequest &request) {
     UniValue result(UniValue::VOBJ);
 
     if (mine) {
+#ifdef ENABLE_WALLET
         // Get only assets owned by this wallet
         std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
         if (!wallet) {
@@ -1201,6 +1206,10 @@ UniValue listassets(const JSONRPCRequest &request) {
                 loaded++;
             }
         }
+#else
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND,
+                           "The 'mine' option requires wallet support, which was disabled at compile time.");
+#endif // ENABLE_WALLET
     } else {
         // Get all assets (original behavior)
         std::vector<CDatabaseAssetData> assets;

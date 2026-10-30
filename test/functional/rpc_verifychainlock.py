@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-from test_framework.test_framework import DashTestFramework
+from test_framework.test_framework import RaptoreumTestFramework
 from test_framework.util import assert_raises_rpc_error
 
 '''
@@ -14,11 +14,11 @@ Test verifychainlock rpc
 '''
 
 
-class RPCVerifyChainLockTest(DashTestFramework):
+class RPCVerifyChainLockTest(RaptoreumTestFramework):
     def set_test_params(self):
         # -whitelist is needed to avoid the trickling logic on node0
-        self.set_dash_test_params(5, 3, [["-whitelist=127.0.0.1"], [], [], [], []], fast_dip3_enforcement=True)
-        self.set_dash_llmq_test_params(3, 2)
+        self.set_raptoreum_test_params(5, 3, [["-whitelist=127.0.0.1"], [], [], [], []], fast_dip3_enforcement=True)
+        self.set_raptoreum_llmq_test_params(3, 2)
 
     def run_test(self):
         node0 = self.nodes[0]

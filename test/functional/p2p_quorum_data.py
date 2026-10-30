@@ -12,7 +12,7 @@ from test_framework.mininode import (
     network_thread_join,
     P2PInterface,
 )
-from test_framework.test_framework import DashTestFramework
+from test_framework.test_framework import LLMQ_TEST_TYPE, RaptoreumTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -123,19 +123,23 @@ class QuorumDataInterface(P2PInterface):
             assert not self.message_count["qdata"]
 
 
-class QuorumDataMessagesTest(DashTestFramework):
+class QuorumDataMessagesTest(RaptoreumTestFramework):
     def set_test_params(self):
         extra_args = [["-llmq-data-recovery=0"]] * 4
-        self.set_dash_test_params(4, 3, fast_dip3_enforcement=True, extra_args=extra_args)
+        self.set_raptoreum_test_params(4, 3, fast_dip3_enforcement=True, extra_args=extra_args)
 
     def restart_mn(self, mn, reindex=False):
-        args = self.extra_args[mn.nodeIdx] + ['-masternodeblsprivkey=%s' % mn.keyOperator]
+        args = self.extra_args[mn.nodeIdx] + ['-smartnodeblsprivkey=%s' % mn.keyOperator]
         if reindex:
             args.append('-reindex')
         self.restart_node(mn.nodeIdx, args)
-        force_finish_mnsync(mn.node)
         connect_nodes(mn.node, 0)
         self.sync_blocks()
+        # After the block sync, not before: a smartnode refuses every inbound
+        # connection while !smartnodeSync.IsSynced() (net.cpp:1126), and syncing
+        # blocks from node0 puts it back below that line, so a p2p peer opened
+        # straight afterwards is accepted at the TCP level and dropped.
+        force_finish_mnsync(mn.node)
 
     def run_test(self):
 
@@ -214,7 +218,7 @@ class QuorumDataMessagesTest(DashTestFramework):
             wait_for_banscore(mn1.node, id_p2p_mn1, 10)
             # - Already received
             force_request_expire()
-            assert mn1.node.quorum("getdata", id_p2p_mn1, 100, quorum_hash, 0x03, mn1.proTxHash)
+            assert mn1.node.quorum("getdata", id_p2p_mn1, LLMQ_TEST_TYPE, quorum_hash, 0x03, mn1.proTxHash)
             p2p_mn1.wait_for_qgetdata()
             p2p_mn1.send_message(qdata_valid)
             time.sleep(1)
@@ -222,7 +226,7 @@ class QuorumDataMessagesTest(DashTestFramework):
             wait_for_banscore(mn1.node, id_p2p_mn1, 20)
             # - Not like requested
             force_request_expire()
-            assert mn1.node.quorum("getdata", id_p2p_mn1, 100, quorum_hash, 0x03, mn1.proTxHash)
+            assert mn1.node.quorum("getdata", id_p2p_mn1, LLMQ_TEST_TYPE, quorum_hash, 0x03, mn1.proTxHash)
             p2p_mn1.wait_for_qgetdata()
             qdata_invalid_request = qdata_valid
             qdata_invalid_request.data_mask = 2
@@ -230,7 +234,7 @@ class QuorumDataMessagesTest(DashTestFramework):
             wait_for_banscore(mn1.node, id_p2p_mn1, 30)
             # - Invalid verification vector
             force_request_expire()
-            assert mn1.node.quorum("getdata", id_p2p_mn1, 100, quorum_hash, 0x03, mn1.proTxHash)
+            assert mn1.node.quorum("getdata", id_p2p_mn1, LLMQ_TEST_TYPE, quorum_hash, 0x03, mn1.proTxHash)
             p2p_mn1.wait_for_qgetdata()
             qdata_invalid_vvec = qdata_valid
             qdata_invalid_vvec.quorum_vvec.pop()
@@ -238,7 +242,7 @@ class QuorumDataMessagesTest(DashTestFramework):
             wait_for_banscore(mn1.node, id_p2p_mn1, 40)
             # - Invalid contributions
             force_request_expire()
-            assert mn1.node.quorum("getdata", id_p2p_mn1, 100, quorum_hash, 0x03, mn1.proTxHash)
+            assert mn1.node.quorum("getdata", id_p2p_mn1, LLMQ_TEST_TYPE, quorum_hash, 0x03, mn1.proTxHash)
             p2p_mn1.wait_for_qgetdata()
             qdata_invalid_contribution = qdata_valid
             qdata_invalid_contribution.enc_contributions.pop()
@@ -254,9 +258,9 @@ class QuorumDataMessagesTest(DashTestFramework):
             id_p2p_mn1 = get_mininode_id(mn1.node)
             mnauth(mn1.node, id_p2p_mn1, fake_mnauth_1[0], fake_mnauth_1[1])
             qgetdata_invalid_type = msg_qgetdata(quorum_hash_int, 103, 0x01, protx_hash_int)
-            qgetdata_invalid_block = msg_qgetdata(protx_hash_int, 100, 0x01, protx_hash_int)
-            qgetdata_invalid_quorum = msg_qgetdata(int(mn1.node.getblockhash(0), 16), 100, 0x01, protx_hash_int)
-            qgetdata_invalid_no_member = msg_qgetdata(quorum_hash_int, 100, 0x02, quorum_hash_int)
+            qgetdata_invalid_block = msg_qgetdata(protx_hash_int, LLMQ_TEST_TYPE, 0x01, protx_hash_int)
+            qgetdata_invalid_quorum = msg_qgetdata(int(mn1.node.getblockhash(0), 16), LLMQ_TEST_TYPE, 0x01, protx_hash_int)
+            qgetdata_invalid_no_member = msg_qgetdata(quorum_hash_int, LLMQ_TEST_TYPE, 0x02, quorum_hash_int)
             p2p_mn1.test_qgetdata(qgetdata_invalid_type, QUORUM_TYPE_INVALID)
             p2p_mn1.test_qgetdata(qgetdata_invalid_block, QUORUM_BLOCK_NOT_FOUND)
             p2p_mn1.test_qgetdata(qgetdata_invalid_quorum, QUORUM_NOT_FOUND)
@@ -292,19 +296,19 @@ class QuorumDataMessagesTest(DashTestFramework):
             # Get the required DKG data for mn1
             p2p_mn2.test_qgetdata(qgetdata_all, 0, self.llmq_threshold, self.llmq_size)
             # Trigger mn1 - QGETDATA -> p2p_mn1
-            assert mn1.node.quorum("getdata", id_p2p_mn1, 100, quorum_hash, 0x03, mn1.proTxHash)
+            assert mn1.node.quorum("getdata", id_p2p_mn1, LLMQ_TEST_TYPE, quorum_hash, 0x03, mn1.proTxHash)
             # Wait until mn1 sent the QGETDATA to p2p_mn1
             p2p_mn1.wait_for_qgetdata()
             # Send the QDATA received from mn2 to mn1
             p2p_mn1.send_message(p2p_mn2.get_qdata())
             # Now mn1 should have its data back!
-            self.wait_for_quorum_data([mn1], 100, quorum_hash, recover=False)
+            self.wait_for_quorum_data([mn1], LLMQ_TEST_TYPE, quorum_hash, recover=False)
             # Restart one more time and make sure data gets saved to db
             mn1.node.disconnect_p2ps()
             mn2.node.disconnect_p2ps()
             network_thread_join()
             self.restart_mn(mn1)
-            self.wait_for_quorum_data([mn1], 100, quorum_hash, recover=False)
+            self.wait_for_quorum_data([mn1], LLMQ_TEST_TYPE, quorum_hash, recover=False)
 
         # Test request limiting / banscore increase
         def test_request_limit():
@@ -413,7 +417,7 @@ class QuorumDataMessagesTest(DashTestFramework):
                 mnauth(node0, id_p2p_node0, fake_mnauth_1[0], fake_mnauth_1[1])
                 mnauth(mn2.node, id_p2p_mn2, fake_mnauth_2[0], fake_mnauth_2[1])
                 p2p_mn2.test_qgetdata(qgetdata_all, 0, self.llmq_threshold, self.llmq_size)
-                assert node0.quorum("getdata", id_p2p_node0, 100, quorum_hash, 0x03, mn1.proTxHash)
+                assert node0.quorum("getdata", id_p2p_node0, LLMQ_TEST_TYPE, quorum_hash, 0x03, mn1.proTxHash)
                 p2p_node0.wait_for_qgetdata()
                 p2p_node0.send_message(p2p_mn2.get_qdata())
                 wait_for_banscore(node0, id_p2p_node0, (1 - len(extra_args)) * 10)
@@ -424,9 +428,9 @@ class QuorumDataMessagesTest(DashTestFramework):
         def test_rpc_quorum_getdata_protx_hash():
             self.log.info("Test optional proTxHash of `quorum getdata`")
             assert_raises_rpc_error(-8, "proTxHash missing",
-                                    mn1.node.quorum, "getdata", 0, 100, quorum_hash, 0x02)
+                                    mn1.node.quorum, "getdata", 0, LLMQ_TEST_TYPE, quorum_hash, 0x02)
             assert_raises_rpc_error(-8, "proTxHash invalid",
-                                    mn1.node.quorum, "getdata", 0, 100, quorum_hash, 0x03,
+                                    mn1.node.quorum, "getdata", 0, LLMQ_TEST_TYPE, quorum_hash, 0x03,
                                     "0000000000000000000000000000000000000000000000000000000000000000")
 
         # Enable DKG and disable ChainLocks
@@ -446,9 +450,9 @@ class QuorumDataMessagesTest(DashTestFramework):
         protx_hash_int = int(mn1.proTxHash, 16)
 
         # Valid requests
-        qgetdata_vvec = msg_qgetdata(quorum_hash_int, 100, 0x01, protx_hash_int)
-        qgetdata_contributions = msg_qgetdata(quorum_hash_int, 100, 0x02, protx_hash_int)
-        qgetdata_all = msg_qgetdata(quorum_hash_int, 100, 0x03, protx_hash_int)
+        qgetdata_vvec = msg_qgetdata(quorum_hash_int, LLMQ_TEST_TYPE, 0x01, protx_hash_int)
+        qgetdata_contributions = msg_qgetdata(quorum_hash_int, LLMQ_TEST_TYPE, 0x02, protx_hash_int)
+        qgetdata_all = msg_qgetdata(quorum_hash_int, LLMQ_TEST_TYPE, 0x03, protx_hash_int)
 
         test_basics()
         test_request_limit()

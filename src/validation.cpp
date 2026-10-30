@@ -583,6 +583,12 @@ static bool CheckInputsFromMempoolAndCache(const CTransaction &tx, CValidationSt
     return CheckInputs(tx, state, view, true, flags, cacheSigStore, true, txdata);
 }
 
+bool TxNeedsAssetsCache(const CTransaction &tx) {
+    return tx.nVersion == 3 && (tx.nType == TRANSACTION_NEW_ASSET ||
+                                tx.nType == TRANSACTION_UPDATE_ASSET ||
+                                tx.nType == TRANSACTION_MINT_ASSET);
+}
+
 static bool AcceptToMemoryPoolWorker(const CChainParams &chainparams, CTxMemPool &pool, CValidationState &state,
                                      const CTransactionRef &ptx,
                                      bool *pfMissingInputs, int64_t nAcceptTime, bool bypass_limits,
@@ -665,7 +671,19 @@ static bool AcceptToMemoryPoolWorker(const CChainParams &chainparams, CTxMemPool
         CCoinsViewMemPool viewMemPool(&coins_cache, pool);
         view.SetBackend(viewMemPool);
 
-        CAssetsCache assetsCache = *passetsCache.get();
+        // The asset cache is consulted only by CheckSpecialTx, and only for the
+        // three asset transaction types (TxNeedsAssetsCache). Copying the whole
+        // cache -- O(confirmed assets), a few ms at mainnet's asset count -- for
+        // every other transaction is pure overhead on the payment path, so pay
+        // it only when the transaction is actually an asset op. Every other
+        // dispatched type's checker (provider/coinbase/quorum-commitment/future)
+        // simply doesn't take an assetsCache parameter, and TRANSACTION_NORMAL
+        // never reaches the dispatcher at all -- so nothing else ever
+        // dereferences this pointer.
+        std::unique_ptr<CAssetsCache> assetsCache;
+        if (TxNeedsAssetsCache(tx)) {
+            assetsCache = std::make_unique<CAssetsCache>(*passetsCache.get());
+        }
 
         // do all inputs exist?
         for (const CTxIn &txin: tx.vin) {
@@ -775,7 +793,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams &chainparams, CTxMemPool
         // DoS scoring a node for non-critical errors, e.g. duplicate keys because a TX is received that was already
         // mined
         // NOTE: we use UTXO here and do NOT allow mempool txes as smartnode collaterals
-        if (!CheckSpecialTx(tx, ::ChainActive().Tip(), state, ::ChainstateActive().CoinsTip(), &assetsCache, true))
+        if (!CheckSpecialTx(tx, ::ChainActive().Tip(), state, ::ChainstateActive().CoinsTip(), assetsCache.get(), true))
             return false;
         if (pool.existsProviderTxConflict(tx)) {
             return state.DoS(0, false, REJECT_DUPLICATE, "protx-dup");
@@ -3643,6 +3661,14 @@ void CChainState::ResetBlockFailureFlags(CBlockIndex *pindex) {
         if (pindex->nStatus & BLOCK_FAILED_MASK) {
             pindex->nStatus &= ~BLOCK_FAILED_MASK;
             setDirtyBlockIndex.insert(pindex);
+            if (pindex->IsValid(BLOCK_VALID_TRANSACTIONS) && !(pindex->nStatus & BLOCK_CONFLICT_CHAINLOCK) &&
+                pindex->HaveTxsDownloaded() && setBlockIndexCandidates.value_comp()(m_chain.Tip(), pindex)) {
+                setBlockIndexCandidates.insert(pindex);
+            }
+            if (pindex == pindexBestInvalid) {
+                // Reset invalid block marker if it was pointing to one of those.
+                pindexBestInvalid = nullptr;
+            }
             m_blockman.m_failed_blocks.erase(pindex);
             // Mark all nearest BLOCK_FAILED_CHILD descendants (if any) as BLOCK_FAILED_VALID
             auto itp = m_blockman.m_prev_block_index.equal_range(pindex->GetBlockHash());
