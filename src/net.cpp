@@ -1110,8 +1110,8 @@ void CConnman::AcceptConnection(const ListenSocket &hListenSocket) {
     // Evict connections until we are below nMaxInbound. In case eviction protection resulted in nodes to not be evicted
     // before, they might get evicted in batches now (after the protection timeout).
     // We don't evict verified MN connections and also don't take them into account when checking limits. We can do this
-    // because we know that such connections are naturally limited by the total number of MNs, so this is not usable
-    // for attacks.
+    // because such connections are bounded by the total number of MNs times MAX_VERIFIED_INBOUND_PER_PROTX
+    // (enforced in TryMarkVerified), so this is not usable for attacks.
     while (nInbound - nVerifiedInboundSmartnodes >= nMaxInbound) {
         if (!AttemptToEvictConnection()) {
             // No connection to evict, disconnect the new connection
@@ -1645,6 +1645,12 @@ bool HasUnpausedReceivableNode(const std::unordered_map<NodeId, CNode *> &receiv
         }
     }
     return false;
+}
+
+bool WouldExceedVerifiedInboundCap(const std::vector<uint256> &existingInboundVerified,
+                                    const uint256 &proRegTxHash, size_t cap) {
+    return std::count(existingInboundVerified.begin(), existingInboundVerified.end(),
+                       proRegTxHash) >= (ptrdiff_t) cap;
 }
 
 void CConnman::SocketHandler() {
@@ -3329,6 +3335,40 @@ bool CConnman::IsSmartnodeQuorumRelayMember(const uint256 &protxHash) {
 void CConnman::AddPendingProbeConnections(const std::set <uint256> &proTxHashes) {
     LOCK(cs_vPendingSmartnodes);
     smartnodePendingProbes.insert(proTxHashes.begin(), proTxHashes.end());
+}
+
+bool CConnman::TryMarkVerified(NodeId id, const uint256 &proRegTxHash, const uint256 &pubKeyHash) {
+    // Exclusive, not shared: the count and the grant must happen in one cs_vNodes scope, or
+    // concurrent callers could each pass the check and jointly exceed the cap.
+    LOCK(cs_vNodes);
+    CNode *foundNode = nullptr;
+    for (CNode *pnode: vNodes) {
+        if (pnode->GetId() == id) {
+            foundNode = pnode;
+            break;
+        }
+    }
+    if (foundNode == nullptr) {
+        return false;
+    }
+    if (foundNode->fInbound) {
+        std::vector<uint256> existingInboundVerified;
+        for (const CNode *pnode: vNodes) {
+            if (pnode != foundNode && !pnode->fDisconnect && pnode->fInbound &&
+                !pnode->GetVerifiedProRegTxHash().IsNull()) {
+                existingInboundVerified.push_back(pnode->GetVerifiedProRegTxHash());
+            }
+        }
+        if (WouldExceedVerifiedInboundCap(existingInboundVerified, proRegTxHash)) {
+            LogPrint(BCLog::NET_NETCONN,
+                     "CConnman::%s -- refusing to verify smartnode %s: already at the verified inbound cap, peer=%d\n",
+                     __func__, proRegTxHash.ToString(), id);
+            return false;
+        }
+    }
+    foundNode->SetVerifiedProRegTxHash(proRegTxHash);
+    foundNode->SetVerifiedPubKeyHash(pubKeyHash);
+    return true;
 }
 
 size_t CConnman::GetNodeCount(NumConnections flags) {
