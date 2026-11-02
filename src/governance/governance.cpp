@@ -221,7 +221,14 @@ CGovernanceManager::ProcessMessage(CNode *pfrom, const std::string &strCommand, 
         // A NEW GOVERNANCE OBJECT VOTE HAS ARRIVED
     else if (strCommand == NetMsgType::MNGOVERNANCEOBJECTVOTE) {
         CGovernanceVote vote;
-        vRecv >> vote;
+        try {
+            vRecv >> vote;
+        } catch (const std::ios_base::failure &) {
+            LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- malformed vote, peer=%d\n", pfrom->GetId());
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return;
+        }
 
         uint256 nHash = vote.GetHash();
 

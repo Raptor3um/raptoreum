@@ -108,7 +108,14 @@ void CSporkManager::ProcessSpork(CNode *pfrom, const std::string &strCommand, CD
     if (strCommand == NetMsgType::SPORK) {
 
         CSporkMessage spork;
-        vRecv >> spork;
+        try {
+            vRecv >> spork;
+        } catch (const std::ios_base::failure &) {
+            LOCK(cs_main);
+            LogPrint(BCLog::SPORK, "CSporkManager::ProcessSpork -- ERROR: malformed spork, peer=%d\n", pfrom->GetId());
+            Misbehaving(pfrom->GetId(), 100);
+            return;
+        }
 
         uint256 hash = spork.GetHash();
 
