@@ -702,6 +702,7 @@ static inline Wrapper<Formatter, T &> Using(T &&t) { return Wrapper<Formatter, T
 #define VARINT(obj, ...) Using<VarIntFormatter<__VA_ARGS__>>(obj)
 #define COMPACTSIZE(obj) Using<CompactSizeFormatter>(obj)
 #define LIMITED_STRING(obj, n) Using<LimitedStringFormatter<n>>(obj)
+#define LIMITED_VECTOR(obj, n) Using<LimitedVectorFormatter<n>>(obj)
 
 struct DynamicBitSetFormatter {
     template<typename Stream>
@@ -827,6 +828,24 @@ struct LimitedStringFormatter {
 
     template<typename Stream>
     void Ser(Stream &s, const std::string &v) {
+        s << v;
+    }
+};
+
+template<size_t Limit>
+struct LimitedVectorFormatter {
+    template<typename Stream>
+    void Unser(Stream &s, std::vector<unsigned char> &v) {
+        size_t size = ReadCompactSize(s);
+        if (size > Limit) {
+            throw std::ios_base::failure("Vector length limit exceeded");
+        }
+        v.resize(size);
+        if (size != 0) s.read((char *) v.data(), size);
+    }
+
+    template<typename Stream>
+    void Ser(Stream &s, const std::vector<unsigned char> &v) {
         s << v;
     }
 };

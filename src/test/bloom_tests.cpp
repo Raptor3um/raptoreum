@@ -10,6 +10,7 @@
 #include <merkleblock.h>
 #include <primitives/block.h>
 #include <random.h>
+#include <script/script.h>
 #include <serialize.h>
 #include <streams.h>
 #include <uint256.h>
@@ -632,5 +633,76 @@ BOOST_AUTO_TEST_CASE(rolling_bloom)
         }
         g_mock_deterministic_tests = false;
         }
+
+//! The message LIMITED_VECTOR throws when the declared length exceeds the configured limit.
+//! Matching it exactly keeps these tests from passing on an unrelated short-read failure, which
+//! is the very failure mode the bound replaces.
+static const std::string LIMIT_REJECTION = "Vector length limit exceeded";
+
+/**
+ * CBloomFilter::vData must not allocate from a peer-declared CompactSize when the claimed length
+ * exceeds MAX_BLOOM_FILTER_SIZE. A handful of bytes claiming millions of bytes, with no payload
+ * following, is the amplification primitive: the old unbounded vector read would resize and then
+ * attempt to read the full claimed length before the short read threw.
+ */
+BOOST_AUTO_TEST_CASE(bloomfilter_rejects_oversized_declared_vdata_length)
+{
+    CDataStream s(SER_NETWORK, PROTOCOL_VERSION);
+    WriteCompactSize(s, 10000000);
+    // No vData payload follows, so the remaining size is far short of the declared length.
+
+    CBloomFilter filter;
+    bool threw = false;
+    std::string what;
+    try {
+        s >> filter;
+    } catch (const std::ios_base::failure &e) {
+        threw = true;
+        what = e.what();
+    }
+    BOOST_CHECK_MESSAGE(threw, "CBloomFilter must reject a declared vData length over MAX_BLOOM_FILTER_SIZE");
+    BOOST_CHECK_MESSAGE(what.find(LIMIT_REJECTION) != std::string::npos,
+                         "Expected a pre-allocation length-limit rejection, got: " + what);
+}
+
+/** A legitimate filter must still round-trip unchanged through the bounded formatter. */
+BOOST_AUTO_TEST_CASE(bloomfilter_round_trips_legitimate_filter)
+{
+    CBloomFilter original(3, 0.01, 0, BLOOM_UPDATE_ALL);
+    original.insert(ParseHex("99108ad8ed9bb6274d3980bab5a85c048f0950c8"));
+
+    CDataStream s(SER_NETWORK, PROTOCOL_VERSION);
+    s << original;
+
+    CBloomFilter decoded;
+    s >> decoded;
+    BOOST_CHECK(decoded.contains(ParseHex("99108ad8ed9bb6274d3980bab5a85c048f0950c8")));
+}
+
+/**
+ * The same LIMITED_VECTOR primitive guards FILTERADD's data element (net_processing.cpp), bounded
+ * at MAX_SCRIPT_ELEMENT_SIZE. Cover the formatter directly at that limit, since exercising the
+ * real P2P handler needs a full CNode fixture this test file doesn't otherwise set up.
+ */
+BOOST_AUTO_TEST_CASE(filteradd_rejects_oversized_declared_length)
+{
+    CDataStream s(SER_NETWORK, PROTOCOL_VERSION);
+    WriteCompactSize(s, MAX_SCRIPT_ELEMENT_SIZE + 1);
+    // No payload follows.
+
+    std::vector<unsigned char> vData;
+    bool threw = false;
+    std::string what;
+    try {
+        s >> LIMITED_VECTOR(vData, MAX_SCRIPT_ELEMENT_SIZE);
+    } catch (const std::ios_base::failure &e) {
+        threw = true;
+        what = e.what();
+    }
+    BOOST_CHECK(threw);
+    BOOST_CHECK(vData.empty());
+    BOOST_CHECK_MESSAGE(what.find(LIMIT_REJECTION) != std::string::npos,
+                         "Expected a pre-allocation length-limit rejection, got: " + what);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
