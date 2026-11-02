@@ -10,6 +10,7 @@
 #include <llmq/quorums_commitment.h>
 #include <llmq/quorums_chainlocks.h>
 #include <llmq/quorums_debug.h>
+#include <llmq/quorums_dkgabsenceestimate.h>
 #include <llmq/quorums_dkgabsencetracker.h>
 #include <llmq/quorums_dkgsessionmgr.h>
 #include <llmq/quorums_instantsend.h>
@@ -28,8 +29,13 @@ namespace llmq {
 
         quorumDKGDebugManager = new CDKGDebugManager();
         quorumDKGAbsenceTracker = new CDKGAbsenceTracker();
+        quorumDKGAbsenceEstimate = new CDKGAbsenceEstimate();
         quorumBlockProcessor = new CQuorumBlockProcessor(evoDb, connman);
         quorumDKGSessionManager = new CDKGSessionManager(connman, *blsWorker, unitTests, fWipe);
+        quorumDKGSessionManager->onAbsenceRecordRelayed =
+                [](const std::vector<uint256> &candidateMembers, const CDKGAbsenceRecord &record) {
+                    quorumDKGAbsenceEstimate->MergeRecord(candidateMembers, record);
+                };
         quorumManager = new CQuorumManager(evoDb, connman, *blsWorker, *quorumDKGSessionManager);
         quorumSigSharesManager = new CSigSharesManager(connman);
         quorumSigningManager = new CSigningManager(connman, unitTests, fWipe);
@@ -58,6 +64,10 @@ namespace llmq {
         quorumBlockProcessor = nullptr;
         delete quorumDKGDebugManager;
         quorumDKGDebugManager = nullptr;
+        // quorumDKGSessionManager, deleted above, is the only thing that ever invokes
+        // onAbsenceRecordRelayed -- safe to free the estimate singleton only after that.
+        delete quorumDKGAbsenceEstimate;
+        quorumDKGAbsenceEstimate = nullptr;
         delete quorumDKGAbsenceTracker;
         quorumDKGAbsenceTracker = nullptr;
         delete blsWorker;

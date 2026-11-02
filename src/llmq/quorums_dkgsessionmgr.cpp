@@ -409,10 +409,18 @@ namespace llmq {
             return false;
         }
 
+        // Resolved once here -- reused for Verify() below AND, on success, for the
+        // onAbsenceRecordRelayed callback, so a listener that needs this same candidate list
+        // (the non-member accumulator) never pays for CLLMQUtils::GetAllQuorumMembers a
+        // second time for the same (llmqType, quorumHash). This is the exact lookup the
+        // staleness gate above exists to keep off the cheap-spam path; a record that reached
+        // this point has earned it.
+        auto members = CLLMQUtils::GetAllQuorumMembers(params, pQuorumBaseBlockIndex);
+
         // Full membership + signature + intersection check. A failure here, for a record that
         // passed the cheap gate above, is treated as real misbehavior -- it's claiming to be
         // about a genuine, recent quorum and failing anyway.
-        if (!record.Verify(pQuorumBaseBlockIndex, params)) {
+        if (!record.Verify(pQuorumBaseBlockIndex, params, members)) {
             if (pfrom != nullptr) {
                 WITH_LOCK(cs_main, Misbehaving(pfrom->GetId(), 100));
             }
@@ -434,7 +442,12 @@ namespace llmq {
         connman.RelayInv(inv);
 
         if (onAbsenceRecordRelayed) {
-            onAbsenceRecordRelayed(record);
+            std::vector<uint256> candidateMembers;
+            candidateMembers.reserve(members.size());
+            for (const auto &m: members) {
+                candidateMembers.push_back(m->proTxHash);
+            }
+            onAbsenceRecordRelayed(candidateMembers, record);
         }
 
         return true;

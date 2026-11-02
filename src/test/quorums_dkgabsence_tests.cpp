@@ -88,6 +88,42 @@ BOOST_AUTO_TEST_CASE(superset_claim_rejected) {
     BOOST_CHECK(!llmq::VerifyAbsenceRecordCore(TYPE, QHASH, 4, 4, MEMBERS, inflated, {voteA, voteC}));
 }
 
+// FoldAbsenceVotes is VerifyAbsenceRecordCore's own extracted computation, returning the
+// intersection it computes rather than just a bool comparison against a caller-supplied
+// confirmedAbsent -- the shape CDKGAbsenceEstimate's round-merge needs (see
+// quorums_dkgabsenceestimate.cpp), since there's no pre-existing confirmedAbsent to compare
+// against when merging several independently-relayed records into one running view.
+
+BOOST_AUTO_TEST_CASE(fold_empty_votes_returns_all_false) {
+    auto folded = llmq::FoldAbsenceVotes(TYPE, QHASH, 4, 4, MEMBERS, {});
+    BOOST_REQUIRE(folded.has_value());
+    BOOST_CHECK(*folded == std::vector<bool>({false, false, false, false}));
+}
+
+BOOST_AUTO_TEST_CASE(fold_returns_the_actual_intersection_not_just_a_match_bool) {
+    auto voteA = MakeVote(MEMBER_A, {false, true, false, true});  // claims B, D absent
+    auto voteC = MakeVote(MEMBER_C, {false, true, false, false}); // claims only B absent
+    auto folded = llmq::FoldAbsenceVotes(TYPE, QHASH, 4, 4, MEMBERS, {voteA, voteC});
+    BOOST_REQUIRE(folded.has_value());
+    // The override property through the direct return value, not through a bool comparison:
+    // D must be absent from the result, not just correctly rejected if a caller guessed wrong.
+    BOOST_CHECK(*folded == std::vector<bool>({false, true, false, false}));
+}
+
+BOOST_AUTO_TEST_CASE(fold_rejects_structurally_invalid_votes) {
+    auto wrongQuorum = MakeVote(MEMBER_A, {false, true, false, false});
+    wrongQuorum.quorumHash = OTHER_QHASH;
+    BOOST_CHECK(!llmq::FoldAbsenceVotes(TYPE, QHASH, 4, 4, MEMBERS, {wrongQuorum}).has_value());
+
+    auto fromNonMember = MakeVote(NON_MEMBER, {false, true, false, false});
+    BOOST_CHECK(!llmq::FoldAbsenceVotes(TYPE, QHASH, 4, 4, MEMBERS, {fromNonMember}).has_value());
+
+    auto duplicateReporter = MakeVote(MEMBER_A, {false, false, false, false});
+    BOOST_CHECK(!llmq::FoldAbsenceVotes(TYPE, QHASH, 4, 4, MEMBERS,
+                                         {MakeVote(MEMBER_A, {true, false, false, false}), duplicateReporter})
+                         .has_value());
+}
+
 BOOST_AUTO_TEST_CASE(subset_claim_rejected) {
     // the real intersection supports B absent; confirmedAbsent
     // under-claims (empty) -- understating evidence is rejected too, not

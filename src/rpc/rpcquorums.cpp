@@ -18,6 +18,7 @@
 #include <llmq/quorums_commitment.h>
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_debug.h>
+#include <llmq/quorums_dkgabsenceestimate.h>
 #include <llmq/quorums_dkgabsencetracker.h>
 #include <llmq/quorums_dkgsession.h>
 #include <llmq/quorums_dkgsessionmgr.h>
@@ -275,6 +276,53 @@ UniValue quorum_dkgstatus(const JSONRPCRequest &request) {
     ret.pushKV("quorumConnections", quorumConnections);
     ret.pushKV("absenceRecords", absenceRecords);
     ret.pushKV("absenceStats", absenceStats);
+
+    return ret;
+}
+
+void quorum_absenceestimate_help(const JSONRPCRequest &request) {
+    RPCHelpMan{"quorum absenceestimate",
+               "Return this node's own estimate of per-member DKG absence across the wider\n"
+               "network, built from CDKGAbsenceRecords this node received over the\n"
+               "QABSENCERECORD P2P relay, for quorums it was never itself a member of.\n"
+               "\n"
+               "This is observational only: it reflects whatever this node happened to\n"
+               "receive over gossip relay, not a network-wide or consensus fact, and it is\n"
+               "lost on restart. Compare quorum dkgstatus's own absenceStats, which is the\n"
+               "same kind of count but limited to rounds this node actually ran as a member.\n",
+               {},
+               RPCResults{},
+               RPCExamples{
+                       HelpExampleCli("quorum", "absenceestimate")
+                       + HelpExampleRpc("quorum", "absenceestimate")
+               },
+    }.Check(request);
+}
+
+UniValue quorum_absenceestimate(const JSONRPCRequest &request) {
+    quorum_absenceestimate_help(request);
+
+    CBlockIndex *pindexTip = WITH_LOCK(cs_main,
+    return ::ChainActive().Tip());
+
+    UniValue ret(UniValue::VOBJ);
+    for (const auto &type: llmq::CLLMQUtils::GetEnabledQuorumTypes(pindexTip)) {
+        const auto &llmq_params = llmq::GetLLMQParams(type);
+        auto allStats = llmq::quorumDKGAbsenceEstimate->GetAllStats(type);
+        if (allStats.empty()) {
+            continue;
+        }
+        UniValue statsArr(UniValue::VARR);
+        for (const auto &[proTxHash, stats]: allStats) {
+            UniValue obj(UniValue::VOBJ);
+            // ToJson() calls setObject() first, which would wipe any key pushed before it --
+            // push proTxHash after, not before (same ordering dkgstatus's own loop uses).
+            stats.ToJson(obj);
+            obj.pushKV("proTxHash", proTxHash.ToString());
+            statsArr.push_back(obj);
+        }
+        ret.pushKV(std::string(llmq_params.name), statsArr);
+    }
 
     return ret;
 }
@@ -658,6 +706,7 @@ UniValue quorum_getdata(const JSONRPCRequest &request) {
                        "  info              - Return information about a quorum\n"
                        "  dkgsimerror       - Simulates DKG errors and malicious behavior\n"
                        "  dkgstatus         - Return the status of the current DKG process\n"
+                       "  absenceestimate   - Return this node's own network-wide DKG absence estimate\n"
                        "  memberof          - Checks which quorums the given smartnode is a member of\n"
                        "  sign              - Threshold-sign a message\n"
                        "  verify            - Test if a quorum signature is valid for a request id and a message hash\n"
@@ -684,6 +733,8 @@ UniValue _quorum(const JSONRPCRequest &request) {
         return quorum_info(new_request);
     } else if (command == "quorumdkgstatus") {
         return quorum_dkgstatus(new_request);
+    } else if (command == "quorumabsenceestimate") {
+        return quorum_absenceestimate(new_request);
     } else if (command == "quorummemberof") {
         return quorum_memberof(new_request);
     } else if (command == "quorumsign" || command == "quorumverify" || command == "quorumhasrecsig" ||

@@ -117,11 +117,17 @@ namespace llmq {
         // false if it was rejected.
         bool ValidateAndRelayAbsenceRecord(CNode *pfrom, const CDKGAbsenceRecord &record);
 
-        // Extension seam for a future non-member local accumulator (see the design doc) --
-        // called once, after a record is confirmed new and about to be relayed. Empty/unset
-        // by default. Deliberately just a callback, not a listener interface: there is exactly
-        // one planned consumer so far, and this is the smallest thing that unblocks it.
-        std::function<void(const CDKGAbsenceRecord &)> onAbsenceRecordRelayed;
+        // Extension seam for a non-member local accumulator (CDKGAbsenceEstimate, see the
+        // design doc) -- called once, after a record is confirmed new and about to be
+        // relayed. `candidateMembers` is the exact member list this call already resolved to
+        // check the record's own signatures; passed straight through rather than making the
+        // listener re-derive quorum membership itself, which would mean paying for
+        // CLLMQUtils::GetAllQuorumMembers a second time for the same (llmqType, quorumHash).
+        // Empty/unset by default. Deliberately just a callback, not a listener interface:
+        // there is exactly one planned consumer so far, and this is the smallest thing that
+        // unblocks it.
+        std::function<void(const std::vector<uint256> &candidateMembers, const CDKGAbsenceRecord &)>
+                onAbsenceRecordRelayed;
 
         // Contributions are written while in the DKG
         void WriteVerifiedVvecContribution(Consensus::LLMQType llmqType, const CBlockIndex *pQuorumBaseBlockIndex,

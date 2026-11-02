@@ -7,10 +7,12 @@
 
 #include <serialize.h>
 #include <llmq/quorums_parameters.h>
+#include <evo/deterministicmns.h>
 #include <bls/bls.h>
 #include <univalue.h>
 
 #include <map>
+#include <optional>
 #include <set>
 
 class CBlockIndex;
@@ -103,7 +105,18 @@ public:
     //    not a superset, not a subset.
     // Does not enforce a minimum vote count; the caller decides what K is
     // acceptable for its purpose (local collection vs. eventual mining).
+    //
+    // Resolves quorum membership itself via GetAllQuorumMembers() -- the right choice for a
+    // caller that doesn't need that member list for anything else afterward. A caller that
+    // does (e.g. feeding a local accumulator the same candidate list this record was checked
+    // against) should resolve it once and call the three-argument overload below instead,
+    // rather than pay for the same lookup twice.
     [[nodiscard]] bool Verify(const CBlockIndex *pQuorumBaseBlockIndex, const Consensus::LLMQParams &params) const;
+
+    // Same check, taking an already-resolved member list instead of resolving one itself.
+    // The two-argument overload above is a thin wrapper around this one.
+    [[nodiscard]] bool Verify(const CBlockIndex *pQuorumBaseBlockIndex, const Consensus::LLMQParams &params,
+                               const std::vector<CDeterministicMNCPtr> &members) const;
 
     void ToJson(UniValue &obj) const;
 };
@@ -126,6 +139,22 @@ bool ShouldRejectAbsenceRecordAsStale(bool blockFound, int nTipHeight, int nQuor
 // decision is testable with a plain map: no chain, network, or BLS signature needed.
 bool TryMarkAbsenceRecordRelayed(std::map<uint256, CDKGAbsenceRecord> &store, const uint256 &hash,
                                   const CDKGAbsenceRecord &record);
+
+// Folds `votes` into the intersection of their absentMembers bitsets, after checking each
+// vote's structural validity (right llmqType/quorumHash, right size, no out-of-range bit, one
+// vote per reporter, reporter is a genuine member of validMembers). Returns nullopt if any
+// vote fails those checks. An empty `votes` is not a failure -- it folds to all-false,
+// matching the "no claim from zero evidence" rule used throughout this file.
+//
+// This is the single shared place the intersection itself gets computed. VerifyAbsenceRecordCore
+// below calls it to check a given confirmedAbsent against what the votes actually fold to.
+// A caller that instead needs the computed intersection itself -- merging several independently
+// -relayed records for the same round into one running view, say -- calls this directly rather
+// than reimplementing the fold.
+std::optional<std::vector<bool>> FoldAbsenceVotes(Consensus::LLMQType llmqType, const uint256 &quorumHash,
+                                                    size_t paramsSize, size_t memberCount,
+                                                    const std::set<uint256> &validMembers,
+                                                    const std::vector<CDKGAbsenceVote> &votes);
 
 // Pure core of CDKGAbsenceRecord::Verify(), extracted so the single most
 // important invariant in this file -- that confirmedAbsent is exactly the

@@ -16,35 +16,13 @@ namespace llmq {
         return hw.GetHash();
     }
 
-    bool VerifyAbsenceRecordCore(Consensus::LLMQType llmqType, const uint256 &quorumHash,
-                                  size_t paramsSize, size_t memberCount, const std::set<uint256> &validMembers,
-                                  const std::vector<bool> &confirmedAbsent,
-                                  const std::vector<CDKGAbsenceVote> &votes) {
-        if (confirmedAbsent.size() != paramsSize) {
-            return false;
-        }
+    std::optional<std::vector<bool>> FoldAbsenceVotes(Consensus::LLMQType llmqType, const uint256 &quorumHash,
+                                                        size_t paramsSize, size_t memberCount,
+                                                        const std::set<uint256> &validMembers,
+                                                        const std::vector<CDKGAbsenceVote> &votes) {
         if (votes.empty()) {
-            // Nothing bundled -- confirmedAbsent must be all-false, never a
-            // claim manufactured out of zero evidence.
-            return std::count(confirmedAbsent.begin(), confirmedAbsent.end(), true) == 0;
-        }
-
-        // CalculateQuorum can hand back fewer than paramsSize members when
-        // the eligible pool is smaller than that -- bits at or beyond the
-        // real member count map to nobody, and a Phase 2 consumer indexing
-        // members[i] for each set bit would go out of range. Deliberately
-        // redundant with the identical per-vote loop below: given votes is
-        // non-empty here, any confirmedAbsent[i] this loop would catch is
-        // already unreachable by the time we'd return true anyway (every
-        // vote with that same bit set gets rejected below; if instead some
-        // vote has it clear, the final intersection != confirmedAbsent
-        // comparison catches it) -- kept anyway as defense in depth, since
-        // that equivalence depends on the vote-side loop and the final
-        // comparison both staying exactly as they are.
-        for (size_t i = memberCount; i < paramsSize; i++) {
-            if (confirmedAbsent[i]) {
-                return false;
-            }
+            // Nothing bundled -- all-false, never a claim manufactured out of zero evidence.
+            return std::vector<bool>(paramsSize, false);
         }
 
         // intersection accumulator, starts all-true and gets AND-ed down
@@ -53,24 +31,28 @@ namespace llmq {
 
         for (const auto &vote: votes) {
             if (vote.llmqType != llmqType || vote.quorumHash != quorumHash) {
-                return false;
+                return std::nullopt;
             }
             if (vote.absentMembers.size() != paramsSize) {
-                return false;
+                return std::nullopt;
             }
+            // CalculateQuorum can hand back fewer than paramsSize members when the eligible
+            // pool is smaller than that -- bits at or beyond the real member count map to
+            // nobody, and a Phase 2 consumer indexing members[i] for each set bit would go
+            // out of range.
             for (size_t i = memberCount; i < paramsSize; i++) {
                 if (vote.absentMembers[i]) {
-                    return false;
+                    return std::nullopt;
                 }
             }
             if (!seenReporters.insert(vote.proTxHash).second) {
                 // same reporter counted twice -- reject rather than silently
                 // dedupe, so a builder can't inflate its own vote's weight
-                return false;
+                return std::nullopt;
             }
             if (!validMembers.count(vote.proTxHash)) {
                 // vote signer is not actually a member of this quorum session
-                return false;
+                return std::nullopt;
             }
 
             for (size_t i = 0; i < intersection.size(); i++) {
@@ -78,7 +60,28 @@ namespace llmq {
             }
         }
 
-        return intersection == confirmedAbsent;
+        return intersection;
+    }
+
+    bool VerifyAbsenceRecordCore(Consensus::LLMQType llmqType, const uint256 &quorumHash,
+                                  size_t paramsSize, size_t memberCount, const std::set<uint256> &validMembers,
+                                  const std::vector<bool> &confirmedAbsent,
+                                  const std::vector<CDKGAbsenceVote> &votes) {
+        if (confirmedAbsent.size() != paramsSize) {
+            return false;
+        }
+        // Covers the bits-beyond-memberCount case for confirmedAbsent itself even when votes
+        // is empty (FoldAbsenceVotes's own loop never reaches that case for an empty list,
+        // since it has nothing to fold) -- kept as its own check rather than folded into the
+        // comparison below, so a confirmedAbsent with a stray out-of-range bit is rejected
+        // the same way regardless of whether any votes are present.
+        for (size_t i = memberCount; i < paramsSize; i++) {
+            if (confirmedAbsent[i]) {
+                return false;
+            }
+        }
+        auto folded = FoldAbsenceVotes(llmqType, quorumHash, paramsSize, memberCount, validMembers, votes);
+        return folded.has_value() && folded.value() == confirmedAbsent;
     }
 
     bool ShouldRejectAbsenceRecordAsStale(bool blockFound, int nTipHeight, int nQuorumHeight,
@@ -96,6 +99,17 @@ namespace llmq {
 
     bool CDKGAbsenceRecord::Verify(const CBlockIndex *pQuorumBaseBlockIndex,
                                     const Consensus::LLMQParams &params) const {
+        if (pQuorumBaseBlockIndex == nullptr || votes.empty()) {
+            // Nothing membership-dependent to resolve yet either way -- let the three-argument
+            // overload's own checks (null index, or the zero-votes special case) handle it
+            // without paying for a lookup that an empty member list makes no difference to.
+            return Verify(pQuorumBaseBlockIndex, params, {});
+        }
+        return Verify(pQuorumBaseBlockIndex, params, CLLMQUtils::GetAllQuorumMembers(params, pQuorumBaseBlockIndex));
+    }
+
+    bool CDKGAbsenceRecord::Verify(const CBlockIndex *pQuorumBaseBlockIndex, const Consensus::LLMQParams &params,
+                                    const std::vector<CDeterministicMNCPtr> &members) const {
         if (nVersion == 0 || nVersion > CURRENT_VERSION) {
             return false;
         }
@@ -112,7 +126,6 @@ namespace llmq {
             return !CountConfirmedAbsent();
         }
 
-        auto members = CLLMQUtils::GetAllQuorumMembers(params, pQuorumBaseBlockIndex);
         std::set<uint256> validMembers;
         for (const auto &m: members) {
             validMembers.insert(m->proTxHash);
