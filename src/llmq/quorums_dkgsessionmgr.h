@@ -12,9 +12,13 @@
 #include <bls/bls.h>
 #include <bls/bls_worker.h>
 
+#include <functional>
+
 class UniValue;
 
 class CBlockIndex;
+
+class CNode;
 
 namespace llmq {
 
@@ -52,6 +56,16 @@ namespace llmq {
         mutable std::map <ContributionsCacheKey, ContributionsCacheEntry> contributionsCache
         GUARDED_BY(contributionsCacheCs);
 
+        // Records relayed network-wide via QABSENCERECORD (see ValidateAndRelayAbsenceRecord),
+        // keyed by the record's own SerializeHash -- doubles as both the dedup seen-set (if
+        // it's in here, it's already been validated and relayed once, so a repeat is a no-op)
+        // and the GETDATA-serving store for peers that haven't seen it yet. Deliberately
+        // separate from GetAbsenceRecord(llmqType, ...) below, which is a different lookup:
+        // this node's own current record for a type it's a member of, not an arbitrary
+        // record received from the wider network for any quorum.
+        mutable RecursiveMutex cs_relayedAbsenceRecords;
+        std::map <uint256, CDKGAbsenceRecord> relayedAbsenceRecords GUARDED_BY(cs_relayedAbsenceRecords);
+
     public:
         CDKGSessionManager(CConnman &_connman, CBLSWorker &_blsWorker, bool unitTests, bool fWipe);
 
@@ -84,6 +98,30 @@ namespace llmq {
         // False if this node isn't running that type, hasn't reached
         // Finalize yet this round, or was never a member of this session.
         bool GetAbsenceRecord(Consensus::LLMQType llmqType, CDKGAbsenceRecord &ret) const;
+
+        // GETDATA lookup for a record relayed over QABSENCERECORD -- by the record's own hash,
+        // for any quorum, not just ones this node is a member of. See relayedAbsenceRecords.
+        bool GetRelayedAbsenceRecord(const uint256 &hash, CDKGAbsenceRecord &ret) const;
+
+        // Validates `record` (the cheap quorumHash-plausibility gate, then the full
+        // membership/signature/intersection check in Verify()) and, if new and valid, stores
+        // it for GETDATA and floods it to every connected peer via QABSENCERECORD -- the
+        // second relay hop past the quorum-member-only mesh QABSENCEVOTE stays within.
+        //
+        // `pfrom` is the peer the record arrived from, for misbehavior scoring on a real
+        // verification failure; pass nullptr for a record this node itself just built (already
+        // trusted, never misbehavior-scored, but still runs through the same single path so
+        // there is exactly one way this ever gets relayed, not two that could drift apart).
+        //
+        // Returns true if the record is valid (whether newly relayed or already seen before),
+        // false if it was rejected.
+        bool ValidateAndRelayAbsenceRecord(CNode *pfrom, const CDKGAbsenceRecord &record);
+
+        // Extension seam for a future non-member local accumulator (see the design doc) --
+        // called once, after a record is confirmed new and about to be relayed. Empty/unset
+        // by default. Deliberately just a callback, not a listener interface: there is exactly
+        // one planned consumer so far, and this is the smallest thing that unblocks it.
+        std::function<void(const CDKGAbsenceRecord &)> onAbsenceRecordRelayed;
 
         // Contributions are written while in the DKG
         void WriteVerifiedVvecContribution(Consensus::LLMQType llmqType, const CBlockIndex *pQuorumBaseBlockIndex,

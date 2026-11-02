@@ -10,6 +10,7 @@
 #include <bls/bls.h>
 #include <univalue.h>
 
+#include <map>
 #include <set>
 
 class CBlockIndex;
@@ -108,6 +109,23 @@ public:
 };
 
 using CDKGAbsenceRecordPtr = std::unique_ptr<CDKGAbsenceRecord>;
+
+// True if a received CDKGAbsenceRecord should be rejected before paying for
+// the membership-dependent work in Verify() -- either its claimed quorumHash
+// isn't a real block at all (blockFound=false), or it's older than this
+// quorum type's own retention window. Pulled out as a pure function of plain
+// values (no live chain, no CBlockIndex) so this ordering is testable
+// directly: a malformed or stale claim must never reach GetAllQuorumMembers().
+bool ShouldRejectAbsenceRecordAsStale(bool blockFound, int nTipHeight, int nQuorumHeight,
+                                       const Consensus::LLMQParams &params);
+
+// True if `hash` was newly inserted into `store` -- meaning this is the first time this
+// exact record has been seen, so it should be relayed onward. False if it was already
+// present -- already validated and relayed once, nothing new to do, must not be relayed
+// again. Pulled out of CDKGSessionManager::ValidateAndRelayAbsenceRecord so the dedup
+// decision is testable with a plain map: no chain, network, or BLS signature needed.
+bool TryMarkAbsenceRecordRelayed(std::map<uint256, CDKGAbsenceRecord> &store, const uint256 &hash,
+                                  const CDKGAbsenceRecord &record);
 
 // Pure core of CDKGAbsenceRecord::Verify(), extracted so the single most
 // important invariant in this file -- that confirmedAbsent is exactly the

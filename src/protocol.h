@@ -264,6 +264,7 @@ namespace NetMsgType {
     extern const char *QJUSTIFICATION;
     extern const char *QPCOMMITMENT;
     extern const char *QABSENCEVOTE;
+    extern const char *QABSENCERECORD;
     extern const char *QWATCH;
     extern const char *QSIGSESANN;
     extern const char *QSIGSHARESINV;
@@ -435,6 +436,7 @@ enum GetDataMsg {
     MSG_ISLOCK = 30,
     MSG_ISDLOCK = 31,
     MSG_QUORUM_ABSENCE_VOTE = 32,
+    MSG_QUORUM_ABSENCE_RECORD = 33,
 };
 
 /** inv message data */

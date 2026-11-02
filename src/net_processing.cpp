@@ -1856,6 +1856,13 @@ LOCKS_EXCLUDED(cs_main)
                         push = true;
                     }
                 }
+                if (!push && (inv.type == MSG_QUORUM_ABSENCE_RECORD)) {
+                    llmq::CDKGAbsenceRecord o;
+                    if (llmq::quorumDKGSessionManager->GetRelayedAbsenceRecord(inv.hash, o)) {
+                        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::QABSENCERECORD, o));
+                        push = true;
+                    }
+                }
                 if (!push && (inv.type == MSG_QUORUM_RECOVERED_SIG)) {
                     llmq::CRecoveredSig o;
                     if (llmq::quorumSigningManager->GetRecoveredSigForGetData(inv.hash, o)) {

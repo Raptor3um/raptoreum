@@ -8,6 +8,7 @@
 #include <llmq/quorums_commitment.h>
 #include <llmq/quorums_dkgabsencetracker.h>
 #include <llmq/quorums_dkgsession.h>
+#include <llmq/quorums_dkgsessionmgr.h>
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_debug.h>
 #include <llmq/quorums_utils.h>
@@ -664,6 +665,14 @@ void CDKGSessionHandler::HandleDKGRound() {
     // those, via CheckAbsences()'s own AreWeMember() guard).
     if (curSession->AreWeMember()) {
         quorumDKGAbsenceTracker->RecordRound(params.type, curSession->GetMemberProTxHashes(), builtRecord.get());
+    }
+
+    // Relay our own freshly-built record through the exact same path a received one goes
+    // through (see ValidateAndRelayAbsenceRecord) -- one path, not two, so self-origination
+    // and receipt from a peer can never silently drift apart. pfrom=nullptr: self-originated,
+    // already trusted, never misbehavior-scored.
+    if (builtRecord != nullptr) {
+        quorumDKGSessionManager->ValidateAndRelayAbsenceRecord(nullptr, *builtRecord);
     }
 
     {

@@ -68,6 +68,7 @@ namespace NetMsgType {
     const char *QJUSTIFICATION = "qjustify";
     const char *QPCOMMITMENT = "qpcommit";
     const char *QABSENCEVOTE = "qabsencevote";
+    const char *QABSENCERECORD = "qabsencerecord";
     const char *QWATCH = "qwatch";
     const char *QSIGSESANN = "qsigsesann";
     const char *QSIGSHARESINV = "qsigsinv";
@@ -139,6 +140,7 @@ const static std::string allNetMessageTypes[] = {
         NetMsgType::QJUSTIFICATION,
         NetMsgType::QPCOMMITMENT,
         NetMsgType::QABSENCEVOTE,
+        NetMsgType::QABSENCERECORD,
         NetMsgType::QWATCH,
         NetMsgType::QSIGSESANN,
         NetMsgType::QSIGSHARESINV,

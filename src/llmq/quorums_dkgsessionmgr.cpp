@@ -157,6 +157,30 @@ namespace llmq {
         if (!IsQuorumDKGEnabled())
             return;
 
+        if (strCommand == NetMsgType::QABSENCERECORD) {
+            // Handled here, before the dkgSessionHandlers.count(llmqType) gate a few lines
+            // down: unlike every other message in this function, a relayed absence record
+            // must be processable for a quorum type this node isn't actively running a DKG
+            // session for at all -- that's the entire point of this message existing (see the
+            // design doc's second-relay-hop section). Membership is resolved from chain state
+            // inside ValidateAndRelayAbsenceRecord, never from a live local session object.
+            if (vRecv.empty()) {
+                LOCK(cs_main);
+                Misbehaving(pfrom->GetId(), 100);
+                return;
+            }
+            CDKGAbsenceRecord record;
+            try {
+                vRecv >> record;
+            } catch (const std::exception &) {
+                LOCK(cs_main);
+                Misbehaving(pfrom->GetId(), 100);
+                return;
+            }
+            ValidateAndRelayAbsenceRecord(pfrom, record);
+            return;
+        }
+
         if (strCommand != NetMsgType::QCONTRIB
             && strCommand != NetMsgType::QCOMPLAINT
             && strCommand != NetMsgType::QJUSTIFICATION
@@ -344,6 +368,75 @@ namespace llmq {
             return false;
         }
         ret = *dkgType.curSession->builtAbsenceRecord;
+        return true;
+    }
+
+    bool CDKGSessionManager::GetRelayedAbsenceRecord(const uint256 &hash, CDKGAbsenceRecord &ret) const {
+        LOCK(cs_relayedAbsenceRecords);
+        auto it = relayedAbsenceRecords.find(hash);
+        if (it == relayedAbsenceRecords.end()) {
+            return false;
+        }
+        ret = it->second;
+        return true;
+    }
+
+    bool CDKGSessionManager::ValidateAndRelayAbsenceRecord(CNode *pfrom, const CDKGAbsenceRecord &record) {
+        const CBlockIndex *pQuorumBaseBlockIndex;
+        int nTipHeight;
+        {
+            LOCK(cs_main);
+            pQuorumBaseBlockIndex = LookupBlockIndex(record.quorumHash);
+            nTipHeight = ::ChainActive().Tip()->nHeight;
+        }
+
+        const auto &llmqParamsMap = Params().GetConsensus().llmqs;
+        auto paramsIt = llmqParamsMap.find(record.llmqType);
+        if (paramsIt == llmqParamsMap.end()) {
+            // Not a recognized llmqType at all -- cheapest possible rejection, same tier as
+            // the missing-block case below, before anything else runs.
+            return false;
+        }
+        const Consensus::LLMQParams &params = paramsIt->second;
+
+        // Cheap gate, before any membership lookup: reject a record whose claimed quorumHash
+        // isn't a real, sufficiently recent block. Not misbehavior-scored on its own -- a
+        // record for a quorum that's simply aged out of the retention window isn't evidence
+        // of an attack, just something no longer worth relaying further.
+        if (ShouldRejectAbsenceRecordAsStale(pQuorumBaseBlockIndex != nullptr, nTipHeight,
+                                              pQuorumBaseBlockIndex != nullptr ? pQuorumBaseBlockIndex->nHeight : 0,
+                                              params)) {
+            return false;
+        }
+
+        // Full membership + signature + intersection check. A failure here, for a record that
+        // passed the cheap gate above, is treated as real misbehavior -- it's claiming to be
+        // about a genuine, recent quorum and failing anyway.
+        if (!record.Verify(pQuorumBaseBlockIndex, params)) {
+            if (pfrom != nullptr) {
+                WITH_LOCK(cs_main, Misbehaving(pfrom->GetId(), 100));
+            }
+            return false;
+        }
+
+        const uint256 hash = ::SerializeHash(record);
+        bool isNew;
+        {
+            LOCK(cs_relayedAbsenceRecords);
+            isNew = TryMarkAbsenceRecordRelayed(relayedAbsenceRecords, hash, record);
+        }
+        if (!isNew) {
+            // Already validated and relayed once -- a valid record, just nothing new to do.
+            return true;
+        }
+
+        CInv inv(MSG_QUORUM_ABSENCE_RECORD, hash);
+        connman.RelayInv(inv);
+
+        if (onAbsenceRecordRelayed) {
+            onAbsenceRecordRelayed(record);
+        }
+
         return true;
     }
 

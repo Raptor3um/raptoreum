@@ -81,6 +81,19 @@ namespace llmq {
         return intersection == confirmedAbsent;
     }
 
+    bool ShouldRejectAbsenceRecordAsStale(bool blockFound, int nTipHeight, int nQuorumHeight,
+                                           const Consensus::LLMQParams &params) {
+        if (!blockFound) {
+            return true;
+        }
+        return nTipHeight - nQuorumHeight > params.max_store_depth();
+    }
+
+    bool TryMarkAbsenceRecordRelayed(std::map<uint256, CDKGAbsenceRecord> &store, const uint256 &hash,
+                                      const CDKGAbsenceRecord &record) {
+        return store.emplace(hash, record).second;
+    }
+
     bool CDKGAbsenceRecord::Verify(const CBlockIndex *pQuorumBaseBlockIndex,
                                     const Consensus::LLMQParams &params) const {
         if (nVersion == 0 || nVersion > CURRENT_VERSION) {

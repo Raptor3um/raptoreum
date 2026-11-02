@@ -181,4 +181,49 @@ BOOST_AUTO_TEST_CASE(vote_quorumhash_mismatch_rejected) {
                                                 {false, true, false, false}, {vote}));
 }
 
+// ShouldRejectAbsenceRecordAsStale is the cheap gate a relayed CDKGAbsenceRecord must pass
+// before anything touches the membership cache (CLLMQUtils::GetAllQuorumMembers) or runs a
+// single BLS verification. Pinned directly with plain values -- no live chain, no quorum --
+// since the entire point is that this decision must be reachable without either.
+namespace {
+    // keepOldKeys * dkgInterval = 100, a round number distinct from any real llmq profile's
+    // own retention window so a test passing/failing can't be mistaken for coincidence.
+    const Consensus::LLMQParams STALE_TEST_PARAMS{.dkgInterval = 10, .keepOldKeys = 10};
+}
+
+BOOST_AUTO_TEST_CASE(stale_check_rejects_unresolvable_block) {
+    // blockFound=false must reject regardless of height -- a hash that isn't a real block at
+    // all is the cheapest possible forgery, and must never reach the expensive path.
+    BOOST_CHECK(llmq::ShouldRejectAbsenceRecordAsStale(false, 1000, 1000, STALE_TEST_PARAMS));
+    BOOST_CHECK(llmq::ShouldRejectAbsenceRecordAsStale(false, 1000, 999999, STALE_TEST_PARAMS));
+}
+
+BOOST_AUTO_TEST_CASE(stale_check_rejects_beyond_retention_window) {
+    // Tip is 101 blocks past the quorum's own height; max_store_depth() here is 100.
+    BOOST_CHECK(llmq::ShouldRejectAbsenceRecordAsStale(true, 1101, 1000, STALE_TEST_PARAMS));
+}
+
+BOOST_AUTO_TEST_CASE(stale_check_accepts_at_and_within_retention_window) {
+    // Exactly at the boundary (100) and comfortably inside it (50) must both pass through to
+    // the expensive path -- this gate only rejects what's strictly beyond the window.
+    BOOST_CHECK(!llmq::ShouldRejectAbsenceRecordAsStale(true, 1100, 1000, STALE_TEST_PARAMS));
+    BOOST_CHECK(!llmq::ShouldRejectAbsenceRecordAsStale(true, 1050, 1000, STALE_TEST_PARAMS));
+}
+
+// TryMarkAbsenceRecordRelayed is the dedup gate for the QABSENCERECORD relay: a record must
+// be relayed exactly once, never re-relayed on a second sighting of the same hash.
+BOOST_AUTO_TEST_CASE(dedup_relays_a_hash_exactly_once) {
+    std::map<uint256, llmq::CDKGAbsenceRecord> store;
+    llmq::CDKGAbsenceRecord record;
+    record.llmqType = TYPE;
+    record.quorumHash = QHASH;
+
+    // First sighting of this hash: newly inserted, caller should relay it.
+    BOOST_CHECK(llmq::TryMarkAbsenceRecordRelayed(store, QHASH, record));
+    // Second sighting of the exact same hash: already present, caller must not relay again.
+    BOOST_CHECK(!llmq::TryMarkAbsenceRecordRelayed(store, QHASH, record));
+    // A genuinely different hash is unaffected by the first one already being stored.
+    BOOST_CHECK(llmq::TryMarkAbsenceRecordRelayed(store, OTHER_QHASH, record));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
