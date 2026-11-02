@@ -6,6 +6,8 @@
 #include <streams.h>
 #include <hash.h>
 #include <test/test_raptoreum.h>
+#include <llmq/quorums_commitment.h>
+#include <uint256.h>
 
 #include <stdint.h>
 
@@ -263,6 +265,85 @@ BOOST_AUTO_TEST_CASE(vector_bool)
         BOOST_CHECK(vec1 == std::vector<uint8_t>(vec2.begin(), vec2.end()));
         BOOST_CHECK(SerializeHash(vec1) == SerializeHash(vec2));
         }
+
+//! The message the bound throws. Matching it exactly keeps these tests from passing on an
+//! unrelated short read, which is the very failure mode the bound replaces.
+static const std::string BOUND_REJECTION = "declared size exceeds remaining bytes";
+
+/**
+ * DYNBITSET must not allocate from an attacker-declared CompactSize when the remaining stream
+ * is far too small to hold the claimed bit payload. A handful of bytes claiming ~1e6 bits is
+ * the amplification primitive: ReadCompactSize permits up to MAX_SIZE, which would resize a
+ * std::vector<bool> and allocate a matching byte buffer before the short read throws.
+ */
+BOOST_AUTO_TEST_CASE(dynbitset_rejects_oversized_declared_length)
+{
+    CDataStream s(SER_NETWORK, PROTOCOL_VERSION);
+    WriteCompactSize(s, 1000000);
+    // No bit payload follows, so the remaining size is zero.
+
+    std::vector<bool> bits;
+    bool threw = false;
+    std::string what;
+    try {
+        s >> DYNBITSET(bits);
+    } catch (const std::ios_base::failure &e) {
+        threw = true;
+        what = e.what();
+    }
+    BOOST_CHECK_MESSAGE(threw, "DYNBITSET must reject a declared length that exceeds remaining bytes");
+    // Rejection has to precede the resize, so the destination must still hold its exact
+    // pre-deserialization state. Merely falling short of the declared size would also be
+    // satisfied by an allocation that happened and was then abandoned.
+    BOOST_CHECK(bits.empty());
+    BOOST_CHECK_MESSAGE(what.find(BOUND_REJECTION) != std::string::npos,
+                         "Expected a pre-allocation rejection, got: " + what);
+}
+
+/** A legitimately sized DYNBITSET must still round-trip unchanged. */
+BOOST_AUTO_TEST_CASE(dynbitset_accepts_legitimate_size)
+{
+    std::vector<bool> original(400, false);
+    for (size_t i = 0; i < original.size(); i += 3) {
+        original[i] = true;
+    }
+
+    CDataStream s(SER_NETWORK, PROTOCOL_VERSION);
+    s << DYNBITSET(original);
+
+    std::vector<bool> decoded;
+    s >> DYNBITSET(decoded);
+    BOOST_CHECK(decoded == original);
+}
+
+/**
+ * The same primitive is reachable from an unauthenticated QFCOMMITMENT via CFinalCommitment's
+ * signers bitset (llmq/quorums_commitment.h), so cover the real message type too.
+ */
+BOOST_AUTO_TEST_CASE(qfinalcommitment_rejects_oversized_signers_bitset)
+{
+    CDataStream s(SER_NETWORK, PROTOCOL_VERSION);
+    // nVersion (u16) | llmqType (enum) | quorumHash (32) | signers DYNBITSET | ...
+    s << static_cast<uint16_t>(1);
+    s << Consensus::LLMQ_NONE;
+    s << uint256S("1");
+    WriteCompactSize(s, 1000000);
+    // No bit payload follows for `signers`.
+
+    llmq::CFinalCommitment qc;
+    bool threw = false;
+    std::string what;
+    try {
+        s >> qc;
+    } catch (const std::ios_base::failure &e) {
+        threw = true;
+        what = e.what();
+    }
+    BOOST_CHECK(threw);
+    BOOST_CHECK(qc.signers.empty());
+    BOOST_CHECK_MESSAGE(what.find(BOUND_REJECTION) != std::string::npos,
+                         "Expected a pre-allocation rejection for CFinalCommitment, got: " + what);
+}
 
 BOOST_AUTO_TEST_CASE(noncanonical)
         {
