@@ -68,7 +68,7 @@ namespace NetMsgType {
     const char *QJUSTIFICATION = "qjustify";
     const char *QPCOMMITMENT = "qpcommit";
     const char *QABSENCEVOTE = "qabsencevote";
-    const char *QABSENCERECORD = "qabsencerecord";
+    const char *QABSENCERECORD = "qabsencerec";
     const char *QWATCH = "qwatch";
     const char *QSIGSESANN = "qsigsesann";
     const char *QSIGSHARESINV = "qsigsinv";
@@ -282,6 +282,8 @@ const char *CInv::GetCommandInternal() const {
             return NetMsgType::QPCOMMITMENT;
         case MSG_QUORUM_ABSENCE_VOTE:
             return NetMsgType::QABSENCEVOTE;
+        case MSG_QUORUM_ABSENCE_RECORD:
+            return NetMsgType::QABSENCERECORD;
         case MSG_QUORUM_RECOVERED_SIG:
             return NetMsgType::QSIGREC;
         case MSG_CLSIG:

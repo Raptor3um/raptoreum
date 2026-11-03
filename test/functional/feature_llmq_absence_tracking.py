@@ -10,7 +10,20 @@ from test_framework.util import assert_equal, sync_blocks, wait_until
 feature_llmq_absence_tracking.py
 
 Regression test for the cross-round DKG absence tracker (follow-up to
-#500). Two stages, both against genuinely-offline members
+#500), now also covering the QABSENCERECORD relay past the member-only
+mesh (#502): nodes[0] is the controller node set up by the base
+framework (test_framework.py's setup_network) -- never a smartnode,
+never a candidate for this or any quorum, no local DKG session object
+for this llmqType at all. Whatever CDKGAbsenceEstimate data it has can
+only have arrived via the second relay hop (ValidateAndRelayAbsenceRecord
+-> RelayInv), never via the member-only QABSENCEVOTE mesh or a local
+HandleDKGRound() call -- so checking its `quorum absenceestimate` output
+after a round is a direct, real-wire-protocol test of #502, not just the
+cross-round counting #500/#501 already covered. It's already connected
+directly to every smartnode (start_smartnodes() -> connect_nodes(mn, 0)),
+so no new node or connectivity wiring is needed for this.
+
+Two stages, both against genuinely-offline members
 (setnetworkactive(False), not quorum('dkgsimerror', ...) -- a node that
 only omits one DKG message type while still relaying its own
 absence-vote normally can never be marked confirmedAbsent, since
@@ -137,6 +150,25 @@ class LLMQAbsenceTracking(RaptoreumTestFramework):
             self.log.info("  observer %s...: %r" % (observer.proTxHash[:10], by_pro_tx))
         return views
 
+    def observer_absence_view(self):
+        # nodes[0] (the controller) is not a smartnode at all -- no mninfo entry,
+        # no DKG session for this quorum type, never a candidate. See the module
+        # docstring: this can only reflect data that arrived over QABSENCERECORD's
+        # second relay hop, not the member-only mesh.
+        stats = self.nodes[0].quorum("absenceestimate").get(LLMQ_TEST_NAME, [])
+        return {s["proTxHash"]: s for s in stats}
+
+    def wait_for_observer_absence_data(self, expected_rounds_selected):
+        # Separate wait from snapshot()'s own: that one confirms the member-side
+        # mesh converged (a prerequisite for there being anything to relay further
+        # in the first place); this confirms the *second* hop -- past the member
+        # mesh, to a node with zero quorum involvement -- has also landed.
+        def ready():
+            view = self.observer_absence_view()
+            return (len(view) == len(self.mninfo) and
+                    all(v["roundsSelected"] >= expected_rounds_selected for v in view.values()))
+        wait_until(ready, timeout=20, sleep=0.5)
+
     def run_test(self):
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
@@ -154,6 +186,17 @@ class LLMQAbsenceTracking(RaptoreumTestFramework):
             for mn in self.mninfo:
                 assert_equal(view[mn.proTxHash]["roundsSelected"], 1)
                 assert_equal(view[mn.proTxHash]["roundsReportedAbsent"], 0)
+
+        self.log.info("Confirming QABSENCERECORD's second relay hop (#502) reached nodes[0] -- a real node "
+                      "with zero quorum membership, no DKG session for this llmqType, connected only via "
+                      "the ordinary P2P mesh, not the member-only one.")
+        self.wait_for_observer_absence_data(1)
+        observer_view = self.observer_absence_view()
+        for mn in self.mninfo:
+            assert_equal(observer_view[mn.proTxHash]["roundsSelected"], 1)
+            assert_equal(observer_view[mn.proTxHash]["roundsReportedAbsent"], 0)
+        self.log.info("Confirmed: a genuinely non-member node received real relayed absence data for "
+                      "every member of a quorum it was never part of.")
 
         self.log.info("Stage 1: taking %s... offline, quorum should still form (4 of 5, above threshold=3)" %
                       offline_mn.proTxHash[:10])
@@ -173,6 +216,16 @@ class LLMQAbsenceTracking(RaptoreumTestFramework):
         self.log.info("Stage 1 done: quorum formed with 1 of 5 offline, correctly recorded by both observers. "
                       "(The existing PoSePunish path may now ban %s... for real, since a commitment landed -- "
                       "expected, not something this test relies on avoiding.)" % offline_mn.proTxHash[:10])
+
+        self.log.info("Confirming the relay also carries real negative evidence to nodes[0], not just the "
+                      "trivial all-present case from round 1.")
+        self.wait_for_observer_absence_data(2)
+        observer_view = self.observer_absence_view()
+        for mn in self.mninfo:
+            assert_equal(observer_view[mn.proTxHash]["roundsSelected"], 2)
+            assert_equal(observer_view[mn.proTxHash]["roundsReportedAbsent"], 1 if mn is offline_mn else 0)
+        self.log.info("Confirmed: the non-member observer's view of the real absence matches the member "
+                      "observers' exactly -- the same underlying record, reached by a different path.")
 
         self.log.info("Stage 2: taking 2 MORE offline (%s..., %s...) -- below threshold=3, finalization must fail" %
                       (more_offline_a.proTxHash[:10], more_offline_b.proTxHash[:10]))

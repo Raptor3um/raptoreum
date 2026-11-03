@@ -230,6 +230,15 @@ namespace llmq {
         if (!IsQuorumDKGEnabled())
             return false;
 
+        if (inv.type == MSG_QUORUM_ABSENCE_RECORD) {
+            // Unlike every other type below, a relayed CDKGAbsenceRecord has nothing to do with
+            // dkgSessionHandlers (that map is this node's own live sessions, keyed by llmqType --
+            // irrelevant to a non-member relaying data for a quorum it was never part of). The
+            // actual seen-set is relayedAbsenceRecords, already keyed by this same hash.
+            LOCK(cs_relayedAbsenceRecords);
+            return relayedAbsenceRecords.count(inv.hash) != 0;
+        }
+
         for (const auto &p: dkgSessionHandlers) {
             auto &dkgType = p.second;
             if (dkgType.pendingContributions.HasSeen(inv.hash)

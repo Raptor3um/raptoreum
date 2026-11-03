@@ -1508,6 +1508,7 @@ EXCLUSIVE_LOCKS_REQUIRED(cs_main)
                     case MSG_QUORUM_JUSTIFICATION:
                     case MSG_QUORUM_PREMATURE_COMMITMENT:
                     case MSG_QUORUM_ABSENCE_VOTE:
+                    case MSG_QUORUM_ABSENCE_RECORD:
                         return llmq::quorumDKGSessionManager->AlreadyHave(inv);
                     case MSG_QUORUM_RECOVERED_SIG:
                         return llmq::quorumSigningManager->AlreadyHave(inv);
