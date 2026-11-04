@@ -3751,7 +3751,16 @@ bool static ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStr
 
     if (strCommand == NetMsgType::FILTERLOAD) {
         CBloomFilter filter;
-        vRecv >> filter;
+        try {
+            vRecv >> filter;
+        } catch (const std::ios_base::failure &) {
+            // An oversized filter now throws pre-allocation (CBloomFilter's LIMITED_VECTOR);
+            // punish here instead of letting it reach the outer message-processing catch, which
+            // drops it without scoring misbehavior.
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return true;
+        }
 
         if (!filter.IsWithinSizeConstraints()) {
             // There is no excuse for sending a too-large filter
@@ -3768,14 +3777,20 @@ bool static ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStr
 
     if (strCommand == NetMsgType::FILTERADD) {
         std::vector<unsigned char> vData;
-        vRecv >> vData;
-
         // Nodes must NEVER send a data item > 520 bytes (the max size for a script data object,
-        // and thus, the maximum size any matched object can have) in a filteradd message
+        // and thus, the maximum size any matched object can have) in a filteradd message. Bound
+        // the declared length before allocation (LIMITED_VECTOR) rather than checking vData.size()
+        // after it's already been read in full.
+        try {
+            vRecv >> LIMITED_VECTOR(vData, MAX_SCRIPT_ELEMENT_SIZE);
+        } catch (const std::ios_base::failure &) {
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 100);
+            return true;
+        }
+
         bool bad = false;
-        if (vData.size() > MAX_SCRIPT_ELEMENT_SIZE) {
-            bad = true;
-        } else {
+        {
             LOCK(pfrom->cs_filter);
             if (pfrom->pfilter) {
                 pfrom->pfilter->insert(vData);

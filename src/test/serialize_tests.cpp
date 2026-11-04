@@ -5,6 +5,7 @@
 #include <serialize.h>
 #include <streams.h>
 #include <hash.h>
+#include <spork.h>
 #include <test/test_raptoreum.h>
 
 #include <stdint.h>
@@ -423,5 +424,77 @@ BOOST_AUTO_TEST_CASE(class_methods)
         ss2 >> methodtest3;
         BOOST_CHECK(methodtest3 == methodtest4);
         }
+
+//! The message LimitedVectorFormatter throws. Matching it exactly keeps these tests from
+//! passing on an unrelated short read, which is the very failure mode the bound replaces.
+static const std::string VECTOR_LIMIT_REJECTION = "Vector length limit exceeded";
+
+/**
+ * A field wrapped in LIMITED_VECTOR must reject a declared CompactSize over the cap before
+ * allocating anything, the same amplification primitive LIMITED_STRING already guards against
+ * for std::string.
+ */
+BOOST_AUTO_TEST_CASE(limited_vector_rejects_oversized_declared_length)
+{
+    CDataStream s(SER_NETWORK, PROTOCOL_VERSION);
+    WriteCompactSize(s, 1000);
+    // No payload follows.
+
+    std::vector<unsigned char> vch;
+    bool threw = false;
+    std::string what;
+    try {
+        s >> Using<LimitedVectorFormatter<65>>(vch);
+    } catch (const std::ios_base::failure &e) {
+        threw = true;
+        what = e.what();
+    }
+    BOOST_CHECK_MESSAGE(threw, "LIMITED_VECTOR must reject a declared length over the cap");
+    BOOST_CHECK(vch.empty());
+    BOOST_CHECK_MESSAGE(what.find(VECTOR_LIMIT_REJECTION) != std::string::npos,
+                         "Expected a pre-allocation rejection, got: " + what);
+}
+
+/** A legitimately sized LIMITED_VECTOR field must still round-trip unchanged. */
+BOOST_AUTO_TEST_CASE(limited_vector_accepts_legitimate_size)
+{
+    std::vector<unsigned char> original(65, 0xAB);
+
+    CDataStream s(SER_NETWORK, PROTOCOL_VERSION);
+    s << Using<LimitedVectorFormatter<65>>(original);
+
+    std::vector<unsigned char> decoded;
+    s >> Using<LimitedVectorFormatter<65>>(decoded);
+    BOOST_CHECK(decoded == original);
+}
+
+/**
+ * The same primitive is applied to CSporkMessage::vchSig (src/spork.h), so cover the real
+ * message type: an unauthenticated peer's SPORK claiming a huge signature must be rejected
+ * before any allocation, not merely on the eventual signature-verification failure.
+ */
+BOOST_AUTO_TEST_CASE(sporkmessage_rejects_oversized_signature)
+{
+    CDataStream s(SER_NETWORK, PROTOCOL_VERSION);
+    // nSporkID (int32_t) | nValue (int64_t) | nTimeSigned (int64_t) | vchSig LIMITED_VECTOR
+    s << static_cast<int32_t>(0);
+    s << static_cast<int64_t>(0);
+    s << static_cast<int64_t>(0);
+    WriteCompactSize(s, 1000);
+    // No signature payload follows.
+
+    CSporkMessage spork;
+    bool threw = false;
+    std::string what;
+    try {
+        s >> spork;
+    } catch (const std::ios_base::failure &e) {
+        threw = true;
+        what = e.what();
+    }
+    BOOST_CHECK(threw);
+    BOOST_CHECK_MESSAGE(what.find(VECTOR_LIMIT_REJECTION) != std::string::npos,
+                         "Expected a pre-allocation rejection for CSporkMessage, got: " + what);
+}
 
 BOOST_AUTO_TEST_SUITE_END()

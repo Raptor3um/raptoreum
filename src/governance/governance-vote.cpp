@@ -15,6 +15,9 @@
 
 #include <evo/deterministicmns.h>
 
+static_assert(CGovernanceVote::COMPACT_SIG_SIZE == CPubKey::COMPACT_SIGNATURE_SIZE);
+static_assert(CGovernanceVote::BLS_SIG_SIZE == CBLSSignature::SerSize);
+
 std::string CGovernanceVoting::ConvertOutcomeToString(vote_outcome_enum_t nOutcome) {
     static const std::map <vote_outcome_enum_t, std::string> mapOutcomeString = {
             {VOTE_OUTCOME_NONE,    "none"},
