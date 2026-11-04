@@ -167,6 +167,33 @@ class NetEventsInterface;
  */
 bool HasUnpausedReceivableNode(const std::unordered_map<NodeId, CNode *> &receivable_nodes);
 
+/**
+ * Upper bound on simultaneous verified *inbound* connections carrying the same proRegTxHash,
+ * enforced by CConnman::TryMarkVerified.
+ *
+ * A verified inbound smartnode peer is exempt from the inbound connection limit
+ * (AcceptConnection) and unconditionally protected from eviction (AttemptToEvictConnection), so
+ * without a bound a single compromised operator key could stack such slots without end.
+ *
+ * The limit is not 1: a reconnect racing a socket not yet detected as dead legitimately produces
+ * a second verified inbound leg for the same identity. A small allowance keeps that case working
+ * while still making the exemption a bounded multiple of the smartnode count rather than
+ * unbounded.
+ */
+static constexpr size_t MAX_VERIFIED_INBOUND_PER_PROTX{3};
+
+/**
+ * True if adding one more verified inbound connection for `proRegTxHash` would reach `cap`, given
+ * `existingInboundVerified` (the proRegTxHash of every OTHER already-verified, non-disconnected
+ * inbound peer). Pulled out of CConnman::TryMarkVerified as a pure function of the count so the
+ * boundary can be pinned directly in a test -- this codebase's test suite does not construct a
+ * live CConnman/CNode fixture (same limitation quorums_dkgsessionmgr_tests.cpp documents for an
+ * analogous case).
+ */
+bool WouldExceedVerifiedInboundCap(const std::vector<uint256> &existingInboundVerified,
+                                    const uint256 &proRegTxHash,
+                                    size_t cap = MAX_VERIFIED_INBOUND_PER_PROTX);
+
 class CConnman {
     friend class CNode;
 
@@ -465,6 +492,15 @@ public:
     bool IsSmartnodeQuorumRelayMember(const uint256 &protxHash);
 
     void AddPendingProbeConnections(const std::set <uint256> &proTxHashes);
+
+    /**
+     * Mark a peer as a verified smartnode connection, granting it the inbound-limit exemption and
+     * eviction protection tied to that status. Returns false, leaving the peer unmarked, if the
+     * peer no longer exists or -- for inbound peers -- marking it would exceed
+     * MAX_VERIFIED_INBOUND_PER_PROTX for this proRegTxHash; see that constant for the rationale.
+     * All paths that verify a smartnode connection must go through this gate.
+     */
+    bool TryMarkVerified(NodeId id, const uint256 &proRegTxHash, const uint256 &pubKeyHash);
 
     size_t GetNodeCount(NumConnections num);
 

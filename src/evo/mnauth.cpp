@@ -194,8 +194,12 @@ void CMNAuth::ProcessMessage(CNode *pnode, const std::string &strCommand, CDataS
             return;
         }
 
-        pnode->SetVerifiedProRegTxHash(mnauth.proRegTxHash);
-        pnode->SetVerifiedPubKeyHash(dmn->pdmnState->pubKeyOperator.GetHash());
+        if (!connman.TryMarkVerified(pnode->GetId(), mnauth.proRegTxHash, dmn->pdmnState->pubKeyOperator.GetHash())) {
+            // At the verified-inbound cap for this identity. Not a misbehavior: a legitimate
+            // reconnect racing a not-yet-reaped stale leg must not be banned.
+            pnode->fDisconnect = true;
+            return;
+        }
 
         if (!pnode->m_smartnode_iqr_connection &&
             connman.IsSmartnodeQuorumRelayMember(pnode->GetVerifiedProRegTxHash())) {

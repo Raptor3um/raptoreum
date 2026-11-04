@@ -561,13 +561,7 @@ static UniValue mnauth(const JSONRPCRequest &request) {
     }
 
     NodeContext &node = EnsureNodeContext(request.context);
-    bool fSuccess = node.connman->ForNode(nodeId, CConnman::AllNodes, [&](CNode *pNode) {
-        pNode->SetVerifiedProRegTxHash(proTxHash);
-        pNode->SetVerifiedPubKeyHash(publicKey.GetHash());
-        return true;
-    });
-
-    return fSuccess;
+    return node.connman->TryMarkVerified(nodeId, proTxHash, publicKey.GetHash());
 }
 
 bool getAddressFromIndex(const int &type, const uint160 &hash, std::string &address) {
