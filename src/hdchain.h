@@ -76,6 +76,8 @@ public:
         // enable ADL (not necessary in our case, but good practice)
         using std::swap;
 
+        LOCK2(first.cs, second.cs);
+
         // by swapping the members of two classes,
         // the two classes are effectively swapped
         swap(first.nVersion, second.nVersion);
