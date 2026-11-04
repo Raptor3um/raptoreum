@@ -19,6 +19,7 @@
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_debug.h>
 #include <llmq/quorums_dkgsession.h>
+#include <llmq/quorums_dkgsessionmgr.h>
 #include <llmq/quorums_signing.h>
 #include <llmq/quorums_signing_shares.h>
 
@@ -191,6 +192,7 @@ UniValue quorum_dkgstatus(const JSONRPCRequest &request) {
     return activeSmartnodeInfo.proTxHash);
     UniValue mineableCommitments(UniValue::VOBJ);
     UniValue quorumConnections(UniValue::VOBJ);
+    UniValue absenceRecords(UniValue::VOBJ);
     for (const auto &type: llmq::CLLMQUtils::GetEnabledQuorumTypes(pindexTip)) {
         const auto &llmq_params = llmq::GetLLMQParams(type);
 
@@ -232,10 +234,25 @@ UniValue quorum_dkgstatus(const JSONRPCRequest &request) {
             fqc.ToJson(obj);
             mineableCommitments.pushKV(std::string(llmq_params.name), obj);
         }
+
+        // Interim reporting for the phantom-pruning evidence pipeline:
+        // identify (CDKGAbsenceVote) -> agree (BuildAbsenceRecord, run
+        // automatically in HandleDKGRound) -> report (here, until the
+        // special transaction replaces this -- see the design doc's
+        // Release A/B split). Local-node-only, no P2P relay of the record
+        // itself yet, no consensus weight: this is this node's own
+        // self-verified view, not a network-wide claim.
+        llmq::CDKGAbsenceRecord absenceRecord;
+        if (llmq::quorumDKGSessionManager->GetAbsenceRecord(type, absenceRecord)) {
+            UniValue obj(UniValue::VOBJ);
+            absenceRecord.ToJson(obj);
+            absenceRecords.pushKV(std::string(llmq_params.name), obj);
+        }
     }
 
     ret.pushKV("mineableCommitments", mineableCommitments);
     ret.pushKV("quorumConnections", quorumConnections);
+    ret.pushKV("absenceRecords", absenceRecords);
 
     return ret;
 }
