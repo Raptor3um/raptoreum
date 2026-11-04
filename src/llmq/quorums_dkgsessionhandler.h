@@ -30,6 +30,13 @@ namespace llmq {
         QuorumPhase_Idle,
     };
 
+    // Returns true if every element of `nodeIds` equals its first element
+    // (vacuously true for an empty input); when true, `soleNodeId` is set to
+    // that shared value. Declared here, defined in the .cpp, so
+    // quorums_dkgsessionhandler_tests.cpp can exercise it directly without
+    // needing a live CDKGSession or real BLS signatures.
+    bool AllNodeIdsMatch(const std::vector<NodeId> &nodeIds, NodeId &soleNodeId);
+
 /**
  * Acts as a FIFO queue for incoming DKG messages. The reason we need this is that deserialization of these messages
  * is too slow to be processed in the main message handler thread. So, instead of processing them directly from the
@@ -137,6 +144,8 @@ namespace llmq {
         CDKGPendingMessages pendingJustifications
         GUARDED_BY(cs);
         CDKGPendingMessages pendingPrematureCommitments
+        GUARDED_BY(cs);
+        CDKGPendingMessages pendingAbsenceVotes
         GUARDED_BY(cs);
 
     public:

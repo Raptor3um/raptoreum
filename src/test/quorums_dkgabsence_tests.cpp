@@ -1,0 +1,265 @@
+// Copyright (c) 2026 The Raptoreum developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#include <llmq/quorums_dkgabsence.h>
+#include <test/test_raptoreum.h>
+
+#include <boost/test/unit_test.hpp>
+
+// VerifyAbsenceRecordCore is the pure core of CDKGAbsenceRecord::Verify()
+// (see quorums_dkgabsence.h/.cpp), extracted specifically so the single
+// most important invariant in this file -- that confirmedAbsent is exactly
+// the intersection of every bundled vote, with no duplicate or non-member
+// reporter and no out-of-range bit -- is pinned directly, with plain
+// values. Verify() itself still needs a live chain/DML (to resolve real
+// quorum membership) and real BLS signatures (to check each vote actually
+// came from its claimed reporter) for the parts this core doesn't cover.
+BOOST_FIXTURE_TEST_SUITE(quorums_dkgabsence_tests, BasicTestingSetup)
+
+namespace {
+    const Consensus::LLMQType TYPE = Consensus::LLMQ_5_60;
+    const uint256 QHASH = uint256S("aa");
+    const uint256 OTHER_QHASH = uint256S("bb");
+    const uint256 MEMBER_A = uint256S("11");
+    const uint256 MEMBER_B = uint256S("22");
+    const uint256 MEMBER_C = uint256S("33");
+    const uint256 MEMBER_D = uint256S("44");
+    const uint256 NON_MEMBER = uint256S("ff");
+    const std::set<uint256> MEMBERS = {MEMBER_A, MEMBER_B, MEMBER_C, MEMBER_D};
+
+    llmq::CDKGAbsenceVote MakeVote(const uint256 &reporter, const std::vector<bool> &absent) {
+        llmq::CDKGAbsenceVote v;
+        v.llmqType = TYPE;
+        v.quorumHash = QHASH;
+        v.proTxHash = reporter;
+        v.absentMembers = absent;
+        return v;
+    }
+} // namespace
+
+BOOST_AUTO_TEST_CASE(empty_votes_accepts_all_false) {
+    std::vector<bool> confirmedAbsent = {false, false, false, false};
+    BOOST_CHECK(llmq::VerifyAbsenceRecordCore(TYPE, QHASH, 4, 4, MEMBERS, confirmedAbsent, {}));
+}
+
+BOOST_AUTO_TEST_CASE(empty_votes_rejects_any_claim) {
+    // zero evidence can't support any claim, even just one bit
+    std::vector<bool> confirmedAbsent = {true, false, false, false};
+    BOOST_CHECK(!llmq::VerifyAbsenceRecordCore(TYPE, QHASH, 4, 4, MEMBERS, confirmedAbsent, {}));
+}
+
+BOOST_AUTO_TEST_CASE(single_vote_exact_match_accepted) {
+    std::vector<bool> absent = {true, false, true, false}; // B reports A and C absent
+    auto vote = MakeVote(MEMBER_B, absent);
+    BOOST_CHECK(llmq::VerifyAbsenceRecordCore(TYPE, QHASH, 4, 4, MEMBERS, absent, {vote}));
+}
+
+BOOST_AUTO_TEST_CASE(intersection_not_union_one_honest_vote_overrides) {
+    // A and C both report B absent; A also claims D absent, but C's own
+    // vote says D is NOT absent (C must have heard from D). The override
+    // property: one honest "present" removes D from confirmedAbsent no
+    // matter how many other votes claimed otherwise.
+    auto voteA = MakeVote(MEMBER_A, {false, true, false, true});  // claims B, D absent
+    auto voteC = MakeVote(MEMBER_C, {false, true, false, false}); // claims only B absent
+    std::vector<bool> expected = {false, true, false, false};     // intersection: only B
+    BOOST_CHECK(llmq::VerifyAbsenceRecordCore(TYPE, QHASH, 4, 4, MEMBERS, expected, {voteA, voteC}));
+}
+
+BOOST_AUTO_TEST_CASE(intersection_not_union_honest_vote_first_still_overrides) {
+    // same as above with the bundle order reversed -- the override property
+    // has to hold regardless of which vote a builder happens to put first
+    // (real bundle order is by message hash, i.e. arbitrary). Pins the
+    // AND-accumulation itself: a "last vote wins" implementation would
+    // compute {false,true,false,true} here and fail this check, even though
+    // it happens to pass the voteA-then-voteC ordering above.
+    auto voteA = MakeVote(MEMBER_A, {false, true, false, true});
+    auto voteC = MakeVote(MEMBER_C, {false, true, false, false});
+    std::vector<bool> expected = {false, true, false, false};
+    BOOST_CHECK(llmq::VerifyAbsenceRecordCore(TYPE, QHASH, 4, 4, MEMBERS, expected, {voteC, voteA}));
+}
+
+BOOST_AUTO_TEST_CASE(superset_claim_rejected) {
+    // the real intersection only supports B absent; confirmedAbsent also
+    // (falsely) claims D -- a fabricated, inflated claim.
+    auto voteA = MakeVote(MEMBER_A, {false, true, false, true});
+    auto voteC = MakeVote(MEMBER_C, {false, true, false, false});
+    std::vector<bool> inflated = {false, true, false, true};
+    BOOST_CHECK(!llmq::VerifyAbsenceRecordCore(TYPE, QHASH, 4, 4, MEMBERS, inflated, {voteA, voteC}));
+}
+
+// FoldAbsenceVotes is VerifyAbsenceRecordCore's own extracted computation, returning the
+// intersection it computes rather than just a bool comparison against a caller-supplied
+// confirmedAbsent -- the shape CDKGAbsenceEstimate's round-merge needs (see
+// quorums_dkgabsenceestimate.cpp), since there's no pre-existing confirmedAbsent to compare
+// against when merging several independently-relayed records into one running view.
+
+BOOST_AUTO_TEST_CASE(fold_empty_votes_returns_all_false) {
+    auto folded = llmq::FoldAbsenceVotes(TYPE, QHASH, 4, 4, MEMBERS, {});
+    BOOST_REQUIRE(folded.has_value());
+    BOOST_CHECK(*folded == std::vector<bool>({false, false, false, false}));
+}
+
+BOOST_AUTO_TEST_CASE(fold_returns_the_actual_intersection_not_just_a_match_bool) {
+    auto voteA = MakeVote(MEMBER_A, {false, true, false, true});  // claims B, D absent
+    auto voteC = MakeVote(MEMBER_C, {false, true, false, false}); // claims only B absent
+    auto folded = llmq::FoldAbsenceVotes(TYPE, QHASH, 4, 4, MEMBERS, {voteA, voteC});
+    BOOST_REQUIRE(folded.has_value());
+    // The override property through the direct return value, not through a bool comparison:
+    // D must be absent from the result, not just correctly rejected if a caller guessed wrong.
+    BOOST_CHECK(*folded == std::vector<bool>({false, true, false, false}));
+}
+
+BOOST_AUTO_TEST_CASE(fold_rejects_structurally_invalid_votes) {
+    auto wrongQuorum = MakeVote(MEMBER_A, {false, true, false, false});
+    wrongQuorum.quorumHash = OTHER_QHASH;
+    BOOST_CHECK(!llmq::FoldAbsenceVotes(TYPE, QHASH, 4, 4, MEMBERS, {wrongQuorum}).has_value());
+
+    auto fromNonMember = MakeVote(NON_MEMBER, {false, true, false, false});
+    BOOST_CHECK(!llmq::FoldAbsenceVotes(TYPE, QHASH, 4, 4, MEMBERS, {fromNonMember}).has_value());
+
+    auto duplicateReporter = MakeVote(MEMBER_A, {false, false, false, false});
+    BOOST_CHECK(!llmq::FoldAbsenceVotes(TYPE, QHASH, 4, 4, MEMBERS,
+                                         {MakeVote(MEMBER_A, {true, false, false, false}), duplicateReporter})
+                         .has_value());
+}
+
+BOOST_AUTO_TEST_CASE(subset_claim_rejected) {
+    // the real intersection supports B absent; confirmedAbsent
+    // under-claims (empty) -- understating evidence is rejected too, not
+    // just inflating it.
+    auto voteA = MakeVote(MEMBER_A, {false, true, false, false});
+    auto voteC = MakeVote(MEMBER_C, {false, true, false, false});
+    std::vector<bool> understated = {false, false, false, false};
+    BOOST_CHECK(!llmq::VerifyAbsenceRecordCore(TYPE, QHASH, 4, 4, MEMBERS, understated, {voteA, voteC}));
+}
+
+BOOST_AUTO_TEST_CASE(duplicate_reporter_rejected) {
+    auto vote1 = MakeVote(MEMBER_A, {false, true, false, false});
+    auto vote2 = MakeVote(MEMBER_A, {false, true, false, false}); // same reporter twice
+    BOOST_CHECK(!llmq::VerifyAbsenceRecordCore(TYPE, QHASH, 4, 4, MEMBERS,
+                                                {false, true, false, false}, {vote1, vote2}));
+}
+
+BOOST_AUTO_TEST_CASE(non_member_reporter_rejected) {
+    auto vote = MakeVote(NON_MEMBER, {false, true, false, false}); // NON_MEMBER not in MEMBERS
+    BOOST_CHECK(!llmq::VerifyAbsenceRecordCore(TYPE, QHASH, 4, 4, MEMBERS,
+                                                {false, true, false, false}, {vote}));
+}
+
+BOOST_AUTO_TEST_CASE(confirmed_absent_size_mismatch_rejected) {
+    // with a non-empty bundle, a wrong-size confirmedAbsent would also fail
+    // the final vector equality on its own (different sizes never compare
+    // equal), which would mask this check -- use an EMPTY bundle instead,
+    // where that equality never runs and the explicit size check is the
+    // only thing standing between accept and reject.
+    //
+    // All-false, not {false, true, false}: a set bit here would also get
+    // rejected by the empty-votes/no-claim-without-evidence check below,
+    // masking the size check the same way a non-empty bundle would -- an
+    // all-false vector is rejected ONLY if the size check itself still runs.
+    std::vector<bool> wrongSize = {false, false, false}; // 3, not paramsSize=4
+    BOOST_CHECK(!llmq::VerifyAbsenceRecordCore(TYPE, QHASH, 4, 4, MEMBERS, wrongSize, {}));
+}
+
+BOOST_AUTO_TEST_CASE(vote_absent_members_too_short_rejected) {
+    auto vote = MakeVote(MEMBER_A, {false, true, false}); // 3, not paramsSize=4
+    BOOST_CHECK(!llmq::VerifyAbsenceRecordCore(TYPE, QHASH, 4, 4, MEMBERS,
+                                                {false, true, false, false}, {vote}));
+}
+
+BOOST_AUTO_TEST_CASE(vote_absent_members_too_long_rejected) {
+    // the too-short case above would also be caught by the AND-loop
+    // indexing past a shorter vector -- this direction is the one that
+    // can't be: a too-LONG vote (DYNBITSET deserializes any length a peer
+    // sends) has every one of the first 4 bits matching, and would be
+    // silently accepted if the size check were the only thing skipped --
+    // the AND-loop only ever reads indices < paramsSize, so it never even
+    // looks at the extra bit.
+    auto vote = MakeVote(MEMBER_A, {false, true, false, false, true}); // 5, not 4
+    BOOST_CHECK(!llmq::VerifyAbsenceRecordCore(TYPE, QHASH, 4, 4, MEMBERS,
+                                                {false, true, false, false}, {vote}));
+}
+
+// There is no standalone test for an out-of-range bit in confirmedAbsent
+// itself (as opposed to in a vote): with a non-empty bundle, that specific
+// check is provably unreachable as a deciding factor -- any vote sharing
+// the out-of-range bit gets rejected by the loop below first, and if no
+// vote shares it the final intersection-vs-confirmedAbsent equality already
+// rejects the mismatch on its own. The check stays in the implementation
+// as cheap defense in depth (see quorums_dkgabsence.cpp); it just can't be
+// pinned by any input shaped to isolate it.
+BOOST_AUTO_TEST_CASE(out_of_range_bit_in_a_vote_rejected) {
+    // only 3 real members even though paramsSize=4 (CalculateQuorum handed
+    // back fewer than the configured size) -- index 3 maps to nobody and
+    // must never be set. Two votes, not one: voteB's bit 3 is false, so
+    // without the bounds check the AND would correctly zero out bit 3
+    // anyway and this would pass for the wrong reason (masked, the same
+    // way the single-vote version was).
+    std::set<uint256> threeMembers = {MEMBER_A, MEMBER_B, MEMBER_C};
+    auto voteA = MakeVote(MEMBER_A, {false, false, false, true}); // bit 3 out of range
+    auto voteB = MakeVote(MEMBER_B, {false, false, false, false});
+    BOOST_CHECK(!llmq::VerifyAbsenceRecordCore(TYPE, QHASH, 4, 3, threeMembers,
+                                                {false, false, false, false}, {voteA, voteB}));
+}
+
+BOOST_AUTO_TEST_CASE(vote_llmqtype_mismatch_rejected) {
+    auto vote = MakeVote(MEMBER_A, {false, true, false, false});
+    vote.llmqType = Consensus::LLMQ_TEST_V17; // doesn't match the record's TYPE
+    BOOST_CHECK(!llmq::VerifyAbsenceRecordCore(TYPE, QHASH, 4, 4, MEMBERS,
+                                                {false, true, false, false}, {vote}));
+}
+
+BOOST_AUTO_TEST_CASE(vote_quorumhash_mismatch_rejected) {
+    auto vote = MakeVote(MEMBER_A, {false, true, false, false});
+    vote.quorumHash = OTHER_QHASH; // doesn't match the record's QHASH
+    BOOST_CHECK(!llmq::VerifyAbsenceRecordCore(TYPE, QHASH, 4, 4, MEMBERS,
+                                                {false, true, false, false}, {vote}));
+}
+
+// ShouldRejectAbsenceRecordAsStale is the cheap gate a relayed CDKGAbsenceRecord must pass
+// before anything touches the membership cache (CLLMQUtils::GetAllQuorumMembers) or runs a
+// single BLS verification. Pinned directly with plain values -- no live chain, no quorum --
+// since the entire point is that this decision must be reachable without either.
+namespace {
+    // keepOldKeys * dkgInterval = 100, a round number distinct from any real llmq profile's
+    // own retention window so a test passing/failing can't be mistaken for coincidence.
+    const Consensus::LLMQParams STALE_TEST_PARAMS{.dkgInterval = 10, .keepOldKeys = 10};
+}
+
+BOOST_AUTO_TEST_CASE(stale_check_rejects_unresolvable_block) {
+    // blockFound=false must reject regardless of height -- a hash that isn't a real block at
+    // all is the cheapest possible forgery, and must never reach the expensive path.
+    BOOST_CHECK(llmq::ShouldRejectAbsenceRecordAsStale(false, 1000, 1000, STALE_TEST_PARAMS));
+    BOOST_CHECK(llmq::ShouldRejectAbsenceRecordAsStale(false, 1000, 999999, STALE_TEST_PARAMS));
+}
+
+BOOST_AUTO_TEST_CASE(stale_check_rejects_beyond_retention_window) {
+    // Tip is 101 blocks past the quorum's own height; max_store_depth() here is 100.
+    BOOST_CHECK(llmq::ShouldRejectAbsenceRecordAsStale(true, 1101, 1000, STALE_TEST_PARAMS));
+}
+
+BOOST_AUTO_TEST_CASE(stale_check_accepts_at_and_within_retention_window) {
+    // Exactly at the boundary (100) and comfortably inside it (50) must both pass through to
+    // the expensive path -- this gate only rejects what's strictly beyond the window.
+    BOOST_CHECK(!llmq::ShouldRejectAbsenceRecordAsStale(true, 1100, 1000, STALE_TEST_PARAMS));
+    BOOST_CHECK(!llmq::ShouldRejectAbsenceRecordAsStale(true, 1050, 1000, STALE_TEST_PARAMS));
+}
+
+// TryMarkAbsenceRecordRelayed is the dedup gate for the QABSENCERECORD relay: a record must
+// be relayed exactly once, never re-relayed on a second sighting of the same hash.
+BOOST_AUTO_TEST_CASE(dedup_relays_a_hash_exactly_once) {
+    std::map<uint256, llmq::CDKGAbsenceRecord> store;
+    llmq::CDKGAbsenceRecord record;
+    record.llmqType = TYPE;
+    record.quorumHash = QHASH;
+
+    // First sighting of this hash: newly inserted, caller should relay it.
+    BOOST_CHECK(llmq::TryMarkAbsenceRecordRelayed(store, QHASH, record));
+    // Second sighting of the exact same hash: already present, caller must not relay again.
+    BOOST_CHECK(!llmq::TryMarkAbsenceRecordRelayed(store, QHASH, record));
+    // A genuinely different hash is unaffected by the first one already being stored.
+    BOOST_CHECK(llmq::TryMarkAbsenceRecordRelayed(store, OTHER_QHASH, record));
+}
+
+BOOST_AUTO_TEST_SUITE_END()

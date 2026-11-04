@@ -1507,6 +1507,8 @@ EXCLUSIVE_LOCKS_REQUIRED(cs_main)
                     case MSG_QUORUM_COMPLAINT:
                     case MSG_QUORUM_JUSTIFICATION:
                     case MSG_QUORUM_PREMATURE_COMMITMENT:
+                    case MSG_QUORUM_ABSENCE_VOTE:
+                    case MSG_QUORUM_ABSENCE_RECORD:
                         return llmq::quorumDKGSessionManager->AlreadyHave(inv);
                     case MSG_QUORUM_RECOVERED_SIG:
                         return llmq::quorumSigningManager->AlreadyHave(inv);
@@ -1845,6 +1847,20 @@ LOCKS_EXCLUDED(cs_main)
                     llmq::CDKGPrematureCommitment o;
                     if (llmq::quorumDKGSessionManager->GetPrematureCommitment(inv.hash, o)) {
                         connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::QPCOMMITMENT, o));
+                        push = true;
+                    }
+                }
+                if (!push && (inv.type == MSG_QUORUM_ABSENCE_VOTE)) {
+                    llmq::CDKGAbsenceVote o;
+                    if (llmq::quorumDKGSessionManager->GetAbsenceVote(inv.hash, o)) {
+                        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::QABSENCEVOTE, o));
+                        push = true;
+                    }
+                }
+                if (!push && (inv.type == MSG_QUORUM_ABSENCE_RECORD)) {
+                    llmq::CDKGAbsenceRecord o;
+                    if (llmq::quorumDKGSessionManager->GetRelayedAbsenceRecord(inv.hash, o)) {
+                        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::QABSENCERECORD, o));
                         push = true;
                     }
                 }

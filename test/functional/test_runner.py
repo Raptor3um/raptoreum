@@ -241,6 +241,7 @@ BASE_SCRIPTS = [
 EXTENDED_SCRIPTS = [
     # These tests are not run by default.
     # Longest test should go first, to favor running tests in parallel
+    'feature_llmq_absence_tracking.py', # NOTE: needs dash_hash to pass; see docs/findings/dkg-phase-wait-stall.md -- intermittent until resolved
     'feature_pruning.py', # NOTE: Prune mode is incompatible with -txindex, should work with governance validation disabled though.
     # vv Tests less than 20m vv
     # vv Tests less than 5m vv
