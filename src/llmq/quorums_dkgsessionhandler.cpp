@@ -6,6 +6,7 @@
 #include <llmq/quorums_dkgsessionhandler.h>
 
 #include <llmq/quorums_commitment.h>
+#include <llmq/quorums_dkgabsencetracker.h>
 #include <llmq/quorums_dkgsession.h>
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_debug.h>
@@ -105,7 +106,8 @@ namespace llmq {
             pendingContributions((size_t) LlmqParamsSize(_params) * 2,MSG_QUORUM_CONTRIB), // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
             pendingComplaints((size_t) LlmqParamsSize(_params) * 2, MSG_QUORUM_COMPLAINT),
             pendingJustifications((size_t) LlmqParamsSize(_params) * 2, MSG_QUORUM_JUSTIFICATION),
-            pendingPrematureCommitments((size_t) LlmqParamsSize(_params) * 2, MSG_QUORUM_PREMATURE_COMMITMENT) {
+            pendingPrematureCommitments((size_t) LlmqParamsSize(_params) * 2, MSG_QUORUM_PREMATURE_COMMITMENT),
+            pendingAbsenceVotes((size_t) LlmqParamsSize(_params) * 2, MSG_QUORUM_ABSENCE_VOTE) {
         if (params.type == Consensus::LLMQType::LLMQ_NONE) {
             throw std::runtime_error("Can't initialize CDKGSessionHandler with LLMQ_NONE type.");
         }
@@ -148,6 +150,8 @@ namespace llmq {
             pendingJustifications.PushPendingMessage(pfrom->GetId(), vRecv);
         } else if (strCommand == NetMsgType::QPCOMMITMENT) {
             pendingPrematureCommitments.PushPendingMessage(pfrom->GetId(), vRecv);
+        } else if (strCommand == NetMsgType::QABSENCEVOTE) {
+            pendingAbsenceVotes.PushPendingMessage(pfrom->GetId(), vRecv);
         }
     }
 
@@ -346,6 +350,19 @@ namespace llmq {
                  params.name, curPhase, nextPhase);
     }
 
+bool AllNodeIdsMatch(const std::vector<NodeId> &nodeIds, NodeId &soleNodeId) {
+    if (nodeIds.empty()) {
+        return true;
+    }
+    soleNodeId = nodeIds.front();
+    for (NodeId id : nodeIds) {
+        if (id != soleNodeId) {
+            return false;
+        }
+    }
+    return true;
+}
+
 // returns a set of NodeIds which sent invalid messages
     template<typename Message>
     std::set <NodeId> BatchVerifyMessageSigs(CDKGSession &session, const std::vector <std::pair<NodeId, std::shared_ptr < Message>>>& messages) {
@@ -402,24 +419,16 @@ namespace llmq {
             return ret;
         }
 
-        // are all messages from the same node?
-        NodeId firstNodeId;
-        first = true;
-        bool nodeIdsAllSame = true;
-        for (auto it = messages.begin(); it != messages.end(); ++it) {
-            if (first) {
-                firstNodeId = it->first;
-            } else {
-                first = false;
-                if (it->first != firstNodeId) {
-                    nodeIdsAllSame = false;
-                    break;
-                }
-            }
+        // are all messages from the same node? if so, take a short path and
+        // return a set with only him
+        std::vector<NodeId> nodeIds;
+        nodeIds.reserve(messages.size());
+        for (const auto &p : messages) {
+            nodeIds.emplace_back(p.first);
         }
-        // if yes, take a short path and return a set with only him
-        if (nodeIdsAllSame) {
-            ret.emplace(firstNodeId);
+        NodeId soleNodeId;
+        if (AllNodeIdsMatch(nodeIds, soleNodeId)) {
+            ret.emplace(soleNodeId);
             return ret;
         }
         // different nodes, let's figure out who are the bad ones
@@ -520,6 +529,7 @@ void CDKGSessionHandler::HandleDKGRound() {
         pendingComplaints.Clear();
         pendingJustifications.Clear();
         pendingPrematureCommitments.Clear();
+        pendingAbsenceVotes.Clear();
         curQuorumHash = quorumHash;
         curQuorumHeight = quorumHeight;
     }
@@ -588,6 +598,77 @@ void CDKGSessionHandler::HandleDKGRound() {
     auto finalCommitments = curSession->FinalizeCommitments();
     for (const auto &fqc: finalCommitments) {
         quorumBlockProcessor->AddMineableCommitment(fqc);
+    }
+
+    // Runs regardless of whether finalCommitments is empty -- this is the
+    // one case FinalizeCommitments() was never meant to cover, and exactly
+    // the case that matters while minSize stays out of reach.
+    curSession->CheckAbsences(pendingAbsenceVotes);
+
+    // Unlike the earlier phases, there's no protocol deadline for absence
+    // votes to arrive by -- they're evidence, not something the round's
+    // own outcome depends on -- so a short, fixed drain window is enough
+    // rather than tying this to a new block-height phase boundary. Other
+    // members reach this same point at roughly the same height, so most
+    // votes that are coming at all arrive within a few seconds of each other.
+    //
+    // Bounded by wall-clock time, not iteration count: ProcessPendingMessageBatch
+    // returns true (meaning "there was work, don't sleep") whenever it popped
+    // anything at all, so a count-based loop can burn through every iteration
+    // in milliseconds under load and never actually wait out the window.
+    int64_t drainEndTime = GetTimeMillis() + 6000;
+    while (GetTimeMillis() < drainEndTime) {
+        if (stopRequested) {
+            break;
+        }
+        if (GetPhaseAndQuorumHash() != std::make_pair(QuorumPhase_Finalize, curQuorumHash)) {
+            // the round has already moved past this point (or aborted) --
+            // nothing left to drain for a session that no longer exists
+            break;
+        }
+        if (!ProcessPendingMessageBatch<CDKGAbsenceVote, MSG_QUORUM_ABSENCE_VOTE>(*curSession, pendingAbsenceVotes, 8)) {
+            UninterruptibleSleep(std::chrono::milliseconds{100});
+        }
+    }
+
+    // Agreeing: turn whatever votes this node ended up holding -- its own
+    // plus however many it received during the window above -- into a
+    // self-verified CDKGAbsenceRecord. minVotes=1 deliberately: even a
+    // lone self-vote is worth keeping and reporting rather than discarding,
+    // for the same severe-dropout-robustness reason Verify() itself never
+    // enforces a minimum (see quorums_dkgabsence.h). Stored, not relayed --
+    // reporting this beyond the local node is the RPC extension in
+    // rpcquorums.cpp for now, and the special transaction later.
+    //
+    // Built outside invCs on purpose: BuildAbsenceRecord() already releases
+    // its own internal invCs lock before calling Verify() (see its comment),
+    // specifically so Verify()'s descent into GetAllQuorumMembers() never
+    // holds invCs. Wrapping the whole call in invCs here would silently
+    // defeat that -- invCs is a RecursiveMutex, so BuildAbsenceRecord's own
+    // inner LOCK(invCs) would just re-enter rather than block, and Verify()
+    // would run with this thread still holding invCs for real. For a
+    // voting-activated LLMQ type (e.g. LLMQ_TEST_V17/LLMQ_100_67 with no
+    // forced height), that reaches Updates().State(), which takes cs_main --
+    // the same lock quorum_dkgstatus holds while it calls GetAbsenceRecord()
+    // (needs invCs). Building first and locking only to store avoids ever
+    // holding both at once from this side.
+    auto builtRecord = curSession->BuildAbsenceRecord(1);
+
+    // Cross-round accounting, so a future threshold/window decision has real
+    // per-round numbers to look at instead of none -- see
+    // quorums_dkgabsencetracker.h. Only for sessions we were actually a
+    // member of: a session we weren't selected into gives us no contribution/
+    // complaint/justification visibility at all, so recording its roster here
+    // would inflate roundsSelected with rounds that can never have a matching
+    // absence observation (BuildAbsenceRecord() already returns nullptr for
+    // those, via CheckAbsences()'s own AreWeMember() guard).
+    if (curSession->AreWeMember()) {
+        quorumDKGAbsenceTracker->RecordRound(params.type, curSession->GetMemberProTxHashes(), builtRecord.get());
+    }
+
+    {
+        LOCK(curSession->invCs);
+        curSession->builtAbsenceRecord = std::move(builtRecord);
     }
 }
 
