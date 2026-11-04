@@ -77,8 +77,11 @@ public:
 
     CBloomFilter() : isFull(true), isEmpty(false), nHashFuncs(0), nTweak(0), nFlags(0) {}
 
+    // vData's declared length is bounded before allocation (LIMITED_VECTOR) so a peer-controlled
+    // CompactSize claiming far more bytes than MAX_BLOOM_FILTER_SIZE can't force a large
+    // speculative allocation before the length is checked.
     SERIALIZE_METHODS(CBloomFilter, obj
-    ) { READWRITE(obj.vData, obj.nHashFuncs, obj.nTweak, obj.nFlags); }
+    ) { READWRITE(LIMITED_VECTOR(obj.vData, MAX_BLOOM_FILTER_SIZE), obj.nHashFuncs, obj.nTweak, obj.nFlags); }
 
     void insert(const std::vector<unsigned char> &vKey);
 

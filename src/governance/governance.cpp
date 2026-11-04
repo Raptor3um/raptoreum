@@ -110,7 +110,15 @@ CGovernanceManager::ProcessMessage(CNode *pfrom, const std::string &strCommand, 
 
         vRecv >> nProp;
 
-        vRecv >> filter;
+        try {
+            vRecv >> filter;
+        } catch (const std::ios_base::failure &) {
+            // An oversized filter now throws pre-allocation (CBloomFilter's LIMITED_VECTOR);
+            // punish here instead of letting it reach the outer message-processing catch, which
+            // drops it without scoring misbehavior.
+            Misbehaving(pfrom->GetId(), 100, "misformatted govsync bloom filter");
+            return;
+        }
         filter.UpdateEmptyFull();
 
         if (nProp == uint256()) {
