@@ -241,6 +241,7 @@ BASE_SCRIPTS = [
 EXTENDED_SCRIPTS = [
     # These tests are not run by default.
     # Longest test should go first, to favor running tests in parallel
+    'feature_llmq_ghostban.py', # 13 nodes, tens of minutes -- DKG + deliberate per-block pacing dominate, not PoW.
     'feature_pruning.py', # NOTE: Prune mode is incompatible with -txindex, should work with governance validation disabled though.
     # vv Tests less than 20m vv
     # vv Tests less than 5m vv
