@@ -7,6 +7,7 @@
 #include <evo/specialtx.h>
 #include <evo/simplifiedmns.h>
 #include <llmq/quorums_commitment.h>
+#include <llmq/quorums_ghoststats.h>
 #include <llmq/quorums_utils.h>
 
 #include <base58.h>
@@ -897,6 +898,18 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock &block, const C
                 }
 
                 HandleQuorumCommitment(qc.commitment, pQuorumBaseBlockIndex, newList, debugLogs);
+            }
+        } else if (tx.nType == TRANSACTION_GHOST_BAN_LIST) {
+            llmq::CGhostBanTxPayload payload;
+            if (!GetTxPayload(tx, payload)) {
+                return _state.DoS(100, false, REJECT_INVALID, "bad-ghostban-payload");
+            }
+            for (const auto &proTxHash : payload.ghostProTxHashes) {
+                if (!newList.HasMN(proTxHash)) {
+                    continue;
+                }
+                // Full penalty: already a sustained verdict, not a single missed session.
+                newList.PoSePunish(proTxHash, newList.CalcPenalty(100), debugLogs);
             }
         }
     }

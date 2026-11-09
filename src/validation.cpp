@@ -390,7 +390,8 @@ ContextualCheckTransaction(const CTransaction &tx, CValidationState &state, cons
                 tx.nType != TRANSACTION_FUTURE &&
                 tx.nType != TRANSACTION_NEW_ASSET &&
                 tx.nType != TRANSACTION_UPDATE_ASSET &&
-                tx.nType != TRANSACTION_MINT_ASSET) {
+                tx.nType != TRANSACTION_MINT_ASSET &&
+                tx.nType != TRANSACTION_GHOST_BAN_LIST) {
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
             }
             if (tx.IsCoinBase() && tx.nType != TRANSACTION_COINBASE)
@@ -613,6 +614,11 @@ static bool AcceptToMemoryPoolWorker(const CChainParams &chainparams, CTxMemPool
     if (tx.nVersion == 3 && tx.nType == TRANSACTION_QUORUM_COMMITMENT)
         // quorum commitment is not allowed outside of blocks
         return state.DoS(100, false, REJECT_INVALID, "qc-not-allowed");
+
+    if (tx.nVersion == 3 && tx.nType == TRANSACTION_GHOST_BAN_LIST)
+        // same reasoning as the quorum commitment above: only ever legitimately built by
+        // CreateNewBlock for one specific block, never a standalone submission
+        return state.DoS(100, false, REJECT_INVALID, "ghostban-not-allowed");
 
     // Coinbase is only valid in a block, not as a loose transaction
     if (tx.IsCoinBase())

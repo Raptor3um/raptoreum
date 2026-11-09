@@ -37,6 +37,7 @@
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_ghoststats.h>
 #include <llmq/quorums_utils.h>
 #include <smartnode/smartnode-payments.h>
 #include <smartnode/smartnode-sync.h>
@@ -180,6 +181,18 @@ std::unique_ptr <CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &s
                 pblocktemplate->vSpecialTxFees.emplace_back(0);
                 pblocktemplate->vTxSigOps.emplace_back(0);
                 nBlockSize += qcTx->GetTotalSize();
+                ++nBlockTx;
+            }
+        }
+
+        std::vector<CTransactionRef> ghostBanTxs;
+        if (llmq::GetGhostBanTxs(pindexPrev, ghostBanTxs)) {
+            for (const auto &ghostBanTx : ghostBanTxs) {
+                pblock->vtx.emplace_back(ghostBanTx);
+                pblocktemplate->vTxFees.emplace_back(0);
+                pblocktemplate->vSpecialTxFees.emplace_back(0);
+                pblocktemplate->vTxSigOps.emplace_back(0);
+                nBlockSize += ghostBanTx->GetTotalSize();
                 ++nBlockTx;
             }
         }

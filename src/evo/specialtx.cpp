@@ -14,6 +14,9 @@
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_commitment.h>
 #include <llmq/quorums_blockprocessor.h>
+#include <llmq/quorums_ghoststats.h>
+
+#include <set>
 
 bool CheckSpecialTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state,
                     const CCoinsViewCache &view, CAssetsCache *assetsCache, bool check_sigs) {
@@ -46,6 +49,8 @@ bool CheckSpecialTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CVali
                 return CheckUpdateAssetTx(tx, pindexPrev, state, view, assetsCache);
             case TRANSACTION_MINT_ASSET:
                 return CheckMintAssetTx(tx, pindexPrev, state, view, assetsCache);
+            case TRANSACTION_GHOST_BAN_LIST:
+                return llmq::CheckGhostBanTx(tx, pindexPrev, state);
         }
     } catch (const std::exception &e) {
         LogPrintf("%s -- failed: %s\n", __func__, e.what());
@@ -78,6 +83,8 @@ bool ProcessSpecialTx(const CTransaction &tx, const CBlockIndex *pindex, CValida
             return true;
         case TRANSACTION_MINT_ASSET:
             return true;
+        case TRANSACTION_GHOST_BAN_LIST:
+            return true; // no wallet-visible effect; validity is entirely CheckSpecialTx's job
     }
     return state.DoS(100, false, REJECT_INVALID, "bad-tx-type-proc");
 }
@@ -105,6 +112,8 @@ bool UndoSpecialTx(const CTransaction &tx, const CBlockIndex *pindex) {
             return true;
         case TRANSACTION_MINT_ASSET:
             return true;
+        case TRANSACTION_GHOST_BAN_LIST:
+            return true; // nothing to undo; never spent/created anything
     }
     return false;
 }
@@ -122,7 +131,18 @@ bool ProcessSpecialTxsInBlock(const CBlock &block, const CBlockIndex *pindex, CV
 
         int64_t nTime1 = GetTimeMicros();
 
+        std::set<uint16_t> seenGhostBanChunks;
+
         for (const auto &ptr_tx: block.vtx) {
+            if (ptr_tx->nVersion == 3 && ptr_tx->nType == TRANSACTION_GHOST_BAN_LIST) {
+                llmq::CGhostBanTxPayload payload;
+                // Cheap structural check, before CheckSpecialTx's expensive per-chunk
+                // recompute: a repeated chunk index is rejected on sight, not after
+                // paying for ComputeGhostStats on every copy.
+                if (GetTxPayload(*ptr_tx, payload) && !seenGhostBanChunks.insert(payload.nChunkIndex).second) {
+                    return state.DoS(100, false, REJECT_INVALID, "bad-ghostban-duplicate-chunk");
+                }
+            }
             if (!CheckSpecialTx(*ptr_tx, pindex->pprev, state, view, assetsCache, fCheckCbTxMerleRoots)) {
                 // pass the state returned by the function above
                 return false;
@@ -138,6 +158,11 @@ bool ProcessSpecialTxsInBlock(const CBlock &block, const CBlockIndex *pindex, CV
         LogPrint(BCLog::BENCHMARK, "        - Loop: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeLoop * 0.000001);
 
         if (!llmq::quorumBlockProcessor->ProcessBlock(block, pindex, state, fJustCheck, fCheckCbTxMerleRoots)) {
+            // pass the state returned by the function above
+            return false;
+        }
+
+        if (!llmq::CheckGhostBanTxPresence(block, pindex, state)) {
             // pass the state returned by the function above
             return false;
         }
