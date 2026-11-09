@@ -7,11 +7,16 @@
 
 #include <consensus/params.h>
 #include <primitives/transaction.h>
+#include <serialize.h>
 #include <uint256.h>
+#include <univalue.h>
 
 #include <map>
+#include <vector>
 
+class CBlock;
 class CBlockIndex;
+class CValidationState;
 
 namespace llmq {
 
@@ -31,6 +36,11 @@ static constexpr int GHOST_THRESHOLD_DISABLED = 255;
 // candidates -- 10 chunks, bounded by registration, never unbounded.
 static constexpr size_t GHOST_BAN_CHUNK_MAX_ENTRIES = 250;
 
+// Generous static ceiling (real worst case is 10, see GHOST_BAN_CHUNK_MAX_ENTRIES's own
+// comment) checked before any expensive recompute, so a flood of distinct out-of-range
+// chunk indices can't force more than this many ComputeGhostStats calls per block.
+static constexpr uint16_t GHOST_BAN_MAX_POSSIBLE_CHUNKS = 16;
+
 inline bool IsGhost(const CGhostStats &stats, int thresholdPercent) {
     return stats.missed * 100 >= stats.selected * thresholdPercent;
 }
@@ -44,6 +54,48 @@ int GetGhostBanSlotStart(int candidateHeight, const Consensus::LLMQParams &param
 size_t GhostBanChunkCount(size_t totalGhosts);
 
 bool IsGhostBanTxRequired(const CBlockIndex *pindexPrev);
+
+bool CheckGhostBanTxPresence(const CBlock &block, const CBlockIndex *pindex, CValidationState &state);
+
+int GetAppliedGhostThreshold(const CBlockIndex *pindexPrev);
+
+bool CheckGhostBanTx(const CTransaction &tx, const CBlockIndex *pindexPrev, CValidationState &state);
+
+bool GetGhostBanTxs(const CBlockIndex *pindexPrev, std::vector<CTransactionRef> &ret);
+
+// nSporkValue: one-cycle lag, see GetAppliedGhostThreshold. Only meaningful on
+// nChunkIndex == 0 -- the live spork is read once per cycle, not once per chunk.
+class CGhostBanTxPayload {
+public:
+    static const uint16_t CURRENT_VERSION = 1;
+
+    uint16_t nVersion{CURRENT_VERSION};
+    uint32_t nHeight{(uint32_t) -1};
+    uint256 quorumHash;
+    uint16_t nChunkIndex{0};
+    std::vector<uint256> ghostProTxHashes;
+    uint8_t nSporkValue{0};
+
+    SERIALIZE_METHODS(CGhostBanTxPayload, obj)
+    {
+        READWRITE(obj.nVersion, obj.nHeight, obj.quorumHash, obj.nChunkIndex, obj.ghostProTxHashes,
+                  obj.nSporkValue);
+    }
+
+    void ToJson(UniValue &obj) const {
+        obj.setObject();
+        obj.pushKV("version", int(nVersion));
+        obj.pushKV("height", int(nHeight));
+        obj.pushKV("quorumHash", quorumHash.ToString());
+        obj.pushKV("chunkIndex", int(nChunkIndex));
+        UniValue arr(UniValue::VARR);
+        for (const auto &h : ghostProTxHashes) {
+            arr.push_back(h.ToString());
+        }
+        obj.pushKV("ghostProTxHashes", arr);
+        obj.pushKV("sporkValue", int(nSporkValue));
+    }
+};
 
 } // namespace llmq
 
