@@ -19,6 +19,7 @@
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_debug.h>
 #include <llmq/quorums_dkgsession.h>
+#include <llmq/quorums_ghoststats.h>
 #include <llmq/quorums_signing.h>
 #include <llmq/quorums_signing_shares.h>
 
@@ -237,6 +238,51 @@ UniValue quorum_dkgstatus(const JSONRPCRequest &request) {
     ret.pushKV("mineableCommitments", mineableCommitments);
     ret.pushKV("quorumConnections", quorumConnections);
 
+    return ret;
+}
+
+void quorum_ghoststats_help(const JSONRPCRequest &request) {
+    RPCHelpMan{"quorum ghoststats",
+               "Return selected/missed quorum counts per smartnode over the last 24h. Diagnostic only.\n",
+               {},
+               RPCResults{},
+               RPCExamples{""},
+    }.Check(request);
+}
+
+UniValue quorum_ghoststats(const JSONRPCRequest &request) {
+    quorum_ghoststats_help(request);
+
+    const CBlockIndex *pindexPrev = WITH_LOCK(cs_main,
+    return ::ChainActive().Tip());
+    auto stats = llmq::ComputeGhostStats(pindexPrev);
+
+    // Display only; can be called at any height, so uses the chainparams default rather than
+    // GetAppliedGhostThreshold (only well-defined at the one-in-720 trigger height).
+    int thresholdPercent = llmq::GHOST_THRESHOLD_DEFAULT_PERCENT;
+
+    UniValue nodes(UniValue::VARR);
+    int ghostCount = 0;
+    for (const auto &p: stats) {
+        bool isGhost = llmq::IsGhost(p.second, thresholdPercent);
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV("proTxHash", p.first.ToString());
+        obj.pushKV("selected", p.second.selected);
+        obj.pushKV("missed", p.second.missed);
+        obj.pushKV("isGhost", isGhost);
+        nodes.push_back(obj);
+        if (isGhost) {
+            ghostCount++;
+        }
+    }
+
+    LogPrintf("quorum ghoststats -- %d candidates evaluated over the last 24h, %d crossed the %d%% threshold\n",
+              (int) stats.size(), ghostCount, thresholdPercent);
+
+    UniValue ret(UniValue::VOBJ);
+    ret.pushKV("nodes", nodes);
+    ret.pushKV("totalEvaluated", (int) stats.size());
+    ret.pushKV("totalGhosts", ghostCount);
     return ret;
 }
 
@@ -619,6 +665,7 @@ UniValue quorum_getdata(const JSONRPCRequest &request) {
                        "  info              - Return information about a quorum\n"
                        "  dkgsimerror       - Simulates DKG errors and malicious behavior\n"
                        "  dkgstatus         - Return the status of the current DKG process\n"
+                       "  ghoststats        - Diagnostic-only: selected/missed-quorum stats over the last 24h\n"
                        "  memberof          - Checks which quorums the given smartnode is a member of\n"
                        "  sign              - Threshold-sign a message\n"
                        "  verify            - Test if a quorum signature is valid for a request id and a message hash\n"
@@ -645,6 +692,8 @@ UniValue _quorum(const JSONRPCRequest &request) {
         return quorum_info(new_request);
     } else if (command == "quorumdkgstatus") {
         return quorum_dkgstatus(new_request);
+    } else if (command == "quorumghoststats") {
+        return quorum_ghoststats(new_request);
     } else if (command == "quorummemberof") {
         return quorum_memberof(new_request);
     } else if (command == "quorumsign" || command == "quorumverify" || command == "quorumhasrecsig" ||
