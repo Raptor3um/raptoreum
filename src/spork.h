@@ -43,6 +43,7 @@ enum SporkId : int32_t {
     SPORK_22_SPECIAL_TX_FEE = 10021,
     SPORK_23_QUORUM_ALL_CONNECTED = 10023,
     SPORK_25_QUORUM_POSE = 10025,
+    SPORK_26_GHOST_BAN_THRESHOLD = 10026,
 
     SPORK_INVALID = -1,
 };
@@ -69,7 +70,7 @@ struct CSporkDef {
 };
 
 #define MAKE_SPORK_DEF(name, defaultValue) CSporkDef{name, defaultValue, #name}
-[[maybe_unused]] static constexpr std::array<CSporkDef, 9>
+[[maybe_unused]] static constexpr std::array<CSporkDef, 10>
 sporkDefs = {
         MAKE_SPORK_DEF(SPORK_2_INSTANTSEND_ENABLED, 4070908800ULL), // OFF
         MAKE_SPORK_DEF(SPORK_3_INSTANTSEND_BLOCK_FILTERING, 4070908800ULL), // OFF
@@ -80,6 +81,8 @@ sporkDefs = {
         MAKE_SPORK_DEF(SPORK_22_SPECIAL_TX_FEE, 4070908800ULL), // OFF
         MAKE_SPORK_DEF(SPORK_23_QUORUM_ALL_CONNECTED, 4070908800ULL), // OFF
         MAKE_SPORK_DEF(SPORK_25_QUORUM_POSE, 4070908800ULL), // OFF
+        // Percentage (1-100), not time-based. >100 disables. Ships OFF.
+        MAKE_SPORK_DEF(SPORK_26_GHOST_BAN_THRESHOLD, 255), // OFF
 };
 #undef MAKE_SPORK_DEF
 extern CSporkManager sporkManager;

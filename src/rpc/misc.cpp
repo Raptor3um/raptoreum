@@ -148,6 +148,14 @@ static UniValue spork(const JSONRPCRequest &request) {
         // SPORK VALUE
         int64_t nValue = request.params[1].get_int64();
 
+        // 1-100 = ban threshold percent, >100 = disabled, 0 invalid
+        if (nSporkID == SPORK_26_GHOST_BAN_THRESHOLD && (nValue < 1 || nValue > 255)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER,
+                               "SPORK_26_GHOST_BAN_THRESHOLD must be 1-100 (ban threshold percentage) "
+                               "or 101-255 (disables the ban list; the mechanism keeps mining and "
+                               "validating an empty one). 0 is never valid.");
+        }
+
         //broadcast new spork
         if (sporkManager.UpdateSpork(nSporkID, nValue, *node.connman)) {
             return "success";

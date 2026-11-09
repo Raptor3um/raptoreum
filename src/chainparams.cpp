@@ -289,6 +289,8 @@ public:
         consensus.llmqTypeChainLocks = Consensus::LLMQ_400_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
         consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
+        consensus.llmqTypeGhostBanTrigger = Consensus::LLMQ_400_85;
+        consensus.llmqTypesGhostBanScope = {Consensus::LLMQ_50_60, Consensus::LLMQ_400_60, Consensus::LLMQ_400_85};
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
         fRequireRoutableExternalIP = true;
@@ -450,6 +452,8 @@ public:
         consensus.llmqTypeChainLocks = Consensus::LLMQ_400_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
         consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
+        consensus.llmqTypeGhostBanTrigger = Consensus::LLMQ_400_85;
+        consensus.llmqTypesGhostBanScope = {Consensus::LLMQ_50_60, Consensus::LLMQ_400_60, Consensus::LLMQ_400_85};
 
         consensus.nCollaterals = SmartnodeCollaterals(
                 {{INT_MAX, 60000 * COIN}},
@@ -604,6 +608,8 @@ public:
         consensus.llmqTypeChainLocks = Consensus::LLMQ_50_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
         consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
+        consensus.llmqTypeGhostBanTrigger = Consensus::LLMQ_400_85;
+        consensus.llmqTypesGhostBanScope = {Consensus::LLMQ_50_60, Consensus::LLMQ_400_60, Consensus::LLMQ_400_85};
 
         UpdateDevnetLLMQChainLocksFromArgs(args);
         UpdateDevnetLLMQInstantSendFromArgs(args);
@@ -711,6 +717,15 @@ public:
         updateManager.Add(
             Update(EUpdate::ROUND_VOTING, std::string("Round Voting"), 1, 10, 100, 10, 100, 10, false,
                 VoteThreshold(95, 95, 5), VoteThreshold(0, 0, 1)));
+        // Test-only: 0/0 thresholds lock this in at the first round checked at/after
+        // startHeight with zero real signaling needed (UpdateManager::State: minerMean/nodeMean
+        // >= 0 is trivially always true) -- deterministic, fast activation for functional tests,
+        // not a model for any real rollout. startHeight=2000 leaves generous room for a test's own
+        // setup phase (smartnode registration, several LLMQ_5_60 cycles) before activation, well
+        // past the functional-test framework's CACHE_HEIGHT=921 chain-cache warmup.
+        updateManager.Add(
+            Update(EUpdate::GHOST_BAN_LIST, std::string("ghost_ban_list"), 2, 10, 2000, 1, 10, 2, false,
+                VoteThreshold(0, 0, 1), VoteThreshold(0, 0, 1)));
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
@@ -810,6 +825,8 @@ public:
         consensus.llmqTypeChainLocks = Consensus::LLMQ_5_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_5_60;
         consensus.llmqTypePlatform = Consensus::LLMQ_5_60;
+        consensus.llmqTypeGhostBanTrigger = Consensus::LLMQ_5_60;
+        consensus.llmqTypesGhostBanScope = {Consensus::LLMQ_5_60};
         UpdateLLMQTestParametersFromArgs(args);
     }
 

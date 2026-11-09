@@ -17,7 +17,7 @@ CChain &ChainActive();
 
 bool CheckTransaction(const CTransaction &tx, CValidationState &state, int nHeight, CAmount blockReward) {
     bool allowEmptyTxInOut = false;
-    if (tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
+    if (tx.nType == TRANSACTION_QUORUM_COMMITMENT || tx.nType == TRANSACTION_GHOST_BAN_LIST) {
         allowEmptyTxInOut = true;
     }
 
