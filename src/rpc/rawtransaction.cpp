@@ -53,6 +53,7 @@
 
 #include <llmq/quorums_chainlocks.h>
 #include <llmq/quorums_commitment.h>
+#include <llmq/quorums_ghoststats.h>
 #include <llmq/quorums_instantsend.h>
 
 #include <stdint.h>
@@ -224,6 +225,13 @@ void TxToJSON(const CTransaction &tx, const uint256 hashBlock, UniValue &entry) 
             UniValue obj;
             qcTx.ToJson(obj);
             entry.pushKV("qcTx", obj);
+        }
+    } else if (tx.nType == TRANSACTION_GHOST_BAN_LIST) {
+        llmq::CGhostBanTxPayload ghostBanTx;
+        if (GetTxPayload(tx, ghostBanTx)) {
+            UniValue obj;
+            ghostBanTx.ToJson(obj);
+            entry.pushKV("ghostBanTx", obj);
         }
     } else if (tx.nType == TRANSACTION_FUTURE) {
         CFutureTx ctx;

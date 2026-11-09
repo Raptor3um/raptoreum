@@ -390,7 +390,8 @@ ContextualCheckTransaction(const CTransaction &tx, CValidationState &state, cons
                 tx.nType != TRANSACTION_FUTURE &&
                 tx.nType != TRANSACTION_NEW_ASSET &&
                 tx.nType != TRANSACTION_UPDATE_ASSET &&
-                tx.nType != TRANSACTION_MINT_ASSET) {
+                tx.nType != TRANSACTION_MINT_ASSET &&
+                tx.nType != TRANSACTION_GHOST_BAN_LIST) {
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
             }
             if (tx.IsCoinBase() && tx.nType != TRANSACTION_COINBASE)
@@ -613,6 +614,11 @@ static bool AcceptToMemoryPoolWorker(const CChainParams &chainparams, CTxMemPool
     if (tx.nVersion == 3 && tx.nType == TRANSACTION_QUORUM_COMMITMENT)
         // quorum commitment is not allowed outside of blocks
         return state.DoS(100, false, REJECT_INVALID, "qc-not-allowed");
+
+    if (tx.nVersion == 3 && tx.nType == TRANSACTION_GHOST_BAN_LIST)
+        // same reasoning as the quorum commitment above: only ever legitimately built by
+        // CreateNewBlock for one specific block, never a standalone submission
+        return state.DoS(100, false, REJECT_INVALID, "ghostban-not-allowed");
 
     // Coinbase is only valid in a block, not as a loose transaction
     if (tx.IsCoinBase())
@@ -4565,7 +4571,7 @@ void PruneBlockFilesManual(int nManualPruneHeight) {
  * Pruning functions are called from FlushStateToDisk when the global fCheckForPruning flag has been set.
  * Block and undo files are deleted in lock-step (when blk00003.dat is deleted, so is rev00003.dat.)
  * Pruning cannot take place until the longest chain is at least a certain length (100000 on mainnet, 1000 on testnet, 1000 on regtest).
- * Pruning will never delete a block within a defined distance (currently 288) from the active chain's tip.
+ * Pruning will never delete a block within a defined distance (currently 1000) from the active chain's tip.
  * The block index is updated by unsetting HAVE_DATA and HAVE_UNDO for any blocks that were stored in the deleted files.
  * A db flag records the fact that at least some block files have been pruned.
  *

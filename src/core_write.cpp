@@ -24,6 +24,7 @@
 #include <evo/providertx.h>
 #include <evo/specialtx.h>
 #include <llmq/quorums_commitment.h>
+#include <llmq/quorums_ghoststats.h>
 #include <assets/assets.h>
 #include <assets/assetstype.h>
 
@@ -343,6 +344,13 @@ void TxToUniv(const CTransaction &tx, const uint256 &hashBlock, UniValue &entry,
             UniValue obj;
             qcTx.ToJson(obj);
             entry.pushKV("qcTx", obj);
+        }
+    } else if (tx.nType == TRANSACTION_GHOST_BAN_LIST) {
+        llmq::CGhostBanTxPayload ghostBanTx;
+        if (GetTxPayload(tx, ghostBanTx)) {
+            UniValue obj;
+            ghostBanTx.ToJson(obj);
+            entry.pushKV("ghostBanTx", obj);
         }
     } else if (tx.nType == TRANSACTION_FUTURE) {
         CFutureTx ctx;
