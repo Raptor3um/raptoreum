@@ -289,6 +289,8 @@ public:
         consensus.llmqTypeChainLocks = Consensus::LLMQ_400_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
         consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
+        consensus.llmqTypeGhostBanTrigger = Consensus::LLMQ_400_85;
+        consensus.llmqTypesGhostBanScope = {Consensus::LLMQ_50_60, Consensus::LLMQ_400_60, Consensus::LLMQ_400_85};
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
         fRequireRoutableExternalIP = true;
@@ -450,6 +452,8 @@ public:
         consensus.llmqTypeChainLocks = Consensus::LLMQ_400_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
         consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
+        consensus.llmqTypeGhostBanTrigger = Consensus::LLMQ_400_85;
+        consensus.llmqTypesGhostBanScope = {Consensus::LLMQ_50_60, Consensus::LLMQ_400_60, Consensus::LLMQ_400_85};
 
         consensus.nCollaterals = SmartnodeCollaterals(
                 {{INT_MAX, 60000 * COIN}},
@@ -604,6 +608,8 @@ public:
         consensus.llmqTypeChainLocks = Consensus::LLMQ_50_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_50_60;
         consensus.llmqTypePlatform = Consensus::LLMQ_100_67;
+        consensus.llmqTypeGhostBanTrigger = Consensus::LLMQ_400_85;
+        consensus.llmqTypesGhostBanScope = {Consensus::LLMQ_50_60, Consensus::LLMQ_400_60, Consensus::LLMQ_400_85};
 
         UpdateDevnetLLMQChainLocksFromArgs(args);
         UpdateDevnetLLMQInstantSendFromArgs(args);
@@ -810,6 +816,8 @@ public:
         consensus.llmqTypeChainLocks = Consensus::LLMQ_5_60;
         consensus.llmqTypeInstantSend = Consensus::LLMQ_5_60;
         consensus.llmqTypePlatform = Consensus::LLMQ_5_60;
+        consensus.llmqTypeGhostBanTrigger = Consensus::LLMQ_5_60;
+        consensus.llmqTypesGhostBanScope = {Consensus::LLMQ_5_60};
         UpdateLLMQTestParametersFromArgs(args);
     }
 

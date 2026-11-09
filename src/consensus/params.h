@@ -12,6 +12,8 @@
 #include <llmq/quorums_parameters.h>
 #include <smartnode/smartnode-collaterals.h>
 
+#include <vector>
+
 namespace Consensus {
 
 /**
@@ -96,6 +98,9 @@ namespace Consensus {
         LLMQType llmqTypeChainLocks;
         LLMQType llmqTypeInstantSend{LLMQ_NONE};
         LLMQType llmqTypePlatform{LLMQ_NONE};
+        // Ghost-ban trigger type and scope (quorums_ghoststats.h). LLMQ_NONE/empty = inert.
+        LLMQType llmqTypeGhostBanTrigger{LLMQ_NONE};
+        std::vector<LLMQType> llmqTypesGhostBanScope;
 
         FounderPayment nFounderPayment;
         FutureRewardShare nFutureRewardShare;
