@@ -611,10 +611,14 @@ def random_transaction(nodes, amount, min_fee, fee_increment, fee_variants):
 # Helper to create at least "count" utxos
 # Pass in a fee that is sufficient for relay and mining new transactions.
 def create_confirmed_utxos(fee, node, count):
+    # Advance mocktime by nPowTargetSpacing per block so DGW doesn't ratchet difficulty up for real.
+    mock_time = node.getblockheader(node.getbestblockhash())['time']
     to_generate = int(0.5 * count) + 101
     while to_generate > 0:
-        node.generate(min(25, to_generate))
-        to_generate -= 25
+        mock_time += 120
+        node.setmocktime(mock_time)
+        node.generate(1)
+        to_generate -= 1
     utxos = node.listunspent()
     iterations = count - len(utxos)
     addr1 = node.getnewaddress()
@@ -634,6 +638,8 @@ def create_confirmed_utxos(fee, node, count):
         node.sendrawtransaction(signed_tx)
 
     while (node.getmempoolinfo()['size'] > 0):
+        mock_time += 120
+        node.setmocktime(mock_time)
         node.generate(1)
 
     utxos = node.listunspent()
