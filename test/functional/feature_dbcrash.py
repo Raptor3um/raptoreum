@@ -209,6 +209,9 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
         utxo_list = create_confirmed_utxos(self.nodes[3].getnetworkinfo()['relayfee'], self.nodes[3], 5000)
         self.log.info("Prepped %d utxo entries", len(utxo_list))
 
+        # node0-2 are disconnected from node3 and never get their own mocktime advanced
+        set_node_times(self.nodes, self.nodes[3].getblockheader(self.nodes[3].getbestblockhash())['time'])
+
         # Sync these blocks with the other nodes
         block_hashes_to_sync = []
         for height in range(initial_height+1, self.nodes[3].getblockcount()+1):
