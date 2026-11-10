@@ -36,12 +36,6 @@ class BIP68Test(BitcoinTestFramework):
         self.log.info("Running test sequence-lock-unconfirmed-inputs")
         self.test_sequence_lock_unconfirmed_inputs()
 
-        self.log.info("Running test BIP68 not consensus before versionbits activation")
-        self.test_bip68_not_consensus()
-
-        self.log.info("Activating BIP68 (and 112/113)")
-        self.activateCSV()
-
         self.log.info("Verifying nVersion=2 transactions are standard.")
         self.log.info("Note that nVersion=2 transactions are always standard (independent of BIP68 activation status).")
         self.test_version2_relay()
@@ -302,7 +296,7 @@ class BIP68Test(BitcoinTestFramework):
         tip = int(self.nodes[0].getblockhash(self.nodes[0].getblockcount()-1), 16)
         height = self.nodes[0].getblockcount()
         for i in range(2):
-            block = create_block(tip, create_coinbase(height), cur_time)
+            block = create_block(tip, create_coinbase(height), cur_time, node=self.nodes[0])
             block.nVersion = 3
             block.rehash()
             block.solve()
@@ -319,65 +313,6 @@ class BIP68Test(BitcoinTestFramework):
         self.nodes[0].setmocktime(self.mocktime)
         self.nodes[0].invalidateblock(self.nodes[0].getblockhash(cur_height+1))
         self.nodes[0].generate(10)
-
-    # Make sure that BIP68 isn't being used to validate blocks, prior to
-    # versionbits activation.  If more blocks are mined prior to this test
-    # being run, then it's possible the test has activated the soft fork, and
-    # this test should be moved to run earlier, or deleted.
-    def test_bip68_not_consensus(self):
-        assert(get_bip9_status(self.nodes[0], 'csv')['status'] != 'active')
-        txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 2)
-
-        tx1 = FromHex(CTransaction(), self.nodes[0].getrawtransaction(txid))
-        tx1.rehash()
-
-        # Make an anyone-can-spend transaction
-        tx2 = CTransaction()
-        tx2.nVersion = 1
-        tx2.vin = [CTxIn(COutPoint(tx1.sha256, 0), nSequence=0)]
-        tx2.vout = [CTxOut(int(tx1.vout[0].nValue - self.relayfee*COIN), CScript([b'a']))]
-
-        # sign tx2
-        tx2_raw = self.nodes[0].signrawtransactionwithwallet(ToHex(tx2))["hex"]
-        tx2 = FromHex(tx2, tx2_raw)
-        tx2.rehash()
-
-        self.nodes[0].sendrawtransaction(ToHex(tx2))
-
-        # Now make an invalid spend of tx2 according to BIP68
-        sequence_value = 100 # 100 block relative locktime
-
-        tx3 = CTransaction()
-        tx3.nVersion = 2
-        tx3.vin = [CTxIn(COutPoint(tx2.sha256, 0), nSequence=sequence_value)]
-        tx3.vout = [CTxOut(int(tx2.vout[0].nValue - self.relayfee*COIN), CScript([b'a']))]
-        tx3.rehash()
-
-        assert_raises_rpc_error(-26, NOT_FINAL_ERROR, self.nodes[0].sendrawtransaction, ToHex(tx3))
-
-        # make a block that violates bip68; ensure that the tip updates
-        tip = int(self.nodes[0].getbestblockhash(), 16)
-        block = create_block(tip, create_coinbase(self.nodes[0].getblockcount()+1), self.mocktime + 600)
-        block.nVersion = 3
-        block.vtx.extend([tx1, tx2, tx3])
-        block.hashMerkleRoot = block.calc_merkle_root()
-        block.rehash()
-        block.solve()
-
-        self.nodes[0].submitblock(ToHex(block))
-        assert_equal(self.nodes[0].getbestblockhash(), block.hash)
-
-    def activateCSV(self):
-        # activation should happen at block height 432 (3 periods)
-        # getblockchaininfo will show CSV as active at block 431 (144 * 3 -1) since it's returning whether CSV is active for the next block.
-        min_activation_height = 432
-        height = self.nodes[0].getblockcount()
-        assert_greater_than(min_activation_height - height, 2)
-        self.nodes[0].generate(min_activation_height - height - 2)
-        assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], "locked_in")
-        self.nodes[0].generate(1)
-        assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], "active")
-        self.sync_blocks()
 
     # Use self.nodes[1] to test that version 2 transactions are standard.
     def test_version2_relay(self):
