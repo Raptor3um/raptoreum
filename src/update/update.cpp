@@ -159,8 +159,11 @@ VoteResult NodeRoundVoting::GetVote(const CBlockIndex *blockIndex, const Update 
 
         // Search all transactions for final quorum commitments:
         CBlock block;
-        bool r = ReadBlockFromDisk(block, curIndex, Params().GetConsensus());
-        assert(r);
+        if (!ReadBlockFromDisk(block, curIndex, Params().GetConsensus())) {
+            // Pruned nodes can lose this round's block data; nothing further back will be available either.
+            LogPrint(BCLog::UPDATES, "Updates: NodeRoundVoting::GetVote, Height: %7d, block data unavailable\n", curIndex->nHeight);
+            break;
+        }
 
         // LogPrint(BCLog::UPDATES, "Updates: NodeRoundVoting, Height: %d, Transactions: %d\n", curIndex->nHeight, block.vtx.size());
 
