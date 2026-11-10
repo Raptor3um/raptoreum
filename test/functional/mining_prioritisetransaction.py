@@ -131,10 +131,12 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
 
         # Test that calling prioritisetransaction is sufficient to trigger
         # getblocktemplate to (eventually) return a new block.
-        self.nodes[0].setmocktime(self.mocktime)
+        # self.mocktime is a stale genesis-era anchor; use the chain's actual tip time instead.
+        current_time = self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())['time']
+        self.nodes[0].setmocktime(current_time)
         template = self.nodes[0].getblocktemplate()
         self.nodes[0].prioritisetransaction(tx_id, -int(self.relayfee*COIN))
-        self.nodes[0].setmocktime(self.mocktime+10)
+        self.nodes[0].setmocktime(current_time+10)
         new_template = self.nodes[0].getblocktemplate()
 
         assert(template != new_template)
