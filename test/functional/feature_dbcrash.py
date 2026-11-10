@@ -49,7 +49,7 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
         # Set -maxmempool=0 to turn off mempool memory sharing with dbcache
         # Set -rpcservertimeout=900 to reduce socket disconnects in this
         # long-running test
-        self.base_args = ["-limitdescendantsize=0", "-maxmempool=0", "-rpcservertimeout=900"]
+        self.base_args = ["-limitdescendantsize=0", "-maxmempool=0", "-dbbatchsize=200000", "-rpcservertimeout=900"]
 
         # Set different crash ratios and cache sizes.  Note that not all of
         # -dbcache goes to the in-memory coins cache.
@@ -208,6 +208,9 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
         initial_height = self.nodes[3].getblockcount()
         utxo_list = create_confirmed_utxos(self.nodes[3].getnetworkinfo()['relayfee'], self.nodes[3], 5000)
         self.log.info("Prepped %d utxo entries", len(utxo_list))
+
+        # node0-2 are disconnected from node3 and never get their own mocktime advanced
+        set_node_times(self.nodes, self.nodes[3].getblockheader(self.nodes[3].getbestblockhash())['time'])
 
         # Sync these blocks with the other nodes
         block_hashes_to_sync = []
