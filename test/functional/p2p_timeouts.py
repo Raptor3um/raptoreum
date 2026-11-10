@@ -53,6 +53,14 @@ class TimeoutsTest(BitcoinTestFramework):
 
         network_thread_start()
 
+        # The asyncio-based network thread connects asynchronously (the old
+        # asyncore loop connected synchronously inside peer_connect()): give
+        # the three connections a moment to actually establish before relying
+        # on them below.
+        wait_until(lambda: no_verack_node.is_connected, timeout=10)
+        wait_until(lambda: no_version_node.is_connected, timeout=10)
+        wait_until(lambda: no_send_node.is_connected, timeout=10)
+
         self.mock_forward(1)
 
         assert no_verack_node.is_connected
@@ -81,9 +89,13 @@ class TimeoutsTest(BitcoinTestFramework):
 
         with self.nodes[0].assert_debug_log(expected_msgs=expected_timeout_logs):
             self.mock_forward(2)
-            no_verack_node.wait_for_disconnect(timeout=1)
-            no_version_node.wait_for_disconnect(timeout=1)
-            no_send_node.wait_for_disconnect(timeout=1)
+            # InactivityCheck (net.cpp) compares real wall-clock time against
+            # -peertimeout, not mocktime above -- these waits are real seconds
+            # of margin for that real 3-second threshold to actually elapse,
+            # not just a bound on how long the disconnect itself takes.
+            no_verack_node.wait_for_disconnect(timeout=5)
+            no_version_node.wait_for_disconnect(timeout=5)
+            no_send_node.wait_for_disconnect(timeout=5)
 
 if __name__ == '__main__':
     TimeoutsTest().main()
