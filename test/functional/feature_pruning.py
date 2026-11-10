@@ -333,6 +333,8 @@ class PruneTest(BitcoinTestFramework):
             raise AssertionError("blk00003.dat is still there, should be pruned by now")
 
         # stop node, start back up with auto-prune at 550MB, make sure still runs
+        # refresh node.mocktime, or its stale auto-appended -mocktime trips the future-block check
+        node.mocktime = node.getblockheader(node.getbestblockhash())['time']
         self.stop_node(node_number)
         self.start_node(node_number, extra_args=["-disablegovernance", "-txindex=0", "-prune=550"])
 
