@@ -25,6 +25,17 @@ TIMESTAMP_WINDOW = 2 * 60 * 60
 def calc_usage(blockdir):
     return sum(os.path.getsize(blockdir+f) for f in os.listdir(blockdir) if os.path.isfile(os.path.join(blockdir, f))) / (1024. * 1024.)
 
+def resend_wallet_transactions(node):
+    # resendwallettransactions RPC doesn't exist; resubmit unconfirmed wallet txs directly instead.
+    seen = set()
+    for tx in node.listtransactions("*", 999999):
+        if tx['confirmations'] <= 0 and tx['txid'] not in seen:
+            seen.add(tx['txid'])
+            try:
+                node.sendrawtransaction(node.gettransaction(tx['txid'])['hex'])
+            except JSONRPCException:
+                pass
+
 class PruneTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
@@ -32,7 +43,7 @@ class PruneTest(BitcoinTestFramework):
 
         # Create nodes 0 and 1 to mine.
         # Create node 2 to test pruning.
-        self.full_node_default_args = ["-dip3params=2000:2000", "-dip8params=2000", "-maxreceivebuffer=20000","-blockmaxsize=999000", "-checkblocks=5", "-limitdescendantcount=100", "-limitdescendantsize=5000", "-limitancestorcount=100", "-limitancestorsize=5000" ]
+        self.full_node_default_args = ["-maxreceivebuffer=20000","-blockmaxsize=999000", "-checkblocks=5", "-limitdescendantcount=100", "-limitdescendantsize=5000", "-limitancestorcount=100", "-limitancestorsize=5000" ]
         # Create nodes 3 and 4 to test manual pruning (they will be re-started with manual pruning later)
         # Create nodes 5 to test wallet in prune mode, but do not connect
         self.extra_args = [self.full_node_default_args,
@@ -105,7 +116,7 @@ class PruneTest(BitcoinTestFramework):
                 else:
                     # Add node1's wallet transactions back to the mempool, to
                     # avoid the mined blocks from being too small.
-                    self.nodes[1].resendwallettransactions()
+                    resend_wallet_transactions(self.nodes[1])
                     self.nodes[1].generate(1) #tx's already in mempool from previous disconnects
 
             # Reorg back with 25 block chain from node 0
@@ -125,7 +136,7 @@ class PruneTest(BitcoinTestFramework):
         # Reboot node 1 to clear its mempool (hopefully make the invalidate faster)
         # Lower the block max size so we don't keep mining all our big mempool transactions (from disconnected blocks)
         self.stop_node(1)
-        self.start_node(1, extra_args=["-dip3params=2000:2000", "-dip8params=2000", "-maxreceivebuffer=20000","-blockmaxsize=5000", "-checkblocks=5"])
+        self.start_node(1, extra_args=["-maxreceivebuffer=20000","-blockmaxsize=5000", "-checkblocks=5"])
 
         height = self.nodes[1].getblockcount()
         self.log.info("Current block height: %d" % height)
@@ -150,7 +161,7 @@ class PruneTest(BitcoinTestFramework):
         self.nodes[1].generate(1)
         # Reboot node1 to clear those giant tx's from mempool
         self.stop_node(1)
-        self.start_node(1, extra_args=["-dip3params=2000:2000", "-dip8params=2000", "-maxreceivebuffer=20000","-blockmaxsize=5000", "-checkblocks=5"])
+        self.start_node(1, extra_args=["-maxreceivebuffer=20000","-blockmaxsize=5000", "-checkblocks=5"])
 
         self.log.info("Generating new longer chain of 300 more blocks")
         self.nodes[1].generate(299)
@@ -167,7 +178,7 @@ class PruneTest(BitcoinTestFramework):
 
         # Get node0's wallet transactions back in its mempool, to avoid the
         # mined blocks from being too small.
-        self.nodes[0].resendwallettransactions()
+        resend_wallet_transactions(self.nodes[0])
 
         for i in range(22):
             # This can be slow, so do this in multiple RPC calls to avoid
@@ -225,14 +236,14 @@ class PruneTest(BitcoinTestFramework):
 
     def manual_test(self, node_number, use_timestamp):
         # at this point, node has 995 blocks and has not yet run in prune mode
-        self.start_node(node_number, extra_args=["-dip3params=2000:2000", "-dip8params=2000", "-disablegovernance", "-txindex=0"])
+        self.start_node(node_number, extra_args=["-disablegovernance", "-txindex=0"])
         node = self.nodes[node_number]
         assert_equal(node.getblockcount(), 995)
         assert_raises_rpc_error(-1, "not in prune mode", node.pruneblockchain, 500)
 
         # now re-start in manual pruning mode
         self.stop_node(node_number)
-        self.start_node(node_number, extra_args=["-dip3params=2000:2000", "-dip8params=2000", "-disablegovernance", "-txindex=0", "-prune=1"])
+        self.start_node(node_number, extra_args=["-disablegovernance", "-txindex=0", "-prune=1"])
         node = self.nodes[node_number]
         assert_equal(node.getblockcount(), 995)
 
