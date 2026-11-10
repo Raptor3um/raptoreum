@@ -2722,6 +2722,7 @@ bool AppInitMain(const util::Ref &context, NodeContext &node, interfaces::BlockA
     connOptions.m_added_nodes = gArgs.GetArgs("-addnode");
 
     connOptions.nMaxOutboundLimit = 1024 * 1024 * gArgs.GetArg("-maxuploadtarget", DEFAULT_MAX_UPLOAD_TARGET);
+    connOptions.nMaxOutboundTimeframe = MAX_UPLOAD_TIMEFRAME;
     connOptions.m_peer_connect_timeout = peer_connect_timeout;
 
     for (const std::string &strBind: gArgs.GetArgs("-bind")) {
