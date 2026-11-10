@@ -70,12 +70,23 @@ class PruneTest(BitcoinTestFramework):
         self.start_nodes()
 
     def create_big_chain(self):
+        # Space blocks by nPowTargetSpacing so manual_test()'s use_timestamp path has a real span to work with.
+        mock_time = self.nodes[1].getblockheader(self.nodes[1].getbestblockhash())['time']
+
         # Start by creating some coinbases we can spend later
-        self.nodes[1].generate(200)
+        for _ in range(200):
+            mock_time += 120
+            set_node_times(self.nodes, mock_time)
+            self.nodes[1].generate(1)
         self.sync_blocks(self.nodes[0:2])
-        self.nodes[0].generate(150)
+        for _ in range(150):
+            mock_time += 120
+            set_node_times(self.nodes, mock_time)
+            self.nodes[0].generate(1)
         # Then mine enough full blocks to create more than 550MiB of data
         for i in range(645):
+            mock_time += 120
+            set_node_times(self.nodes, mock_time)
             mine_large_block(self.nodes[0], self.utxo_cache_0)
 
         self.sync_blocks(self.nodes[0:5])
