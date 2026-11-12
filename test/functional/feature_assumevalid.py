@@ -45,7 +45,7 @@ from test_framework.messages import (
 from test_framework.mininode import P2PInterface, network_thread_start, network_thread_join
 from test_framework.script import (CScript, OP_TRUE)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (assert_equal, set_node_times)
+from test_framework.util import (assert_equal, set_node_times, wait_until)
 
 class BaseNode(P2PInterface):
     def send_header_for_blocks(self, new_blocks):
@@ -78,20 +78,18 @@ class AssumeValidTest(BitcoinTestFramework):
                 break
 
     def assert_blockchain_height(self, node, height):
-        """Wait until the blockchain is no longer advancing and verify it's reached the expected height."""
-        last_height = node.getblock(node.getbestblockhash())['height']
-        timeout = 10
-        while True:
-            time.sleep(0.25)
-            current_height = node.getblock(node.getbestblockhash())['height']
-            if current_height != last_height:
-                last_height = current_height
-                timeout = 10
-                continue
-            timeout -= 0.25
-            if timeout < 0:
-                assert current_height == height, "blockchain stopped advancing at height %d, expected %d" % (current_height, height)
-                break
+        """Wait for the node to reach the expected height, then confirm it settles there.
+
+        Waits on the target itself (timeout=90s) rather than on a short window of
+        inactivity: on a loaded CI runner, node0/node2 can take well over 10s to
+        process even their first block after the (possibly slow) block-construction
+        phase, and a short inactivity window misreads "hasn't started yet" as
+        "stopped advancing", failing at height 0 before the node gets a real chance.
+        """
+        wait_until(lambda: node.getblock(node.getbestblockhash())['height'] >= height, timeout=90)
+        time.sleep(2)
+        current_height = node.getblock(node.getbestblockhash())['height']
+        assert current_height == height, "blockchain advanced past height %d, now at %d" % (height, current_height)
 
     def run_test(self):
 
