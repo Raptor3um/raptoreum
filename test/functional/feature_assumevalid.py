@@ -108,6 +108,9 @@ class AssumeValidTest(BitcoinTestFramework):
         self.block_time = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['time'] + 1
 
         self.blocks = []
+        # create_quorum_commitments() needs this for session-start blocks we've
+        # built but not yet sent to the node -- it can't look them up itself.
+        self.block_hashes = {}
 
         # Get a pubkey for the coinbase TXO
         coinbase_key = ECKey()
@@ -116,21 +119,23 @@ class AssumeValidTest(BitcoinTestFramework):
 
         # Create the first block with a coinbase output to our key
         height = 1
-        block = create_block(self.tip, create_coinbase(height, coinbase_pubkey), self.block_time)
+        block = create_block(self.tip, create_coinbase(height, coinbase_pubkey), self.block_time, node=self.nodes[0], block_hashes=self.block_hashes)
         self.blocks.append(block)
         self.block_time += 1
         block.solve()
         # Save the coinbase for later
         self.block1 = block
         self.tip = block.sha256
+        self.block_hashes[height] = block.sha256
         height += 1
 
         # Bury the block 100 deep so the coinbase output is spendable
         for i in range(100):
-            block = create_block(self.tip, create_coinbase(height), self.block_time)
+            block = create_block(self.tip, create_coinbase(height), self.block_time, node=self.nodes[0], block_hashes=self.block_hashes)
             block.solve()
             self.blocks.append(block)
             self.tip = block.sha256
+            self.block_hashes[height] = block.sha256
             self.block_time += 1
             height += 1
 
@@ -140,7 +145,7 @@ class AssumeValidTest(BitcoinTestFramework):
         tx.vout.append(CTxOut(49 * 100000000, CScript([OP_TRUE])))
         tx.calc_sha256()
 
-        block102 = create_block(self.tip, create_coinbase(height), self.block_time)
+        block102 = create_block(self.tip, create_coinbase(height), self.block_time, node=self.nodes[0], block_hashes=self.block_hashes)
         self.block_time += 1
         block102.vtx.extend([tx])
         block102.hashMerkleRoot = block102.calc_merkle_root()
@@ -148,16 +153,18 @@ class AssumeValidTest(BitcoinTestFramework):
         block102.solve()
         self.blocks.append(block102)
         self.tip = block102.sha256
+        self.block_hashes[height] = block102.sha256
         self.block_time += 1
         height += 1
 
         # Bury the assumed valid block 8400 deep (Raptoreum needs 4x as much blocks to allow -assumevalid to work)
         for i in range(8400):
-            block = create_block(self.tip, create_coinbase(height), self.block_time)
+            block = create_block(self.tip, create_coinbase(height), self.block_time, node=self.nodes[0], block_hashes=self.block_hashes)
             block.nVersion = 4
             block.solve()
             self.blocks.append(block)
             self.tip = block.sha256
+            self.block_hashes[height] = block.sha256
             self.block_time += 1
             height += 1
 
