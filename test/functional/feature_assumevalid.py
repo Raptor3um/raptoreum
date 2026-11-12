@@ -42,7 +42,7 @@ from test_framework.messages import (
     msg_block,
     msg_headers
 )
-from test_framework.mininode import P2PInterface
+from test_framework.mininode import P2PInterface, network_thread_start, network_thread_join
 from test_framework.script import (CScript, OP_TRUE)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (assert_equal, set_node_times)
@@ -57,7 +57,7 @@ class AssumeValidTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
-        self.extra_args = ["-dip3params=9000:9000", "-checkblockindex=0"]
+        self.extra_args = ["-checkblockindex=0"]
 
     def setup_network(self):
         self.add_nodes(3)
@@ -86,13 +86,11 @@ class AssumeValidTest(BitcoinTestFramework):
             current_height = node.getblock(node.getbestblockhash())['height']
             if current_height != last_height:
                 last_height = current_height
-                if timeout < 0:
-                    assert False, "blockchain too short after timeout: %d" % current_height
-                timeout - 0.25
+                timeout = 10
                 continue
-            elif current_height > height:
-                assert False, "blockchain too long: %d" % current_height
-            elif current_height == height:
+            timeout -= 0.25
+            if timeout < 0:
+                assert current_height == height, "blockchain stopped advancing at height %d, expected %d" % (current_height, height)
                 break
 
     def run_test(self):
@@ -106,6 +104,11 @@ class AssumeValidTest(BitcoinTestFramework):
         # Build the blockchain
         self.tip = int(self.nodes[0].getbestblockhash(), 16)
         self.block_time = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['time'] + 1
+        # Pace block_time at >nPowTargetSpacing (120s on regtest) so DGW's 60-block
+        # average (DGWBlocksAvg) keeps computing powLimit once nMinimumDifficultyBlocks
+        # (2000) stops exempting blocks from a real difficulty check. Exact spacing
+        # undershoots the target slightly (60 blocks = 59 gaps), so use a margin.
+        BLOCK_TIME_STEP = 150
 
         self.blocks = []
         # create_quorum_commitments() needs this for session-start blocks we've
@@ -121,7 +124,7 @@ class AssumeValidTest(BitcoinTestFramework):
         height = 1
         block = create_block(self.tip, create_coinbase(height, coinbase_pubkey), self.block_time, node=self.nodes[0], block_hashes=self.block_hashes)
         self.blocks.append(block)
-        self.block_time += 1
+        self.block_time += BLOCK_TIME_STEP
         block.solve()
         # Save the coinbase for later
         self.block1 = block
@@ -136,7 +139,7 @@ class AssumeValidTest(BitcoinTestFramework):
             self.blocks.append(block)
             self.tip = block.sha256
             self.block_hashes[height] = block.sha256
-            self.block_time += 1
+            self.block_time += BLOCK_TIME_STEP
             height += 1
 
         # Create a transaction spending the coinbase output with an invalid (null) signature
@@ -146,7 +149,7 @@ class AssumeValidTest(BitcoinTestFramework):
         tx.calc_sha256()
 
         block102 = create_block(self.tip, create_coinbase(height), self.block_time, node=self.nodes[0], block_hashes=self.block_hashes)
-        self.block_time += 1
+        self.block_time += BLOCK_TIME_STEP
         block102.vtx.extend([tx])
         block102.hashMerkleRoot = block102.calc_merkle_root()
         block102.rehash()
@@ -154,7 +157,7 @@ class AssumeValidTest(BitcoinTestFramework):
         self.blocks.append(block102)
         self.tip = block102.sha256
         self.block_hashes[height] = block102.sha256
-        self.block_time += 1
+        self.block_time += BLOCK_TIME_STEP
         height += 1
 
         # Bury the assumed valid block 8400 deep (Raptoreum needs 4x as much blocks to allow -assumevalid to work)
@@ -165,7 +168,7 @@ class AssumeValidTest(BitcoinTestFramework):
             self.blocks.append(block)
             self.tip = block.sha256
             self.block_hashes[height] = block.sha256
-            self.block_time += 1
+            self.block_time += BLOCK_TIME_STEP
             height += 1
 
         # We're adding new connections so terminate the network thread
