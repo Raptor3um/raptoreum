@@ -205,12 +205,12 @@ class AssumeValidTest(BitcoinTestFramework):
         # node0 does not need to receive all headers
         # node1 must receive all headers as otherwise assumevalid is ignored in ConnectBlock
         # node2 should NOT receive all headers to force skipping of the assumevalid check in ConnectBlock
+        # Unsolicited headers messages over MAX_HEADERS_RESULTS (2000) get the whole
+        # message discarded (net_processing.cpp), so node1 needs its own chunking
+        # that stays correct regardless of how many blocks are in the chain.
         p2p0.send_header_for_blocks(self.blocks[0:2000])
-        p2p1.send_header_for_blocks(self.blocks[0:2000])
-        p2p1.send_header_for_blocks(self.blocks[2000:4000])
-        p2p1.send_header_for_blocks(self.blocks[4000:6000])
-        p2p1.send_header_for_blocks(self.blocks[6000:8000])
-        p2p1.send_header_for_blocks(self.blocks[8000:])
+        for lo in range(0, len(self.blocks), 2000):
+            p2p1.send_header_for_blocks(self.blocks[lo:lo + 2000])
         p2p2.send_header_for_blocks(self.blocks[0:200])
 
         # Send blocks to node0. Block 102 will be rejected.
