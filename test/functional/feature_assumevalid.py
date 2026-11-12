@@ -162,8 +162,14 @@ class AssumeValidTest(BitcoinTestFramework):
         self.block_time += BLOCK_TIME_STEP
         height += 1
 
-        # Bury the assumed valid block 8400 deep (Raptoreum needs 4x as much blocks to allow -assumevalid to work)
-        for i in range(8400):
+        # -assumevalid only skips script checks once GetBlockProofEquivalentTime(tip, block)
+        # exceeds two weeks; for a uniform-difficulty chain that reduces to
+        # (blocks between block and tip) * nPowTargetSpacing, independent of the
+        # difficulty itself. Bitcoin's original 2100 assumed its own 600s spacing
+        # (2 weeks = 2016 blocks, +margin). Raptoreum's regtest nPowTargetSpacing
+        # is 120s, so it needs 5x as many blocks (>10080), not 4x (8400) -- the old
+        # comment/constant here was never recalculated and was short of the mark.
+        for i in range(10500):
             block = create_block(self.tip, create_coinbase(height), self.block_time, node=self.nodes[0], block_hashes=self.block_hashes)
             block.nVersion = 4
             block.solve()
@@ -215,7 +221,7 @@ class AssumeValidTest(BitcoinTestFramework):
         for i in range(200):
             p2p1.send_message(msg_block(self.blocks[i]))
         # Syncing so many blocks can take a while on slow systems. Give it plenty of time to sync.
-        p2p1.sync_with_ping(300)
+        p2p1.sync_with_ping(960)
         assert_equal(self.nodes[1].getblock(self.nodes[1].getbestblockhash())['height'], 200)
 
         # Send blocks to node2. Block 102 will be rejected.
