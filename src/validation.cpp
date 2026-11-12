@@ -2884,8 +2884,10 @@ EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
         FormatISO8601DateTime(pindexNew->GetBlockTime()),
         GuessVerificationProgress(chainParams.TxData(), pindexNew),::ChainstateActive().CoinsTip().DynamicMemoryUsage() * (1.0 / (1<<20)),::ChainstateActive().CoinsTip().GetCacheSize());
         strMessage += strprintf(" evodb_cache=%.1fMiB", evoDb->GetMemoryUsage() * (1.0 / (1<<20)));
-        if (!warningMessages.empty())
-        strMessage += strprintf(" warning='%s'", warningMessages);
+        if (!warningMessages.empty()) {
+            strMessage += strprintf(" warning='%s'", warningMessages);
+            DoWarning(warningMessages);
+        }
         LogPrintf("%s\n", strMessage);
         }
 
