@@ -142,10 +142,12 @@ class AssumeValidTest(BitcoinTestFramework):
             self.block_time += BLOCK_TIME_STEP
             height += 1
 
-        # Create a transaction spending the coinbase output with an invalid (null) signature
+        # Create a transaction spending the coinbase output with an invalid (null) signature.
+        # Leaves 1 RTM as an implicit fee, out of Raptoreum's 4 RTM block-1 subsidy (the
+        # upstream "49" was Bitcoin's 50 BTC subsidy minus 1, never adjusted for this chain).
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(self.block1.vtx[0].sha256, 0), scriptSig=b""))
-        tx.vout.append(CTxOut(49 * 100000000, CScript([OP_TRUE])))
+        tx.vout.append(CTxOut(3 * 100000000, CScript([OP_TRUE])))
         tx.calc_sha256()
 
         block102 = create_block(self.tip, create_coinbase(height), self.block_time, node=self.nodes[0], block_hashes=self.block_hashes)
