@@ -29,7 +29,6 @@ Start three nodes:
       block 200. node2 will reject block 102 since it's assumed valid, but it
       isn't buried by at least two weeks' work.
 """
-import time
 
 from test_framework.blocktools import (create_block, create_coinbase)
 from test_framework.key import ECKey
@@ -78,18 +77,17 @@ class AssumeValidTest(BitcoinTestFramework):
                 break
 
     def assert_blockchain_height(self, node, height):
-        """Wait for the node to reach the expected height, then confirm it settles there.
+        """Wait for the node to reach and settle at the expected height.
 
-        Waits on the target itself (timeout=90s) rather than on a short window of
-        inactivity: on a loaded CI runner, node0/node2 can take well over 10s to
-        process even their first block after the (possibly slow) block-construction
-        phase, and a short inactivity window misreads "hasn't started yet" as
-        "stopped advancing", failing at height 0 before the node gets a real chance.
+        No explicit timeout -- matches Dash's own self.wait_until() call here,
+        which also omits one (RTM has no self.wait_until; this is the standalone
+        wait_until() from util.py, same default). The CI job doesn't pass --ci,
+        so there's no automatic per-test ceiling to race against; an inner
+        timeout here only risks a false failure on a slow/loaded runner, as
+        already seen twice this session.
         """
-        wait_until(lambda: node.getblock(node.getbestblockhash())['height'] >= height, timeout=90)
-        time.sleep(2)
-        current_height = node.getblock(node.getbestblockhash())['height']
-        assert current_height == height, "blockchain advanced past height %d, now at %d" % (height, current_height)
+        wait_until(lambda: node.getblockcount() >= height)
+        assert_equal(node.getblockcount(), height)
 
     def run_test(self):
 
