@@ -79,14 +79,15 @@ class AssumeValidTest(BitcoinTestFramework):
     def assert_blockchain_height(self, node, height):
         """Wait for the node to reach and settle at the expected height.
 
-        No explicit timeout -- matches Dash's own self.wait_until() call here,
-        which also omits one (RTM has no self.wait_until; this is the standalone
-        wait_until() from util.py, same default). The CI job doesn't pass --ci,
-        so there's no automatic per-test ceiling to race against; an inner
-        timeout here only risks a false failure on a slow/loaded runner, as
-        already seen twice this session.
+        Dash's own self.wait_until() call here also omits an explicit timeout,
+        but that doesn't mean "wait forever" in either codebase: Dash's
+        self.wait_until defaults to timeout=60, and RTM's standalone wait_until()
+        (used here; RTM has no self.wait_until) silently clamps to the same 60s
+        when both attempts and timeout are left at their infinite defaults. 60s
+        already failed once on CI under load; so did an explicit 90s before that.
+        300s matches the scale already proven necessary for sync_with_ping below.
         """
-        wait_until(lambda: node.getblockcount() >= height)
+        wait_until(lambda: node.getblockcount() >= height, timeout=300)
         assert_equal(node.getblockcount(), height)
 
     def run_test(self):
