@@ -200,6 +200,79 @@ jobs:
           coin-name: ${{ env.COIN_NAME }}
 
   # ============================================================================
+  # Functional Tests (Ubuntu 22)
+  # ============================================================================
+
+  test-functional:
+    name: Functional Tests (Ubuntu 22)
+    needs: [get-version, build-linux]
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Release Binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.COIN_NAME }}-ubuntu22-${{ needs.get-version.outputs.version }}
+          path: release-pkg
+
+      - name: Extract Binaries
+        run: |
+          tar -xzf release-pkg/${COIN_NAME}-ubuntu22-${{ needs.get-version.outputs.version }}.tar.gz -C src
+          chmod +x src/raptoreumd src/raptoreum-cli
+          ls -la src/raptoreumd src/raptoreum-cli
+
+      - name: Install Required Packages
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y python3-dev
+
+      - name: Setup Dependencies
+        uses: ./.github/actions/setup-depends
+        with:
+          host: x86_64-pc-linux-gnu
+
+      - name: Build raptoreum_hash (ghostrider-py)
+        run: |
+          pip3 install setuptools pyzmq
+          cd contrib/ghostrider-py && pip3 install . && cd ../..
+          python3 -c "import raptoreum_hash; print('raptoreum_hash OK:', raptoreum_hash.__file__)"
+
+      - name: Write test/config.ini
+        run: |
+          cat > test/config.ini <<EOF
+          [environment]
+          PACKAGE_NAME=Raptoreum Core
+          PACKAGE_BUGREPORT=https://github.com/Raptor3um/raptoreum/issues
+          SRCDIR=$PWD
+          BUILDDIR=$PWD
+          EXEEXT=
+          RPCAUTH=$PWD/share/rpcauth/rpcauth.py
+
+          [components]
+          ENABLE_WALLET=true
+          ENABLE_CLI=true
+          ENABLE_WALLET_TOOL=true
+          ENABLE_BITCOIND=true
+          ENABLE_ZMQ=true
+          EOF
+
+      - name: Run Functional Test Suite
+        run: |
+          python3 test/functional/test_runner.py \
+            --extended --exclude feature_pruning,feature_dbcrash \
+            -j4 --combinedlogslen=200
+
+      - name: Upload Functional Test Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: functional-test-logs-${{ needs.get-version.outputs.version }}
+          path: /tmp/raptoreum_test_runner_*/
+          if-no-files-found: ignore
+
+  # ============================================================================
   # Windows Build
   # ============================================================================
   
