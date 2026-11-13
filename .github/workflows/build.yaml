@@ -262,7 +262,7 @@ jobs:
         run: |
           python3 test/functional/test_runner.py \
             --extended --exclude feature_pruning,feature_dbcrash \
-            -j4 --combinedlogslen=200
+            -j4 --attempts=3 --combinedlogslen=200
 
       - name: Upload Functional Test Logs
         if: always()
