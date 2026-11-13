@@ -289,6 +289,7 @@ def main():
                                      epilog='''
     Help text and arguments for individual test script:''',
                                      formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('--attempts', '-a', type=int, default=1, help='how many attempts should be allowed for the non-deterministic test suite. Default=1.')
     parser.add_argument('--combinedlogslen', '-c', type=int, default=0, metavar='n', help='On failure, print a log (of length n lines) to the console, combined from the test framework and all test nodes.')
     parser.add_argument('--coverage', action='store_true', help='generate a basic coverage report for the RPC interface')
     parser.add_argument('--ci', action='store_true', help='Run checks and code that are usually only enabled in a continuous integration environment')
@@ -388,6 +389,7 @@ def main():
         build_dir=config["environment"]["BUILDDIR"],
         tmpdir=tmpdir,
         jobs=args.jobs,
+        attempts=args.attempts,
         enable_coverage=args.coverage,
         args=passon_args,
         failfast=args.failfast,
@@ -395,7 +397,7 @@ def main():
         combined_logs_len=args.combinedlogslen,
     )
 
-def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=False, args=None, failfast=False, runs_ci, combined_logs_len=0):
+def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, attempts=1, enable_coverage=False, args=None, failfast=False, runs_ci, combined_logs_len=0):
     args = args or []
 
     # Warn if raptoreumd is already running (unix only)
@@ -439,6 +441,7 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
         test_list=test_list,
         flags=flags,
         timeout_duration=TRAVIS_TIMEOUT_DURATION if runs_ci else float('inf'),  # in seconds
+        attempts=attempts,
     )
     start_time = time.time()
     test_results = []
@@ -517,7 +520,7 @@ class TestHandler:
     Trigger the test scripts passed in via the list.
     """
 
-    def __init__(self, *, num_tests_parallel, tests_dir, tmpdir, test_list, flags, timeout_duration):
+    def __init__(self, *, num_tests_parallel, tests_dir, tmpdir, test_list, flags, timeout_duration, attempts=1):
         assert num_tests_parallel >= 1
         self.num_jobs = num_tests_parallel
         self.tests_dir = tests_dir
@@ -525,6 +528,7 @@ class TestHandler:
         self.timeout_duration = timeout_duration
         self.test_list = test_list
         self.flags = flags
+        self.attempts = attempts
         self.num_running = 0
         # In case there is a graveyard of zombie dashds, we can apply a
         # pseudorandom offset to hopefully jump over them.
@@ -552,14 +556,16 @@ class TestHandler:
                                                stderr=log_stderr),
                               testdir,
                               log_stdout,
-                              log_stderr))
+                              log_stderr,
+                              portseed,
+                              1))  # attempt
         if not self.jobs:
             raise IndexError('pop from empty list')
         while True:
             # Return first proc that finishes
             time.sleep(.5)
             for job in self.jobs:
-                (name, start_time, proc, testdir, log_out, log_err) = job
+                (name, start_time, proc, testdir, log_out, log_err, portseed, attempt) = job
                 if int(time.time() - start_time) > self.timeout_duration:
                     # Timeout individual tests if timeout is specified (to stop
                     # tests hanging and not providing useful output).
@@ -572,6 +578,29 @@ class TestHandler:
                         status = "Passed"
                     elif proc.returncode == TEST_EXIT_SKIPPED:
                         status = "Skipped"
+                    elif attempt < self.attempts:
+                        # Non-deterministic test suite: retry the same test/portseed
+                        # before counting it as a real failure.
+                        shutil.rmtree(testdir, ignore_errors=True)
+                        self.jobs.remove(job)
+                        print('\n{} failed at attempt {}/{}, Duration: {} s'.format(name, attempt, self.attempts, int(time.time() - start_time)))
+                        portseed_arg = ["--portseed={}".format(portseed)]
+                        log_stdout = tempfile.SpooledTemporaryFile(max_size=2**16)
+                        log_stderr = tempfile.SpooledTemporaryFile(max_size=2**16)
+                        test_argv = name.split()
+                        tmpdir_arg = ["--tmpdir={}".format(testdir)]
+                        self.jobs.append((name,
+                                          time.time(),
+                                          subprocess.Popen([sys.executable, self.tests_dir + test_argv[0]] + test_argv[1:] + self.flags + portseed_arg + tmpdir_arg,
+                                                           universal_newlines=True,
+                                                           stdout=log_stdout,
+                                                           stderr=log_stderr),
+                                          testdir,
+                                          log_stdout,
+                                          log_stderr,
+                                          portseed,
+                                          attempt + 1))
+                        continue
                     else:
                         status = "Failed"
                     self.num_running -= 1
