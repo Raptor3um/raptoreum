@@ -587,7 +587,9 @@ void CTxMemPool::addFutureIndex(const CTxMemPoolEntry &entry, const CCoinsViewCa
     if (tx.nVersion >= 3 && tx.nType == TRANSACTION_FUTURE) {
         CFutureTx ftx;
         if (GetTxPayload(tx.vExtraPayload, ftx)) {
-            // TODO: How to handle lockOutputIndex out of range?  Log error and ignore or throw?
+            if (ftx.lockOutputIndex >= tx.vout.size()) {
+                return;
+            }
 
             CFutureIndexKey key = CFutureIndexKey(tx.GetHash(), ftx.lockOutputIndex);
             CTxOut txOut = tx.vout[ftx.lockOutputIndex];

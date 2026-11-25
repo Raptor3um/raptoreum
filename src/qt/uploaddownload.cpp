@@ -11,6 +11,7 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ssl/stream.hpp>
 #include <boost/asio/connect.hpp>
+#include <boost/asio/ssl/host_name_verification.hpp>
 #include <QString>
 #include <QFileDialog>
 #include <filesystem>
@@ -30,6 +31,8 @@ ssl::context setup_ssl_context() {
             ssl::context::no_tlsv1_1 |
             ssl::context::single_dh_use
     );
+    ctx.set_default_verify_paths();
+    ctx.set_verify_mode(ssl::verify_peer);
     return ctx;
 }
 
@@ -41,6 +44,8 @@ beast::ssl_stream<beast::tcp_stream> create_and_connect_ssl_stream(net::io_conte
         beast::error_code ec{static_cast<int>(::ERR_get_error()), net::error::get_ssl_category()};
         throw beast::system_error{ec};
     }
+
+    stream.set_verify_callback(ssl::host_name_verification(host));
 
     auto const results = resolver.resolve(host, port);
     beast::get_lowest_layer(stream).connect(results);

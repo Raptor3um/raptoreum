@@ -33,6 +33,7 @@
 #include <util/validation.h>
 #include <validation.h>
 #include <memory>
+#include <optional>
 
 #include <spork.h>
 #include <governance/governance.h>
@@ -67,9 +68,16 @@
 /** Maximum number of in-flight objects from a peer */
 static constexpr int32_t
 MAX_PEER_OBJECT_IN_FLIGHT = 100;
-/** Maximum number of announced objects from a peer */
+/** Maximum number of announced objects from a peer.
+ *  CVE-2024-52913 class (upstream #19988): RTM's object-download layer is already bounded
+ *  (per-peer in-flight cap, limitedmap eviction, inbound delay + re-ask), but this per-peer
+ *  announcement cap was 2*MAX_INV_SZ = 20x Bitcoin's post-fix per-peer tx cap, letting a
+ *  botnet pin bounded-but-large memory under a sustained INV flood. Tightened to one full
+ *  INV worth (MAX_INV_SZ); legitimate peers drain well below this, only a flooder hits it.
+ *  Conservative vs Bitcoin's 5000 because this layer also carries Dash objects
+ *  (ISLOCK/CLSIG/quorum sigs/spork/governance) that burst on busy smartnodes. */
 static constexpr int32_t
-MAX_PEER_OBJECT_ANNOUNCEMENTS = 2 * MAX_INV_SZ;
+MAX_PEER_OBJECT_ANNOUNCEMENTS = MAX_INV_SZ;
 /** How many microseconds to delay requesting transactions from inbound peers */
 static constexpr std::chrono::microseconds
 INBOUND_PEER_TX_DELAY{
@@ -208,8 +216,17 @@ namespace {
         bool fValidatedHeaders;                                  //!< Whether this block has validated headers at the time of request.
         std::unique_ptr <PartiallyDownloadedBlock> partialBlock;  //!< Optional, used for CMPCTBLOCK downloads
     };
-    std::map <uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator>> mapBlocksInFlight
+    // CVE-2024-52922 groundwork: a multimap so a block may be in flight from more than one
+    // peer (one stalling peer can no longer monopolise a block's single download slot). This
+    // commit is the type/call-site conversion only and is behaviour-preserving under the
+    // current request policy (FindNextBlocksToDownload still requests a block only when it is
+    // in flight from nobody), so no block is actually requested from a second peer yet.
+    // The parallel-request policy from upstream #27626 (compact block getblocktxns to
+    // high-bandwidth/outbound peers, capped at MAX_PEERS_REQUESTING_BLOCK) must be added on
+    // top and validated with a multi-node compact-block test before it changes behaviour.
+    std::multimap <uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator>> mapBlocksInFlight
     GUARDED_BY(cs_main);
+    static constexpr int MAX_PEERS_REQUESTING_BLOCK = 3;
 
     /** Stack of nodes which we have set to announce using compact blocks */
     std::list <NodeId> lNodesAnnouncingHeaderAndIDs
@@ -507,14 +524,33 @@ namespace {
         }
     }
 
+// Find the in-flight entry for a specific (hash, peer), or end() if that peer has no
+// request for this block. With the multimap several peers may have the same hash.
+    std::multimap<uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator>>::iterator
+    FindBlockInFlight(const uint256 &hash, NodeId nodeid)
+    EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
+        auto range = mapBlocksInFlight.equal_range(hash);
+        for (auto it = range.first; it != range.second; ++it) {
+            if (it->second.first == nodeid) return it;
+        }
+        return mapBlocksInFlight.end();
+    }
+
 // Returns a bool indicating whether we requested this block.
 // Also used if a block was /not/ received and timed out or started with another peer
-    bool MarkBlockAsReceived(const uint256 &hash)
+    bool MarkBlockAsReceived(const uint256 &hash, std::optional<NodeId> from_peer = std::nullopt)
 
     EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
-            std::map < uint256, std::pair < NodeId,
-            std::list<QueuedBlock>::iterator > > ::iterator itInFlight = mapBlocksInFlight.find(hash);
-            if (itInFlight != mapBlocksInFlight.end()) {
+            // Iterate every peer that has this block in flight. With from_peer set, act only on
+            // that peer's entry (another peer relaying the block must not clear our legitimate
+            // download from a different peer). With from_peer unset, clear all entries.
+            bool erased = false;
+            auto range = mapBlocksInFlight.equal_range(hash);
+            for (auto itInFlight = range.first; itInFlight != range.second;) {
+                if (from_peer && itInFlight->second.first != *from_peer) {
+                    ++itInFlight;
+                    continue;
+                }
                 CNodeState *state = State(itInFlight->second.first);
                 assert(state != nullptr);
                 state->nBlocksInFlightValidHeaders -= itInFlight->second.second->fValidatedHeaders;
@@ -529,10 +565,10 @@ namespace {
                 state->vBlocksInFlight.erase(itInFlight->second.second);
                 state->nBlocksInFlight--;
                 state->nStallingSince = 0;
-                mapBlocksInFlight.erase(itInFlight);
-                return true;
+                itInFlight = mapBlocksInFlight.erase(itInFlight);
+                erased = true;
             }
-            return false;
+            return erased;
     }
 
 // returns false, still setting pit, if the block was already in flight from the same peer
@@ -546,16 +582,18 @@ namespace {
             assert(state != nullptr);
 
             // Short-circuit most stuff in case it is from the same node
-            std::map<uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator> >::iterator itInFlight = mapBlocksInFlight.find(hash);
-            if (itInFlight != mapBlocksInFlight.end() && itInFlight->second.first == nodeid) {
+            auto itInFlight = FindBlockInFlight(hash, nodeid);
+            if (itInFlight != mapBlocksInFlight.end()) {
                 if (pit) {
                     *pit = &itInFlight->second.second;
                 }
                 return false;
             }
 
-            // Make sure it's not listed somewhere already.
-            MarkBlockAsReceived(hash);
+            // NOTE: with the multimap we do NOT MarkBlockAsReceived(hash) here — that would
+            // cancel other peers' in-flight requests for this block. Under the current request
+            // policy this function is only reached for a block not already in flight (or in
+            // flight from this same peer, handled above), so nothing needs clearing.
 
             std::list<QueuedBlock>::iterator it = state->vBlocksInFlight.insert(state->vBlocksInFlight.end(), {
                 hash, pindex, pindex != nullptr, std::unique_ptr<PartiallyDownloadedBlock>(
@@ -570,7 +608,7 @@ namespace {
             if (state->nBlocksInFlightValidHeaders == 1 && pindex != nullptr) {
                 nPeersWithValidatedDownloads++;
             }
-            itInFlight = mapBlocksInFlight.insert(std::make_pair(hash, std::make_pair(nodeid, it))).first;
+            itInFlight = mapBlocksInFlight.insert(std::make_pair(hash, std::make_pair(nodeid, it)));
             if (pit)
             *pit = &itInFlight->second.second;
             return true;
@@ -780,7 +818,8 @@ namespace {
                                 }
                             } else if (waitingfor == -1) {
                                 // This is the first already-in-flight block.
-                                waitingfor = mapBlocksInFlight[pindex->GetBlockHash()].first;
+                                // multimap has no operator[]; take the first peer downloading this block.
+                                waitingfor = mapBlocksInFlight.equal_range(pindex->GetBlockHash()).first->second.first;
                             }
                         }
                     }
@@ -980,7 +1019,10 @@ void PeerLogicValidation::FinalizeNode(NodeId nodeid, bool &fUpdateConnectionTim
     }
 
     for (const QueuedBlock &entry: state->vBlocksInFlight) {
-        mapBlocksInFlight.erase(entry.hash);
+        // Multimap: erase only THIS peer's entry for the hash, not other peers' in-flight
+        // requests for the same block.
+        auto it = FindBlockInFlight(entry.hash, nodeid);
+        if (it != mapBlocksInFlight.end()) mapBlocksInFlight.erase(it);
     }
     EraseOrphansFor(nodeid);
     nPreferredDownload -= state->fPreferredDownload;
@@ -3342,9 +3384,8 @@ bool static ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStr
                 nodestate->m_last_block_announcement = GetTime();
             }
 
-            std::map < uint256, std::pair < NodeId, std::list<QueuedBlock>::iterator > > ::iterator
-            blockInFlightIt = mapBlocksInFlight.find(pindex->GetBlockHash());
-            bool fAlreadyInFlight = blockInFlightIt != mapBlocksInFlight.end();
+            bool fAlreadyInFlight = mapBlocksInFlight.count(pindex->GetBlockHash()) != 0;
+            bool fPeerAlreadyInFlight = FindBlockInFlight(pindex->GetBlockHash(), pfrom->GetId()) != mapBlocksInFlight.end();
 
             if (pindex->nStatus & BLOCK_HAVE_DATA) // Nothing to do here
                 return true;
@@ -3369,7 +3410,7 @@ bool static ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStr
             // possibilities in compact block processing...
             if (pindex->nHeight <= ::ChainActive().Height() + 2) {
                 if ((!fAlreadyInFlight && nodestate->nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) ||
-                    (fAlreadyInFlight && blockInFlightIt->second.first == pfrom->GetId())) {
+                    fPeerAlreadyInFlight) {
                     std::list<QueuedBlock>::iterator *queuedBlockIt = nullptr;
                     if (!MarkBlockAsInFlight(mempool, pfrom->GetId(), pindex->GetBlockHash(), pindex, &queuedBlockIt)) {
                         if (!(*queuedBlockIt)->partialBlock)
@@ -3504,10 +3545,9 @@ bool static ProcessMessage(CNode *pfrom, const std::string &strCommand, CDataStr
         {
             LOCK(cs_main);
 
-            std::map < uint256, std::pair < NodeId, std::list<QueuedBlock>::iterator > > ::iterator
-            it = mapBlocksInFlight.find(resp.blockhash);
-            if (it == mapBlocksInFlight.end() || !it->second.second->partialBlock ||
-                it->second.first != pfrom->GetId()) {
+            // multimap: look up THIS peer's in-flight entry for the block directly.
+            auto it = FindBlockInFlight(resp.blockhash, pfrom->GetId());
+            if (it == mapBlocksInFlight.end() || !it->second.second->partialBlock) {
                 LogPrint(BCLog::NET, "Peer %d sent us block transactions for block we weren't expecting\n",
                          pfrom->GetId());
                 return true;

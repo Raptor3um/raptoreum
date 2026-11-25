@@ -76,7 +76,13 @@ QString TransactionDesc::FutureTxDescToHTML(const interfaces::WalletTx &wtx, con
 
     if (GetTxPayload(wtx.tx->vExtraPayload, ftx)) {
 
-        CAmount ftxValue = wtx.tx->vout[ftx.lockOutputIndex].nValue;
+        // Defensive bounds check (F5): a future with an out-of-range lockOutputIndex
+        // was accepted by pre-F5 consensus (the CheckFutureTx rejection is activation-
+        // gated and inert on mainnet/testnet today), so a crafted/historical future can
+        // carry lockOutputIndex >= vout.size(). Guard the read so opening its details in
+        // the GUI cannot out-of-bounds read and crash the wallet. Node-local, NOT gated.
+        CAmount ftxValue = (ftx.lockOutputIndex < wtx.tx->vout.size())
+                               ? wtx.tx->vout[ftx.lockOutputIndex].nValue : 0;
         int txBlock = status.block_height;
         int currentHeight = ::ChainActive().Height();
         int64_t nTime = wtx.time;
